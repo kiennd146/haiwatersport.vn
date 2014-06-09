@@ -171,6 +171,7 @@ if (empty ( $this->product )) {
 							} ?>
 						</div>
 						<?php } ?>
+						<?php /* remove add to cart ?>
 						<div class="addtocart-bar">
 							<?php // Display the quantity box ?>
 							<!-- <label for="quantity<?php echo $this->product->virtuemart_product_id;?>" class="quantity_box"><?php echo JText::_('COM_VIRTUEMART_CART_QUANTITY'); ?>: </label> -->
@@ -198,6 +199,7 @@ if (empty ( $this->product )) {
 							</span>
 							<div class="clear"></div>
 						</div>
+						<?php */ ?>
 						<?php // Display the add to cart button END ?>
 						<input type="hidden" class="pname" value="<?php echo $this->product->product_name ?>" />
 						<input type="hidden" name="option" value="com_virtuemart" />
@@ -215,6 +217,7 @@ if (empty ( $this->product )) {
 				<?php }  // Add To Cart Button END ?>
 				<?php // Availability Image
 				/* TO DO add width and height to the image */
+				/*
 				if (!empty($this->product->product_availability)) {
 					$stockhandle = VmConfig::get('stockhandle','none');
 					if($stockhandle=='risetime' and ($this->product->product_in_stock - $this->product->product_ordered)<1){
@@ -229,7 +232,7 @@ if (empty ( $this->product )) {
 				</div>
 				<?php }
 				}
-
+				*/
 				// Ask a question about this product ?>
 				<div class="ask-a-question">
 					<a class="ask-a-question" href="<?php echo $url ?>" ><?php echo JText::_('COM_VIRTUEMART_PRODUCT_ENQUIRY_LBL') ?></a>
