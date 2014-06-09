@@ -1,0 +1,11 @@
+* Bug braku htmlspecialchars w title
+* Bug braku htmlspecialchars w alt
+* Fixed htmlspecialchars use
+
+* Bug z ID artykułów we wszystkich kontrolerach
+
+// generating WHERE condition
+for($i = 0;$i < count($source);$i++){
+	if(count($source) == 1) $where .= (is_array($source)) ? $where1.$source[0] : $where1.$source;
+	else $where .= ($i == 0) ? $where1.$source[$i] : $where2.$source[$i];		
+}

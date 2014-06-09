@@ -1,0 +1,223 @@
+/*
+#------------------------------------------------------------------------
+# e-Sport - January 2011 template (for Joomla 1.7/2.5)
+#
+# Copyright (C) 2007-2011 Gavick.com. All Rights Reserved.
+# License: Copyrighted Commercial Software
+# Website: http://www.gavick.com
+# Support: support@gavick.com 
+*/
+
+a {
+		-webkit-transition: color 0.15s linear;
+		-moz-transition: color 0.15s linear;
+		-ms-transition: color 0.15s linear;
+		-o-transition: color 0.15s linear;
+		transition: color 0.15s linear;
+}
+input,
+select,
+textarea,
+button,
+.button,
+input[type="submit"],
+input[type="button"],
+div.mobileSwitch > a,
+.search dl,
+.box_menu ul li,
+.additional-images .product-thumb,
+.vm-button-correct,
+#facebox .popup > div > div > a {
+		border-radius: 2px;
+		-moz-border-radius: 2px;
+		-webkit-border-radius: 2px;
+		-webkit-transition: background-color 0.15s linear;
+		-moz-transition: background-color 0.15s linear;
+		-o-transition: background-color 0.15s linear;
+		transition: background-color 0.15s linear;
+}
+.tip {
+		-webkit-box-shadow: 2px 2px 2px #f5f5f5;
+		-moz-box-shadow: 2px 2px 2px #f5f5f5;
+		box-shadow: 2px 2px 2px #f5f5f5;
+}
+
+.nspvm .nspArtPage { 
+		-webkit-box-shadow: inset 1px 1px 0 #eee; 
+		-moz-box-shadow: inset 1px 1px 0 #eee; 
+		box-shadow: inset 1px 1px 0 #eee;
+}
+
+.gkIsWrapper-gk_eSport.gkThumbsTop .gkContentArea { 
+		-webkit-transition: top 0.35s ease-out; 
+		-moz-transition: top 0.35s ease-out; 
+		transition: top 0.35s ease-out; 
+}
+
+.gkIsWrapper-gk_eSport.gkThumbsBottom .gkContentArea { 
+		-webkit-transition: bottom 0.35s ease-out; 
+		-moz-transition: bottom 0.35s ease-out; 
+		transition: bottom 0.35s ease-out; 
+}
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li { 
+		-webkit-transition: opacity 1s ease-out; 
+		-moz-transition: opacity 1s ease-out; 
+		transition: opacity 1s ease-out; 
+}
+.gkIsWrapper-gk_eSport .gkIsImageAnimArea > div { 
+		-webkit-border-radius: 1000px; 
+		-moz-border-radius: 1000px; 
+		border-radius: 1000px; 
+		position: absolute; 
+}
+.gkIsWrapper-gk_eSport .gkIsPreloader { 
+		-webkit-border-radius: 50%; 
+		-moz-border-radius: 50%; 
+		border-radius: 50%;
+		-webkit-transition: opacity 0.5s ease-out, width 0.5s ease-out, height 0.5s ease-out, margin 0.5s ease-out; 
+		-moz-transition: opacity 0.5s ease-out, width 0.5s ease-out, height 0.5s ease-out, margin 0.5s ease-out; 
+		transition: opacity 0.5s ease-out, width 0.5s ease-out, height 0.5s ease-out, margin 0.5s ease-out; 
+}
+
+.gkIsWrapper-gk_eSport .gkIsPreloader.loading { 
+		-webkit-animation-name: loader; 
+		-webkit-animation-duration: 0.75s; 
+		-webkit-animation-iteration-count: infinite; 
+		-webkit-animation-timing-function: ease-out; 
+		-moz-animation-name: loader; 
+		-moz-animation-duration: 0.75s; 
+		-moz-animation-iteration-count: infinite; 
+		-moz-animation-timing-function: ease-out;
+		animation-name: loader; 
+		animation-duration: 0.75s; 
+		animation-iteration-count: infinite; 
+		animation-timing-function: ease-out;
+}
+
+@-webkit-keyframes loader {
+	from { margin: -13px 0 0 -13px; width:24px; height:24px; }
+	50% { margin: -18px 0 0 -18px; width:36px; height:36px; }
+	to { margin: -13px 0 0 -13px; width:24px; height:24px; }
+}
+@-moz-keyframes loader {
+	from { margin: -13px 0 0 -13px; width:24px; height:24px; }
+	50% { margin: -18px 0 0 -18px; width:36px; height:36px; }
+	to { margin: -13px 0 0 -13px; width:24px; height:24px; }
+}
+@keyframes loader {
+	from { margin: -13px 0 0 -13px; width:24px; height:24px; }
+	50% { margin: -18px 0 0 -18px; width:36px; height:36px; }
+	to { margin: -13px 0 0 -13px; width:24px; height:24px; }
+}
+
+.gkCol { 
+	-moz-box-sizing:border-box; 
+	-webkit-box-sizing:border-box; 
+	-ms-box-sizing:border-box; 
+	box-sizing:border-box;
+}
+span#fb-auth small {
+		-moz-box-shadow:inset 0px 1px 0px 0px #aab5cd;
+		-webkit-box-shadow:inset 0px 0px 1px 0px #556a9a;
+		box-shadow:1px 0px #556a9a;
+}
+span#fb-auth {
+		-moz-box-shadow:inset 0px 1px 0px 0px #aab5cd;
+		-webkit-box-shadow:inset 0px 1px 0px 0px #aab5cd;
+		box-shadow:inset 0px 1px 0px 0px #aab5cd;
+		background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #798db9), color-stop(1, #556b9b) );
+		background:-moz-linear-gradient( center top, #798db9 5%, #556b9b 100% );
+		-moz-border-radius:3px;
+		-webkit-border-radius:3px;
+		border-radius:3px;
+}
+span#fb-auth:hover {
+		background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #556b9b), color-stop(1, #798db9) );
+		background:-moz-linear-gradient( center top, #556b9b 5%, #798db9 100% );
+}
+
+#gkPopupOverlay,
+#gkPopupLogin,
+#gkPopupRegister,
+#gkPopupCart {
+		-webkit-box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+		-moz-box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+		border-radius: 3px;
+		-webkit-border-radius: 3px;
+		-moz-border-radius: 3px;
+}
+
+.list-reviews .normal,
+.list-reviews .highlight {
+		border-radius:3px;
+		-webkit-border-radius:3px;
+		-moz-border-radius:3px;
+}
+
+#facebox .popup > div > div {
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		-ms-box-sizing: border-box;
+		box-sizing: border-box;
+}
+
+p.gkInfo2,
+p.gkTips2,
+p.gkWarning2 { 
+		border-radius: 1px; 
+		-moz-border-radius: 1px; 
+		-webkit-border-radius: 1px; 
+}
+
+.gkHighlight1,
+.gkHighlight2,
+.gkHighlight3,
+.gkHighlight4 { 
+		transition: all 0.3s ease-out; 
+		-moz-transition: all 0.3s ease-out; 
+		-o-transition: all 0.3s ease-out; 
+		-webkit-transition: all 0.3s ease-out; 
+}
+
+pre,
+.gkCode1,
+.gkCode2 { 
+		transition: all 0.3s ease-out; 
+		-moz-transition: all 0.3s ease-out; 
+		-o-transition: all 0.3s ease-out; 
+		-webkit-transition: all 0.3s ease-out; 
+}
+
+div.gkLegend1 h4,
+div.gkLegend2 h4,
+div.gkLegend3 h4,
+div.gkLegend4 h4 { 
+		border-radius: 1px; 
+		-moz-border-radius: 1px; 
+		-webkit-border-radius: 1px; 
+}
+
+div.gkLegend1,
+div.gkLegend2,
+div.gkLegend3,
+div.gkLegend4 { 
+		border-radius: 1px; 
+		-moz-border-radius: 1px; 
+		-webkit-border-radius: 1px; 
+}
+
+.gkTooltip:hover span { 
+		border-radius: 3px; 
+		-moz-border-radius: 3px; 
+		-webkit-border-radius: 3px; 
+		box-shadow:  8px 8px 1px rgba(0, 0, 0, 0.12); 
+		-webkit-box-shadow: 8px 8px 1px rgba(0, 0, 0, 0.12); 
+		-moz-box-shadow: 8px 8px 1px rgba(0, 0, 0, 0.12); 
+}
+
+#gkMainMenu > div.gk-menu > ul div.childcontent-inner-wrap div.childcontent-inner-wrap { 
+	-webkit-box-shadow: 0 0 3px #666; 
+	-moz-box-shadow: 0 0 3px #666; 
+	box-shadow: 0 0 3px #666; 
+}

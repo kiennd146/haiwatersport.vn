@@ -1,0 +1,119 @@
+/*
+#------------------------------------------------------------------------
+# e-Sport - January 2011 template (for Joomla 1.7/2.5)
+#
+# Copyright (C) 2007-2011 Gavick.com. All Rights Reserved.
+# License: Copyrighted Commercial Software
+# Website: http://www.gavick.com
+# Support: support@gavick.com 
+*/
+
+/* main layout */
+html { min-height:100%; border-bottom:1px solid transparent; }
+.clear { clear: both; }
+.overflow { overflow: hidden; }
+.gkWrap {max-width: 1200px}
+#gkMainBlock { margin-bottom: 0!important; }
+#gkContentMainbody { margin-bottom: 30px; }
+#gkComponentWrap { padding:0!important; }
+.gkWrap { margin: 0 auto; }
+.clearfix:after,
+.gkWrap:after,
+.gkMain:after,
+#gkComponentWrap:after,
+#gkContentMainbody:after { content: "."; display: block; height: 0; clear: both; visibility: hidden; }
+#gkTop1,
+#gkTop2,
+#gkUser1,
+#gkUser2,
+#gkBottom1,
+#gkBottom2,
+#gkMainBlock,
+#gkLeftMiddle,
+#gkRightMiddle { display: block; width: 100%; }
+#gkTop1,
+#gkTop2,
+#gkUser1,
+#gkUser2 { margin-bottom: 34px; }
+#gkTop1 > div, 
+#gkTop2 > div, 
+#gkUser1 > div,
+#gkUser2 > div { padding: 0; }
+.gkCol { display: block; float: left; width: 100%; }
+#gkBottom1,
+#gkBottom2 {}
+#gkBottomWrap > div:first-child { margin-top: 0; }
+#gkMainbodyBottom { margin-top: 34px; }
+#gkLeft {padding-right: 18px !important; padding-bottom: 30px; }
+#gkRight {padding-left: 18px !important; padding-bottom: 30px; }
+#gkInset1 { padding-right: 34px!important; padding-bottom: 30px; }
+#gkInset2 { padding-left: 34px!important; padding-bottom: 30px; }
+#gkContentTop{margin-bottom: 34px !important}
+#gkContentBottom {margin-top: 34px !important}
+#gkContent {padding-top: 0!important}
+.gkContentL { padding-left: 18px!important; }
+.gkContentR { padding-right: 18px!important; }
+.gkContentRL { padding-left: 18px!important; padding-right: 18px!important; }
+/* USER/TOP/BOTTOM columns */
+.gkColFull > .box,
+.gkColLeft > .box,
+.gkColCenter > .box,
+.gkColRight > .box { margin-left: 0; }
+.gkColLeft > .box { margin-left: 0; }
+.gkColRight > .box { margin-right: 0; }
+.gkColFull > .box { margin-left: 0; margin-right: 0; }
+
+.gkColLeft > div {margin-right: 9px!important}
+.gkColCenter > div  {margin-left: 9px!important; margin-right: 9px!important}
+.gkColRight > div  {margin-left: 9px!important}
+#gkRight > div, 
+#gkLeft > div { margin-top: 34px; }
+#gkRight > div:first-child, 
+#gkLeft > div:first-child { margin-top: 0; }
+/* TBLR */
+.gkPaddingT { padding-top: 34px!important; }
+.gkPaddingB { padding-bottom: 34px!important; }
+.gkPaddingL { padding-left: 34px!important; }
+.gkPaddingR { padding-right: 34px!important; }
+.gkPaddingTB { padding-top: 34px!important; padding-bottom: 34px!important; }
+.gkPaddingTL { padding-top: 34px!important; padding-right: 34px!important; }
+.gkPaddingTR { padding-top: 34px!important; padding-right: 34px!important; }
+.gkPaddingBL { padding-bottom: 34px!important; padding-left: 34px!important; }
+.gkPaddingBR { padding-bottom: 34px!important; padding-right: 34px!important; }
+.gkPaddingLR { padding-left: 34px!important; padding-right: 34px!important; }
+.gkPaddingTBL { padding-top: 34px!important; padding-bottom: 34px!important; padding-left: 34px!important; }
+.gkPaddingTBR { padding-top: 34px!important; padding-bottom: 34px!important; padding-right: 34px!important; }
+.gkPaddingTLR { padding-top: 34px!important; padding-left: 34px!important; padding-right: 34px!important; }
+.gkPaddingBLR { padding-bottom: 34px!important; padding-left: 34px!important; padding-right: 34px!important; }
+.gkPaddingTBLR { padding: 34px!important; }
+
+.gkMarginT { padding-top: 34px!important; }
+.gkMarginB { padding-bottom: 34px!important; }
+.gkMarginL { padding-left: 34px!important; }
+.gkMarginR { padding-right: 34px!important; }
+.gkMarginTB { padding-top: 34px!important; padding-bottom: 34px!important; }
+.gkMarginTL { padding-top: 34px!important; padding-right: 34px!important; }
+.gkMarginTR { padding-top: 34px!important; padding-right: 34px!important; }
+.gkMarginBL { padding-bottom: 34px!important; padding-left: 34px!important; }
+.gkMarginBR { padding-bottom: 34px!important; padding-right: 34px!important; }
+.gkMarginLR { padding-left: 34px!important; padding-right: 34px!important; }
+.gkMarginTBL { padding-top: 34px!important; padding-bottom: 34px!important; padding-left: 34px!important; }
+.gkMarginTBR { padding-top: 34px!important; padding-bottom: 34px!important; padding-right: 34px!important; }
+.gkMarginTLR { padding-top: 34px!important; padding-left: 34px!important; padding-right: 34px!important; }
+.gkMarginBLR { padding-bottom: 34px!important; padding-left: 34px!important; padding-right: 34px!important; }
+.gkMarginTBLR { padding: 34px!important; }
+/* Joomla columns */
+
+.cols-1 { display: block; float: none !important; margin: 0 !important; }
+.cols-2 .column-1 { width:46%; float:left; }
+.cols-2 .column-2 { width:46%; float:right; margin:0 }
+.cols-3 .column-1 { float:left; width:29%; padding:0px 5px; margin-right:4% }
+.cols-3 .column-2 { float:left; width:29%; margin-left:0; padding:0px 5px }
+.cols-3 .column-3 { float:right; width:29%; padding:0px 5px }
+.items-row { padding-bottom:18px !important; }
+.column-1,
+.column-2,
+.column-3 { padding:0 }
+.column-2 { width:55%; margin-left:40%; }
+.column-3 { width:30% }
+.blog-more { padding:18px 5px }

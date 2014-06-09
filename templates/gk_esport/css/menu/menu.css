@@ -1,0 +1,94 @@
+/*
+#------------------------------------------------------------------------
+# e-Sport - January 2011 template (for Joomla 1.7/2.5)
+#
+# Copyright (C) 2007-2011 Gavick.com. All Rights Reserved.
+# License: Copyrighted Commercial Software
+# Website: http://www.gavick.com
+# Support: support@gavick.com 
+*/
+
+#gkMainMenu { position:relative; z-index:10000; margin: 42px 0 12px 0; border: 1px solid #cfcfcf; }
+#gkMainMenu.gkTopSpace { margin-top: 0; }
+#gkMainMenu > div.gk-menu > ul {  height: 50px; background: #f0f0f0 url('../../images/style1/bg_menu.png') repeat-x left top; border-bottom: 1px solid #cfcfcf; }
+#gkMainMenu > div.gk-menu > ul > li { height: 50px; line-height: 50px; border-right: 1px solid #fafafa; font-size: 12px; font-weight: bold; color: #555; }
+#gkMainMenu > div.gk-menu > ul > li:hover,
+#gkMainMenu > div.gk-menu > ul > li:active,
+#gkMainMenu > div.gk-menu > ul > li:focus,
+#gkMainMenu > div.gk-menu > ul > li.active { background: #f9f9f9 url('../../images/style1/bg_menu_hover.png') repeat-x left top; color: #90a857; }
+
+#gkMainMenu > div.gk-menu > ul > li:hover > a,
+#gkMainMenu > div.gk-menu > ul > li:active > a,
+#gkMainMenu > div.gk-menu > ul > li:focus > a { color: #90a857; }
+#gkMainMenu > div.gk-menu > ul > li.active > a { color: #90a857; }
+#gkMainMenu > div.gk-menu > ul > li > a { padding: 0 25px; display: block; height: 50px; line-height:50px; font-size: 13px; border-right: 1px solid #e2e2e2; text-shadow: 0 1px 0 #fff; } 
+
+#gkMainMenu > div.gk-menu > ul div.childcontent { }
+#gkMainMenu > div.gk-menu > ul > li > div.childcontent { margin-left: -2px; }
+#gkMainMenu > div.gk-menu > ul div.childcontent-inner-wrap { background: #90A857; padding-top: 6px 0;  border-top: none; }
+#gkMainMenu > div.gk-menu > ul div.childcontent-inner-wrap div.childcontent-inner-wrap { box-shadow: 0 0 3px #667a37 }
+#gkMainMenu > div.gk-menu > ul div.childcontent-inner { overflow: hidden; padding: 12px 0; }
+
+div.gk-menu > ul.level0 > li > .childcontent .gkcol { padding-bottom: 0; }
+#gkMainMenu > div.gk-menu > ul div.childcontent a,
+#gkMainMenu > div.gk-menu > ul div.childcontent span { font-size: 12px; color: #fff; }
+#gkMainMenu > div.gk-menu > ul div.childcontent li { font-weight: normal; margin: 0 20px; padding: 3px 0; min-height: 24px; border-top: 1px solid #A1B968 }
+#gkMainMenu > div.gk-menu > ul div.childcontent li:first-child { border: none}
+#gkMainMenu > div.gk-menu > ul div.childcontent li.group { padding: 0; margin: 0; height: auto; border: none!important; background: none }
+#gkMainMenu > div.gk-menu > ul div.childcontent li > a,
+#gkMainMenu > div.gk-menu > ul div.childcontent li > span { display:block; min-height: 24px; }
+
+#gkMainMenu > div.gk-menu > ul div.childcontent li.active > a,
+#gkMainMenu > div.gk-menu > ul div.childcontent li.active > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li:hover > a,
+#gkMainMenu > div.gk-menu > ul div.childcontent li:hover > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li > a:hover,
+#gkMainMenu > div.gk-menu > ul div.childcontent li > span:hover,
+#gkMainMenu > div.gk-menu > ul div.childcontent li.active > a > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li.active > span > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li:hover > a > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li:hover > span > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li > a:hover > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li > span:hover > span { color: #D4EC9B; }
+
+#gkMainMenu > div.gk-menu > ul div.childcontent .group-title { background: transparent; padding: 10px 20px;   }
+#gkMainMenu > div.gk-menu > ul div.childcontent .group-title .menu-title { font-size: 16px; padding: 7px 12px; line-height: 24px; display: block; color: #fff;background: #A1B968  }
+#gkMainMenu > div.gk-menu > ul div.childcontent .group-title .menu-desc { font-size: 10px; line-height: 12px; display: block; color: #90a857; } 
+#gkMainMenu .module p {font-size: 12px; line-height:  18px; }
+
+/* split menu */
+#gkSubmenu { background: #f1f1f1 url('../../images/style1/bg_dropline.png') repeat-x left top; height: 40px; }
+#gkSubmenu > div > ul { float: left; font-size: 12px; }
+#gkSubmenu > div > ul li { float: left; padding: 0 15px; font-size: 11px; }
+#gkSubmenu > div > ul li a { display:block; height: 40px; color: #828181; }
+#gkSubmenu > div > ul li a:hover { color: #90a857; }
+#gkSubmenu > div > ul > li { background: transparent url('../../images/style1/breadcrumbs_bullets.png') no-repeat left center; }
+#gkSubmenu > div > ul > li:first-child { background: none; padding-left: 0; }
+#gkSubmenuMod { background: #f1f1f1 url('../../images/style1/bg_dropline.png') repeat-x left top; height: 40px; }
+#gkSubmenuMod ul { padding-left: 25px; height: 40px; line-height: 40px; float: left; }
+#gkSubmenuMod ul li { float: left; padding-right: 25px; font-size: 12px; line-height: 40px; }
+#gkSubmenuMod ul li a { color: #828181; }
+#gkSubmenuMod ul li a:active,
+#gkSubmenuMod ul li a:focus,
+#gkSubmenuMod ul li a:hover { color: #90a857; }
+
+/* Sub Nav (lv2) */
+
+#gkSubmenu ul li li { clear:both; float:none; border-left: none; margin: 0 10px; padding: 0; min-height: 24px; }
+#gkSubmenu ul li li:first-child { border-top: none; }
+#gkSubmenu ul li li > a { display:block; min-height: 24px; height: 24px; font-size: 12px; color: #828181; }
+#gkSubmenu ul li li > a:hover,
+#gkSubmenu ul li li > a:hover > span { color: #90a857; }
+#gkSubmenu ul li ul,
+#gkSubmenu ul li ul ul,
+#gkSubmenu ul li ul ul ul { background: #fff; border: 1px solid #e2e2e2; position: relative; padding: 6px 0; }
+#gkSubmenu ul li ul ul,
+#gkSubmenu ul li ul ul ul { }
+#gkSubmenu ul>li.hover>ul { display:block; height:auto; left:auto; position:absolute; }
+#gkSubmenu ul ul { }
+#gkSubmenu > div > ul > ul { margin-left: -20px!important; }
+#gkSubmenu ul ul ul { display:none!important; left:-999px!important; }
+#gkSubmenu ul ul li:hover>ul { margin-left:180px!important; margin-top: -32px!important; left:0!important; display:block!important; }
+#gkSubmenu ul li:hover ul,
+#gkSubmenu ul li:hover ul ul,
+#gkSubmenu ul li:hover ul ul ul { left: auto; }

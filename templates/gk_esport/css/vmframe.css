@@ -1,0 +1,175 @@
+body {
+		font-family: Arial, Verdana, sans-serif;
+		padding: 20px;
+}
+::selection {
+		background: #f47b20;
+		color: #fff;
+}
+::-moz-selection {
+ background: #f47b20;
+ color: #fff;
+}
+::-webkit-selection {
+ background: #f47b20;
+ color: #fff;
+}
+body {
+		min-height: 100%;
+		background: #fff;
+		font-size: 13px;
+		line-height: 2;
+		color: #777;
+}
+a {
+		text-decoration: none;
+		color: #333;
+}
+a:hover,
+a:active,
+a:focus {
+		color: #879d52;
+}
+h1,
+h2,
+h3,
+h4,
+h5 {
+		font-family:  Arial, sans-serif;
+		margin: 0;
+		padding: 0;
+		font-weight: normal;
+		color: #333
+}
+h1,
+h2 {
+		margin: 0 0 8px
+}
+h1 {
+		font-size:24px;
+		line-height: 32px;
+}
+h2 {
+		font-size:20px;
+		line-height: 28px;
+}
+h3 {
+		font-size:135%
+}
+h4 {
+		font-size:110%
+}
+h5 {
+		font-size:100%
+}
+ul {
+		list-style:none;
+}
+ul li {
+		line-height:2.6;
+}
+p {
+		margin: 0.5em 0 1.5em
+}
+/* Form ---------------------------------*/
+input,
+select,
+textarea {
+		border: 1px solid #e7e7e7;
+		border-top-color: #ccc;
+		height: 24px;
+		line-height: 24px;
+		padding: 5px 9px;
+}
+textarea {
+		height: auto;
+}
+select {
+		padding: 2px;
+}
+input:focus,
+select,
+textarea:focus {
+		background: #fffef4;
+}
+button,
+.button,
+input[type="submit"],
+input[type="button"],
+div.mobileSwitch > a {
+		display: block;
+		float: left;
+		height: 36px;
+		line-height: 36px;
+		margin: 0 5px 2px 2px;
+		padding: 0 12px;
+		border: none;
+		background: #333;
+		font-size: 12px;
+		text-transform: uppercase;
+		text-align: center;
+		color: #fff;
+		cursor: pointer;
+}
+button:hover,
+.button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover {
+		background: #f47b20;
+		color: #fff;
+}
+input[type=checkbox],
+.checkbox,
+input[type=radio],
+.radio {
+		height:auto !important;
+		background:transparent!important;
+		border: none!important;
+		margin-top: 7px;
+}
+select[size] {
+		height:auto;
+}
+select[size="1"] {
+		height: 23px!important;
+}
+/* Other content */
+.product-image {
+		float: right;
+}
+textarea {
+		width: 95%;
+		margin-bottom: 20px;
+		height: 160px;
+}
+label {
+		padding: 3px 0;
+}
+.inputs {
+		float: left;
+}
+.inputs label {
+		display: block;
+}
+.inputs label span {
+		min-width: 100px;
+		display: block;
+		line-height: 32px;
+		float: left;
+}
+.clear {
+		display: block;
+		clear: both;
+}
+.width30 {
+		width: 30%;
+}
+.width70 {
+		width: 70%;
+}
+.floatleft {
+		float: left;
+}
+.floatright {
+		float: right;
+}

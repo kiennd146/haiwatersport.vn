@@ -1,0 +1,285 @@
+/*
+#------------------------------------------------------------------------
+# e-Sport - January 2011 template (for Joomla 1.7/2.5)
+#
+# Copyright (C) 2007-2011 Gavick.com. All Rights Reserved.
+# License: Copyrighted Commercial Software
+# Website: http://www.gavick.com
+# Support: support@gavick.com 
+*/
+
+/*
+ * Tabs Module 
+ */
+
+.gkTab { position: relative; border: 1px solid #eee;  }
+.gkTabWrap { margin: 0 auto; }
+ul.gkTabs { height: 46px; padding: 0; background: #121212;   }
+ul.gkTabs li { float: left;  padding: 0 20px; height: 46px; line-height: 46px;  list-style-type:none;  background: none; border: none; border-right: 1px solid #292929;  color: #888;  font-size: 16px; }
+ul.gkTabs li:first-child { border: none}
+ul.gkTabs li span { display: block;  }
+ul.gkTabs li.active, ul.gkTabs li:hover  { color: #333;  cursor: pointer; background: #fff; border-color: #eee }
+.gkTabContainer0 { clear: both; margin:0; }
+.gkTabContainer1 { overflow: hidden; }
+.gkTabItem { float: left; overflow: hidden; padding: 0; }
+.gkTabButtonNext,
+.gkTabButtonPrev { display: none; }
+.gkTabContainer0,
+.gkTabContainer1,
+.gkTabContainer2 { position:relative; }
+.gkTabItem { position: absolute; left: -999em; top: 0; width: 100%; }
+.gkTabItem.active { position: static; left: 0; }
+.gkTabItemSpace { padding: 24px; }
+
+/* suffix tab1 */
+
+.tab1 ul.gkTabs {  background: #f47b20; }
+.tab1 ul.gkTabs li {  padding:0; border: none; border-right: 1px solid #fe9749;  color: #fff  }
+.tab1 ul.gkTabs li span { padding: 0 20px; }
+.tab1 ul.gkTabs li.active { color: #333; background: #fff!important; }
+.tab1 ul.gkTabs li.active span { border-color: #fff}
+.tab1 ul.gkTabs li:hover{ background: #fe9749}
+
+/* suffix tab2 */
+.tab2 ul.gkTabs {  background: #90a857; }
+.tab2 ul.gkTabs li {  padding:0; border: none; border-right: 1px solid #a5bf66;  color: #fff  }
+.tab2 ul.gkTabs li span { padding: 0 20px; }
+.tab2 ul.gkTabs li.active { color: #333; background: #fff!important; }
+.tab2 ul.gkTabs li.active span { border-color: #fff}
+.tab2 ul.gkTabs li:hover{ background: #a5bf66}
+
+/* 
+ * News Show Pro GK4
+ */
+ 
+.nsp { position:relative; }
+.nspMain { overflow:hidden; }
+/* interface */
+.nspBotInterface,
+.nspTopInterface { overflow:hidden; width:auto; margin: 0; }
+.nspBotInterface { margin:0; padding: 5px 0 0 0; }
+.nspTopInterface div { position: absolute; right: 0; padding:0 3px; }
+.nspBotInterface div { float: right; margin-top: 2px; }
+/* pagination */
+.nspBotInterface .nspPagination li,
+.nspTopInterface .nspPagination li,
+.nspBotInterface .nspPagination li.active,
+.nspTopInterface .nspPagination li.active { display:block;  float:left; border:3px solid transparent!important; width: 5px; height: 5px; margin: -1px 0 0 0;  padding:0 !important;  background: transparent url('../images/style1/nsp_interface.png') no-repeat 0 -8px; text-indent: -999px!important; cursor:pointer; overflow: hidden; }
+.nspBotInterface .nspPagination li:hover,
+.nspBotInterface .nspPagination li.active,
+.nspTopInterface .nspPagination li:hover,
+.nspTopInterface .nspPagination li.active { background-position: 0 -28px; cursor:pointer; }
+.nspTopInterface .nspPagination,
+.nspBotInterface .nspPagination { border:none !important; float:left; width:auto; padding: 0 8px!important; list-style-type:none; margin:3px 0 0 0; }
+.nspBotInterface .nspCounter,
+.nspTopInterface .nspCounter { padding:4px 8px!important; font-size:10px; font-weight:normal !important; height:10px; line-height:10px; background:transparent; color:#ccc !important; cursor:pointer; float:left; margin: 0 0 0 8px !important; }
+.nspBotInterface .nspCounter span,
+.nspTopInterface .nspCounter span { color:#dfdfdf !important; }
+/* buttons: prev & next */
+.nspBotInterface, 
+.nspTopInterface  { margin: 0!important; }
+.nspTopInterface div { top: 18px!important; }
+.nspBotInterface .nspPrev,
+.nspTopInterface .nspPrev,
+.nspBotInterface .nspNext,
+.nspTopInterface .nspNext { display: block; float:left; border:none !important; height: 20px;  width: 20px; margin: -3px 0 0 2px; background: transparent url('../images/style1/nsp_interface.png') no-repeat -23px 0; cursor:pointer; text-indent: 999px; padding:0 !important; overflow: hidden; }
+.nspBotInterface .nspNext,
+.nspTopInterface .nspNext { background-position: -43px 0px; }
+.nspBotInterface .nspPrev:hover,
+.nspTopInterface .nspPrev:hover { background-position: -23px -20px; }
+.nspBotInterface .nspNext:hover,
+.nspTopInterface .nspNext:hover { background-position: -43px -20px }
+/* article layout */
+.nspArts { overflow:hidden; }
+.nspArt > div { overflow:hidden; padding:0 10px; }
+.nspArt h4.nspHeader { font-size: 14px; font-weight: bold; line-height:1.2; margin-bottom: 12px;   }
+.nspArt img { border: none; background: #fff; padding: 0; }
+.nspArt img:hover { opacity: 0.85; filter: alpha(opacity=85); }
+.nspLinks h4 a { }
+.nspLinks h4 a:hover,
+.nspArt h4.nspHeader a:hover { }
+.nspArt p.nspText { margin-top: 0!important;  line-height: 1.4; }
+.nspArt p.nspInfo { font-size:11px; color: #333; margin:6px 0; }
+.nspArt .tleft { text-align:left; }
+.nspArt .tright { text-align:right; }
+.nspArt .tcenter { text-align:center; }
+.nspArt .tjustify { text-align:justify; }
+.nspArt .fleft { float:left; }
+.nspArt .fright { float:right; }
+.nspArt .fnone { clear:both; width:100%; float:none; }
+.nspArt { float:left; }
+.nspReadon_class.left,
+.nspReadon_class.right,
+.nspReadon_class.center { clear:both; }
+.nspReadon_class.left { float:left; }
+.nspReadon_class.right { float:right; }
+.nspReadon_class.center { display:inline; float:none; }
+.box .nspLinks > div.nspLinkScroll1 > div > ul li { border-top: 1px solid #ebebeb!important; list-style-type: none!important; background: none!important; padding-left: 0!important; margin: 0!important; }
+.nspLinks > div.nspLinkScroll1 > div > ul li:first-child { border-top: none!important; padding-top: 0px }
+.nspLinks ul li h4 {  margin-bottom: 6px; font-size:14px; line-height:1.2!important; font-weight: bold}
+.nspLinks ul li p { margin:0; font-size:12px;  line-height: 130%}
+.nspLinks > div.nspLinkScroll1 > div > ul li { margin:0; padding: 16px 0; height:auto; border-bottom:none; }
+.nspLinks > div.nspLinkScroll1 > div > ul { padding:0; margin:0; list-style-type:none!important; clear:none!important; }
+.nspArts.left { float:right; text-align:inherit!important; }
+.nspLinksWrap.left { float:left; text-align:inherit!important; }
+.nspArts.right { float:left; text-align:inherit!important; }
+.nspLinksWrap.right { float:right; text-align:inherit!important; }
+.nspMain .unvisible { height:1px; left:-10000px; overflow:hidden; position:absolute; top:auto; width:1px; }
+.nspAvatar { margin-bottom:-5px; }
+.nspArt .nspReadon { margin-top: 14px; }
+.nspText .readon { display: inline!important; float: none!important; }
+a.nspComments { }
+
+/* interface position */
+.border1 .nspTopInterface div,
+.border2 .nspTopInterface div,
+.border3 .nspTopInterface div,
+.color1 .nspTopInterface div,
+.color2 .nspTopInterface div,
+.dark .nspTopInterface div,
+.dotted .nspTopInterface div,
+.grey .nspTopInterface div,
+.noise .nspTopInterface div { top: 30px!important; right: 20px; }
+.border3 .nspTopInterface div { top: 18px!important; right: 0; }
+
+/* suffix color2 */
+.color2 .nspLinks > div.nspLinkScroll1 > div > ul li { border-top: 1px solid #E8E6CF!important; }
+.color2 .nspLinks > div.nspLinkScroll1 > div > ul li:first-child { border-top: none!important; }
+
+/* suffix noise */
+.noise .nspLinks > div.nspLinkScroll1 > div > ul li { border-top: 1px solid #ddd!important; }
+.noise .nspLinks > div.nspLinkScroll1 > div > ul li:first-child { border-top: none!important; }
+
+
+
+/* suffix dark */
+.dark .nspBotInterface .nspPrev,
+.dark .nspTopInterface .nspPrev { background-position: -23px -40px; }
+.dark .nspBotInterface .nspNext,
+.dark .nspTopInterface .nspNext { background-position: -43px -40px; }
+.dark .nspBotInterface .nspPrev:hover,
+.dark .nspTopInterface .nspPrev:hover { background-position: -23px -60px; }
+.dark .nspBotInterface .nspNext:hover,
+.dark .nspTopInterface .nspNext:hover { background-position: -43px -60px; }
+.dark .nspBotInterface .nspPagination li,
+.dark .nspTopInterface .nspPagination li { background-position: 0 -48px; }
+.dark .nspBotInterface .nspPagination li:hover,
+.dark .nspBotInterface .nspPagination li.active,
+.dark .nspTopInterface .nspPagination li:hover,
+.dark .nspTopInterface .nspPagination li.active { background-position: 0 -68px; }
+.dark .nspLinks > div.nspLinkScroll1 > div > ul li { border-top: 1px solid #333!important; }
+.dark .nspLinks > div.nspLinkScroll1 > div > ul li:first-child { border-top: none!important; }
+
+
+/* suffix color1 */
+.color1 .nspBotInterface .nspPrev,
+.color1 .nspTopInterface .nspPrev { background-position: -23px -80px; }
+.color1 .nspBotInterface .nspNext,
+.color1 .nspTopInterface .nspNext { background-position: -43px -80px; }
+.color1 .nspBotInterface .nspPrev:hover,
+.color1 .nspTopInterface .nspPrev:hover { background-position: -23px -100px; }
+.color1 .nspBotInterface .nspNext:hover,
+.color1 .nspTopInterface .nspNext:hover { background-position: -43px -100px; }
+.color1 .nspBotInterface .nspPagination li,
+.color1 .nspTopInterface .nspPagination li { background-position: 0 -88px; }
+.color1 .nspBotInterface .nspPagination li:hover,
+.color1 .nspBotInterface .nspPagination li.active,
+.color1 .nspTopInterface .nspPagination li:hover,
+.color1 .nspTopInterface .nspPagination li.active { background-position: 0 -108px; }
+.color1 .nspInfo { color: #fff; }
+
+/* VM elements */
+.nspVmStore .PricesalesPrice { margin: 0; padding: 0; float: left; }
+.nspVmStore .PricediscountAmount { font-size: 11px; line-height: 12px; color: #b6b6b6; float: left; clear: left; } 
+.nspVmStore .PricetaxAmount { font-size: 11px; line-height: 12px; color: #b6b6b6; float: left; clear: left; }
+.nspVmStore input.addtocart-button { width: 30px; height: 30px; background: transparent url('../images/style1/nsp_add_to_cart.png') no-repeat 0 0; margin: 0; float: right; text-indent: -999em; }
+.nspVmStore input.addtocart-button:hover { background-position: 0 bottom!important; background-color: transparent!important; }
+.nspVmStore div.PricesalesPrice { font-size: 18px; line-height: 22px; }
+.nspVmStore { height: 40px; padding: 12px 0 0;border-top: 1px solid #eee; }
+.nspVmStore form { float: right; }
+.nspvm .nspArt > div { border-right: 1px solid #eee; border-bottom: 1px solid #eee; }
+.nspvm .nspHeader { min-height: 32px;  }
+
+/* suffix dotted */
+
+.nspvm.dotted .nspArt > div { background: #fff; border: none; margin: 0 7px}
+.nspvm.dotted .nspArtPage { box-shadow: none}
+.nspvm.dotted .nspArt .nspHeader { margin-top: 12px; min-height: 48px; }
+
+/* Image Show */
+.gkIsWrapper-gk_eSport::selection { background: transparent; color: inherit; }
+.gkIsWrapper-gk_eSport::-moz-selection { background: transparent; color: inherit; }
+.gkIsWrapper-gk_eSport::-webkit-selection { background: transparent; color: inherit; }
+
+.gkIsWrapper-gk_eSport { position:relative; background: #fff; width:100%; overflow: hidden; }
+.gkIsWrapper-gk_eSport .gkIsSlides { position:relative; overflow:hidden; }
+.gkIsWrapper-gk_eSport .gkIsSlide { position:absolute; right: -999px; bottom: -999px; }
+.slide-links .gkIsSlide { cursor:pointer; }
+.gkIsWrapper-gk_eSport .gkIsImage { overflow:hidden; position: relative; width: 100%; }
+
+/* content area */
+.gkIsWrapper-gk_eSport .gkContentArea { position: absolute; z-index: 127; width: 100%; }
+.gkIsWrapper-gk_eSport .gkContentArea > div { position: relative; }
+
+/* thumbnails */
+.gkIsWrapper-gk_eSport .gkIsThumbnails { margin: 0 30px; background: #fff; padding: 14px 0; position: relative; z-index: 101; }
+.gkIsWrapper-gk_eSport .gkIsPrev { width: 50px; height: 100%; float: left; position: relative; }
+.gkIsWrapper-gk_eSport .gkIsNext { width: 50px; height: 100%; float: right; position: relative; }
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap { float: left; overflow: hidden; }
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap ul { width: 3000px; }
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li { float: left; margin-right: 13px; opacity: 0.65; cursor: pointer; }
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li.active,
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li:hover { opacity: 1; }
+.gkIsWrapper-gk_eSport .gkIsPrev > span,
+.gkIsWrapper-gk_eSport .gkIsNext > span { height: 34px; width: 17px; background: transparent url('../images/style1/is_nav.png') no-repeat left -1px; text-indent: -999em; display: block; border-left: 20px solid #fff; position: absolute; top: 50%; margin-top: -17px; }
+.gkIsWrapper-gk_eSport .gkIsNext > span { background-position: right -1px; border-right: 20px solid #fff; border-left: none; right: 0; }
+.gkIsWrapper-gk_eSport .gkIsPrev > span:hover,
+.gkIsWrapper-gk_eSport .gkIsNext > span:hover { cursor: pointer; background-position: left bottom; }
+.gkIsWrapper-gk_eSport .gkIsNext > span:hover { background-position: right bottom; }
+
+/* bubbles */
+.gkIsWrapper-gk_eSport .gkIsImageAnimArea { position: relative; overflow: hidden; }
+.gkIsWrapper-gk_eSport .gkIsImageAnimArea > div { position: absolute; }
+
+/* text blocks */
+.gkIsWrapper-gk_eSport .gkIsTextTitle { position: absolute; z-index: 100; height: 62px;
+ width: auto; background: transparent url('../images/style1/is_bg_title.png') repeat 0 0; padding: 0 30px; text-transform: uppercase; visibility: hidden; right: 30px; }
+.gkIsWrapper-gk_eSport .gkIsTextTitle a { font-size: 30px; color: #fff; line-height: 62px; }
+.gkIsWrapper-gk_eSport .gkIsTextTitle a:hover { color: #dfdfdf; }
+.gkIsWrapper-gk_eSport.gkThumbsTop .gkIsTextTitle { left: 30px; right: auto; }
+
+/* preloader */
+.gkIsWrapper-gk_eSport .gkIsPreloader { display: block; position:absolute; z-index:128; text-align: center; top:50%; left: 50%; margin: 0; width:0px; height:0px; line-height: 0px; opacity: 0; }
+.gkIsWrapper-gk_eSport .gkIsPreloader.loaded { left: 50%; margin: 0; width:0px; height:0px; opacity: 0; }
+.gkIsWrapper-gk_eSport .gkIsPreloader span { display: none; }
+.gkIsWrapper-gk_eSport .gkIsPreloader.loading { margin: -13px 0 0 -13px; background: transparent url('../images/style1/is_loader.gif') no-repeat center center;  width:24px; height:24px; border: 1px solid #eee; opacity: 1; }
+
+/* VirtueMart Cart */
+.gkPopupCart .gkPopupWrap { padding-bottom: 0!important; }
+.vmGkCartModule { overflow: hidden; }
+.vmGkCartModule > h3 { border-bottom: 1px solid #eee; color: #333; font-size: 28px; font-weight: bold; line-height: 28px; margin: 0; padding: 0 0 43px 0; text-transform: uppercase; }
+.vmGkCartModule .gkShowCart { color: #333; float: left; font-size: 26px; font-weight: bold; line-height: 180px; }
+.vmGkCartModule .gkContainer { border-bottom: 1px solid #eee; min-height: 90px; overflow: hidden; padding: 28px 0; }
+.vmGkCartModule .gkContainer > img { float: left; margin-right: 35px; }
+.vmGkCartModule .gkProductName { color: #333; font-size: 16px; font-weight: bold; }
+.vmGkCartModule .gkProductName > span { color: #a6a6a6; }
+.vmGkCartModule .gkPrice { color: #ea3c3c; float: right; font-size: 18px; font-weight: bold; line-height: 90px; text-align: right; width: 100px; }
+.vmGkCartModule .gkPrice.num0 { background: transparent url('../images/style1/bg_cart_price1.png') no-repeat 10px 55px; }
+.vmGkCartModule .gkPrice.num1 { background: transparent url('../images/style1/bg_cart_price2.png') no-repeat 10px 55px; }
+.vmGkCartModule .gkPrice.num2 { background: transparent url('../images/style1/bg_cart_price3.png') no-repeat 10px 55px; }
+.vmGkCartModule .gkContainer .gkProductContent { float: left; width: 200px; }
+.vmGkCartModule .gkTotal { background: transparent url('../images/style1/bg_cart_total.png') no-repeat right 20px; color: #ea3c3c; float: right; font-size: 24px; font-weight: bold; line-height: 180px; height: 160px; min-width: 174px; overflow: hidden; padding-right: 32px; text-align: right; }
+.vmGkCartModule .gkProductAttributes { color: #888; font-size: 12px; font-weight: normal; line-height: 1.2; }
+.vmGkCartModule .gkProductAttributes br:first-child { display: none; }
+.vmGkCartModule .gkProductAttributes img { max-height: 16px; max-width: 16px; }
+
+/* VirtueMart Cart button */
+#gkVmCartSmall { width:41px; height:49px; background:transparent url('../images/style1/minicart.png') no-repeat right 0; position:fixed; z-index:1000001; left:50%; top:225px; overflow: hidden; cursor: pointer; }
+#gkHiddenCart { display: none; }
+#gkVmCartSmall.full { background-position: right -49px; }
+#gkVmCartSmall.loading { background-position: right -98px; }
+#gkVmCartSmall.full.loading { background-position: right -147px; }
+
+#gkVmCartSmall.loading #gkHiddenCart { background: transparent url('../images/style1/loader_empty.gif') no-repeat center center; display: block; height: 49px; overflow: hidden; width: 41px; }
+#gkVmCartSmall.full.loading #gkHiddenCart { background: transparent url('../images/style1/loader_full.gif') no-repeat center center; }
+#gkVmCartSmall.loading #gkHiddenCart .vmCartModule { display: none; }

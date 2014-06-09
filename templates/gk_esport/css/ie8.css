@@ -1,0 +1,28 @@
+/*
+#------------------------------------------------------------------------
+# e-Sport - January 2011 template (for Joomla 1.7/2.5)
+#
+# Copyright (C) 2007-2011 Gavick.com. All Rights Reserved.
+# License: Copyrighted Commercial Software
+# Website: http://www.gavick.com
+# Support: support@gavick.com 
+*/
+
+.nspvm .nspArtPage {
+	border-left: 1px solid #eee;
+	border-top: 1px solid #eee;	
+}
+
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li { 
+	filter: alpha(opacity=65); 
+}
+
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li.active,
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li:hover { 
+	filter: alpha(opacity=100); 
+}
+
+.dotted.nspvm .nspArtPage {
+	border-left: none!important;
+	border-top: none!important;	
+}

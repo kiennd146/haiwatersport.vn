@@ -1,0 +1,147 @@
+/*
+#------------------------------------------------------------------------
+# e-Sport - January 2011 template (for Joomla 1.7/2.5)
+#
+# Copyright (C) 2007-2011 Gavick.com. All Rights Reserved.
+# License: Copyrighted Commercial Software
+# Website: http://www.gavick.com
+# Support: support@gavick.com 
+*/
+
+.gkCol { float: left; margin-top: 0!important; }
+#gkTop1,
+#gkTop2,
+#gkUser1,
+#gkUser2,
+#gkMainBlock,
+#gkLeftMiddle,
+#gkRightMiddle { padding: 0; }
+#gkLeft,
+#gkContent,
+#gkRight { margin-top: 0!important; }
+div.gk-menu > ul.level0 > li:hover > .childcontent a { display: block; }
+div.gk-menu > ul.level0 > li:hover > .childcontent .childcontent { margin-left: 150px!important; } /* submenu width - (left padding of item * 4) */ 
+div.gk-menu > ul.level0 > li > .childcontent .childcontent { margin-top: -32px!important; }
+
+div#gkDropSub > ul > li > ul,
+div#gkDropSub > ul > li > ul ul { position: absolute; display: block; left: -999%; width: 200px; z-index: 999; }
+
+div#gkDropSub > ul > li:hover > ul,
+div#gkDropSub > ul > li:hover > ul li:hover > ul { left: auto; }
+
+#gkSocialAPI .google-buzz-button { margin-top: 1px; }
+
+.items-row.cols-1 .item{ width:100%!important;  }
+.items-row.cols-2 .item{ width:49.5%!important; }
+.items-row.cols-3 .item{ width: 32.5%!important; }
+.items-row.cols-4 .item{ width: 24.5%!important; }
+
+#gkContentBottom { clear: both; }
+
+.gkCol { padding-left: 0!important; padding-right: 0!important; margin-left: -2px!important; }
+.gkCol > div { padding-left: 6px!important; padding-right: 6px!important; }
+
+.catItemContent,
+.catItemView,
+.itemView,
+.article-content {
+	position: relative; zoom: 1;
+}
+
+li {
+	zoom: 1;
+}
+
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li { 
+	filter: alpha(opacity=65); 
+}
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li.active,
+.gkIsWrapper-gk_eSport .gkIsThumbnailsWrap li:hover { 
+	filter: alpha(opacity=100); 
+}
+
+.nspvm .nspArtPage {
+	border-left: 1px solid #eee;
+	border-top: 1px solid #eee;	
+}
+
+.dotted.nspvm .nspArtPage {
+	border-left: none!important;
+	border-top: none!important;	
+}
+
+.gkDate {
+	margin-left: -47px!important;
+}
+
+.itemCommentsLink {
+	zoom: 1;
+	margin-top: -15px!important;
+}
+
+.nspVmStore {
+	text-align: left!important;
+}
+
+.nspVmStore .PricetaxAmount {
+	width: 100%!important;
+}
+
+.pagination ul {
+	overflow: hidden;
+	zoom: 1;
+	min-height: 39px!important;
+}
+
+.pagination li {
+	float: left;
+}
+
+.pagination li.counter {
+	float: right;
+}
+
+#gkComponent .row .product {
+	float: left!important;
+	display: block!important;
+	margin-left: -1px;
+}
+
+.product-related-products div {
+	float: left;
+}
+
+.product-related-products {
+	overflow: hidden;
+}
+
+#ui-tabs li {
+	float: left;
+}
+
+#ui-tabs > div {
+	clear: both;
+}
+
+#tabs {
+	overflow: hidden;
+}
+
+.catItemView {
+	overflow: visible!important;
+}
+
+.catItemHeader {
+	overflow: visible!important;
+}
+
+.latestItemView .gkDate,
+.catItemList .gkDate {
+	margin-left: -118px!important;
+}
+.genericView .gkDate {
+	margin-left: -47px!important;
+}
+.k2FeedIcon a {
+	line-height: 1.0;
+}

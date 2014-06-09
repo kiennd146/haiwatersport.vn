@@ -1,0 +1,83 @@
+/*
+#------------------------------------------------------------------------
+# e-Sport - January 2011 template (for Joomla 1.7/2.5)
+#
+# Copyright (C) 2007-2011 Gavick.com. All Rights Reserved.
+# License: Copyrighted Commercial Software
+# Website: http://www.gavick.com
+# Support: support@gavick.com 
+*/
+
+::selection { background: #90a857; color: #fff; }
+::-moz-selection { background: #90a857; color: #fff; }
+::-webkit-selection { background: #90a857; color: #fff; }
+body, html { margin: 0; padding: 0; min-height: 100%; }
+body { background: #f5f5f5 url('../../images/style1/bg_main.png') repeat-x left top; font-size: 13px; line-height: 2; color: #555; font-family: 'Open Sans', Arial, sans-serif; }
+a { text-decoration: none; color: #000; -webkit-transition: color 0.15s linear; -moz-transition: color 0.15s linear; -o-transition: color 0.15s linear; transition: color 0.15s linear; }
+a:hover, a:active, a:focus { color: #90a857; }
+
+/* containers */
+#gkBg { background: transparent url('../../images/style1/bg_halftone.png') no-repeat center top; }
+#gkPage { width: 800px; padding: 50px 0 0 0; margin: 0 auto; }
+#gkPageWrap { background: transparent; padding: 0 30px 30px 30px; }
+#frame { margin: 0; background: transparent; overflow: hidden; padding: 80px 0 10px 0; clear: both; }
+#errorboxbody { width: 390px; font-size: 11px; padding: 0 0 12px 0; margin: 0 auto; }
+#errorNumber { float: left; padding: 31px 0 0; width: 39%; }
+
+/* Logo  */
+h1#gkLogo { float: none; margin: 0 auto; position:relative; height: 93px; width: 152px; background: transparent url('../../images/style1/bg_logo.png') no-repeat 0 0; }
+h1#gkLogo a img { display: block; height: auto; margin: 0; width: auto; }
+h1#gkLogo a.cssLogo { background: url('../../images/style1/logo.png') no-repeat 0 0; display: block; height: 93px; margin: 0; text-indent: -999em; width:152px; }
+h1#gkLogo a.cssLogo + span { display: none; text-indent: -999em; }
+h1#gkLogo.text { width: auto; height: 93px; float: left; padding: 0 20px; }
+h1#gkLogo.text a { display: block; font-weight:normal; text-indent: 0; float: left; margin-top: 0px; }
+h1#gkLogo.text a { padding: 0; width: auto!important; }
+h1#gkLogo.text a > span { color: #fff; display: block; font-size: 24px; line-height: 80px; text-align: center; }
+h1#gkLogo.text .gkLogoSlogan { font-size: 12px!important; line-height: 14px; color: #fff; margin: -25px 0 0 0; height: 14px; display: block; clear: both; text-align: center; }
+
+/* Other elements */
+h2 { font: normal 40px/60px Play, Arial, sans-serif; text-align: center; color: #333; margin: 0 0 20px; padding: 0 }
+strong {  color: #ea3c3c; }
+h3 { font-size: 16px; font-weight: normal; text-align: center}
+#errorboxbody { text-align: center; margin: 160px auto -10px; }
+
+
+
+fieldset { border: none; padding: 0; margin: 0 auto; overflow: hidden; }
+p#username, 
+p#password, 
+p#remember { margin: 10px 20px 0 0; float: left; width: 325px; }
+form#form-login { margin: 0 auto; width: 700px; }
+p#remember, #form-login ul { clear: both }
+label { font: 12px Arial, Helvetica, sans-serif; }
+div.buttons { float: right; margin: 30px 18px 0; }
+
+
+input { border: 1px solid #e7e7e7; border-top-color: #ccc; height: 24px; line-height: 24px; padding: 5px 9px; -webkit-border-radius: 3px; -moz-border-radius: 3px; border-radius: 3px; }
+input:focus { background: #fffef4; }
+button,
+.button,
+input[type="submit"],
+input[type="button"] { display: block; float: left; height: 36px; line-height: 36px; margin: 0 5px 2px 2px; padding: 0 12px; border: none; background: #333; font-size: 12px; text-transform: uppercase; text-align: center; color: #fff; cursor: pointer; -webkit-border-radius: 3px; -moz-border-radius: 3px; border-radius: 3px; }
+button:hover,
+.button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover { background: #f47b20; color: #fff; }
+
+#remember { float: left; width: auto; }
+label[for="remember"] { float: left; line-height: 33px; }
+
+
+/* messages */
+#system-message-container { clear: both; overflow: hidden; }
+#system-message { margin: 22px 0; font-size: 14px; clear: both; }
+#system-message dt { display: none; }
+#system-message dd { padding:0!important; margin: 0!important; background:none!important; }
+#system-message dd.message ul, 
+#system-message dd.error ul, 
+#system-message dd.notice ul { margin: 0 0 2px 0; padding: 0; color: #fff; font-weight: normal; list-style-type: none; }
+#system-message dd.message ul li, 
+#system-message dd.error ul li, 
+#system-message dd.notice ul li { color: #333; margin: 0; padding: 6px; text-indent:0; text-align: center; line-height: 36px!important; border: 1px solid #dfdfdf; background: #fff url('../../images/icons/info.gif') no-repeat 14px center; }
+#system-message dd.error ul li { background-image: url('../../images/icons/error.png'); }
+#system-message dd.notice ul li { background-image: url('../../images/icons/warning.gif'); }

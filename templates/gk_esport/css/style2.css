@@ -1,0 +1,380 @@
+/*
+#------------------------------------------------------------------------
+# e-Sport - January 2011 template (for Joomla 1.7/2.5)
+#
+# Copyright (C) 2007-2011 Gavick.com. All Rights Reserved.
+# License: Copyrighted Commercial Software
+# Website: http://www.gavick.com
+# Support: support@gavick.com 
+*/
+
+/* Style 1 */
+
+/* template.css */
+::selection {
+		background: #5e98be;
+}
+::-moz-selection {
+ 		background: #5e98be;
+}
+::-webkit-selection {
+ 		background: #5e98be;
+}
+body {
+		background: #f5f5f5 url('../images/style2/bg_splash.jpg') no-repeat center top;
+}
+a:hover,
+a:active,
+a:focus {
+		color: #5e98be;
+}
+h1,
+h2 {
+		color: #5e98be
+}
+#gkBg {
+		background-image: url('../images/style2/bg_main.png');
+		background-repeat: repeat;
+}
+h1#gkLogo {
+		background-image: url('../images/style2/bg_logo.png');
+}
+h1#gkLogo a.cssLogo {
+		background-image: url('../images/style2/logo.png');
+}
+#gkPageTopLinks a {
+		background-image: url('../images/style2/bottom_bullet.png');
+}
+#gkPageTopLinks a:active,
+#gkPageTopLinks a:focus,
+#gkPageTopLinks a:hover {
+		color: #d94e2d;
+}
+#gkBreadcrumb .breadcrumbs li.separator {
+		background-image: url('../images/style2/bottom_bullet.png');
+}
+#gkFooterWrap li {
+		background-image: url('../images/style2/bottom_bullet.png');
+}
+#gkFrameworkLogo {
+		background-image: url('../images/framework-logo.png');
+}
+.box.color1 > div {
+		background: #5e98be;
+		color: #dfeaf1;
+}
+.box.color1 li {
+		border-top-color: #6fa9cf;
+}
+.box.color1 a:active,
+.box.color1 a:focus,
+.box.color1 a:hover {
+		color: #d4ec9b;
+}
+.box.noise > div {
+		background-image: url('../images/style2/bg_noise.png');
+}
+.box.dotted {
+		background-image: url('../images/style2/bg_dotted.png');
+}
+.box_menu .active {
+		color: #d94e2d;
+}
+.box_menu ul li:hover,
+.box_menu ul li:focus,
+.box_menu ul li:active {
+		background-image: url('../images/style2/bg_menu_arrow.png');
+}
+#gkBottom2 li {
+		background-image: url('../images/style2/bottom_bullet.png');
+}
+#gkPopupLogin #loginForm ul.menu li {
+		background-image: url('../images/style2/bottom_bullet.png');
+}
+
+/* menu.css */
+#gkMainMenu > div.gk-menu > ul > li:hover,
+#gkMainMenu > div.gk-menu > ul > li:active,
+#gkMainMenu > div.gk-menu > ul > li:focus,
+#gkMainMenu > div.gk-menu > ul > li.active {  
+	color: #5e98be; 
+}
+#gkMainMenu > div.gk-menu > ul > li:hover > a,
+#gkMainMenu > div.gk-menu > ul > li:active > a,
+#gkMainMenu > div.gk-menu > ul > li:focus > a { 
+	color: #d94e2d; 
+}
+#gkMainMenu > div.gk-menu > ul > li.active > a { 
+	color: #d94e2d; 
+}
+#gkMainMenu > div.gk-menu > ul div.childcontent-inner-wrap { 
+	background: #5e98be; 
+}
+#gkMainMenu > div.gk-menu > ul div.childcontent li { 
+	border-top: 1px solid #91b8d1; 
+}
+#gkMainMenu > div.gk-menu > ul div.childcontent li.active > a,
+#gkMainMenu > div.gk-menu > ul div.childcontent li.active > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li:hover > a,
+#gkMainMenu > div.gk-menu > ul div.childcontent li:hover > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li > a:hover,
+#gkMainMenu > div.gk-menu > ul div.childcontent li > span:hover,
+#gkMainMenu > div.gk-menu > ul div.childcontent li.active > a > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li.active > span > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li:hover > a > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li:hover > span > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li > a:hover > span,
+#gkMainMenu > div.gk-menu > ul div.childcontent li > span:hover > span { 
+	color: #ccd9e2; 
+}
+#gkMainMenu > div.gk-menu > ul div.childcontent .group-title .menu-title {
+	background-color: #8cb3cc;
+}
+#gkMainMenu > div.gk-menu > ul div.childcontent .group-title .menu-desc { 
+	color: #5e98be; 
+} 
+#gkSubmenu > div > ul li a:hover { 
+	color: #5e98be; 
+}
+#gkSubmenuMod ul li a { 
+	color: #828181; 
+}
+#gkSubmenuMod ul li a:active,
+#gkSubmenuMod ul li a:focus,
+#gkSubmenuMod ul li a:hover { 
+	color: #5e98be; 
+}
+#gkSubmenu ul li li > a { 
+	color: #828181; 
+}
+#gkSubmenu ul li li > a:hover,
+#gkSubmenu ul li li > a:hover > span { 
+	color: #5e98be; 
+}
+#gkMainMenu > div.gk-menu > ul div.childcontent-inner-wrap div.childcontent-inner-wrap { 
+	-webkit-box-shadow: 0 0 3px #18374a; 
+	-moz-box-shadow: 0 0 3px #18374a; 
+	box-shadow: 0 0 3px #18374a; 
+}
+
+/* joomla.css */
+button:hover,
+.button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover {
+		background: #d94e2d;
+}
+.gkDate {
+		background-image: url('../images/style2/date.png');
+}
+.gkDate > div {
+		background: #d94e2d;
+}
+ul.pagenav a:hover {
+		background-color: #5e98be;
+}
+li.counter {
+		background: #5e98be;
+}
+div.pagination ul li a:hover,
+span.pagenav {
+		background: #5e98be;
+		border-color: #6fa9cf!important;
+}
+.categories-list ul li {
+		background-image:url('../images/style2/typography/bullet-circle2.png');
+}
+#system-message dd.message ul li,
+#system-message dd.error ul li,
+#system-message dd.notice ul li {
+		background-image: url('../images/style2/typography/info_small.png');
+}
+#system-message dd.error ul li {
+		background-image: url('../images/style2/typography/warning_small.png');
+}
+#system-message dd.notice ul li {
+		background-image: url('../images/style2/typography/tips_small.png');
+}
+dt.result-title a {
+		color: #5e98be;
+}
+#users-profile-core legend,
+#users-profile-custom legend,
+.profile-edit legend,
+.registration legend {
+		color: #5e98be
+}
+form#member-registration .spacer strong,
+form#member-registration fieldset dt span.star {
+		color: #da4d00;
+}
+div.pagenavcounter {
+		color: #5e98be;
+}
+dl#tabs dt.open {
+		border-bottom-color: #5e98be;
+		background: #5e98be;
+}
+dl#tabs dt:hover a {
+		color: #5e98be;
+}
+
+/* gk_stuff.css */
+.tab1 ul.gkTabs {  
+	background: #d94e2d; 
+}
+.tab1 ul.gkTabs li {  
+	border-right-color: #ea5f3e; 
+}
+.tab1 ul.gkTabs li:hover{ 
+	background: #ea5f3e;
+}
+.tab2 ul.gkTabs {  
+	background: #5e98be; 
+}
+.tab2 ul.gkTabs li { 
+	border-right-color: #6fa9cf;
+}
+.tab2 ul.gkTabs li:hover { 
+	background: #6fa9cf;
+}
+.nspBotInterface .nspPagination li,
+.nspTopInterface .nspPagination li,
+.nspBotInterface .nspPagination li.active,
+.nspTopInterface .nspPagination li.active { 
+	background-image: url('../images/style2/nsp_interface.png');
+}
+.nspBotInterface .nspPrev,
+.nspTopInterface .nspPrev,
+.nspBotInterface .nspNext,
+.nspTopInterface .nspNext { 
+	background-image: url('../images/style2/nsp_interface.png'); 
+}
+.nspVmStore input.addtocart-button { 
+	background-image: url('../images/style2/nsp_add_to_cart.png');
+}
+.gkIsWrapper-gk_eSport .gkIsPrev > span,
+.gkIsWrapper-gk_eSport .gkIsNext > span { 
+	background-image: url('../images/style2/is_nav.png');
+}
+.gkIsWrapper-gk_eSport .gkIsTextTitle { 
+	background-image: url('../images/style2/is_bg_title.png'); 
+	background-color: transparent;
+}
+.gkIsWrapper-gk_eSport .gkIsPreloader.loading { 
+	background-image: url('../images/style2/is_loader.gif'); 
+}
+.vmGkCartModule .gkPrice { 
+	color: #ea3c3c; 
+}
+.vmGkCartModule .gkPrice.num0 { 
+	background-image: url('../images/style2/bg_cart_price1.png'); 
+}
+.vmGkCartModule .gkPrice.num1 { 
+	background-image: url('../images/style2/bg_cart_price2.png'); 
+}
+.vmGkCartModule .gkPrice.num2 { 
+	background-image: url('../images/style2/bg_cart_price3.png');
+}
+.vmGkCartModule .gkTotal { 
+	background-image: url('../images/style2/bg_cart_total.png'); 
+	color: #ea3c3c; 
+}
+#gkVmCartSmall { 
+	background-image: url('../images/style2/minicart.png'); 
+}
+#gkVmCartSmall.loading #gkHiddenCart { 
+	background-image: url('../images/style2/loader_empty.gif'); 
+}
+#gkVmCartSmall.full.loading #gkHiddenCart { 
+	background-image: url('../images/style2/loader_full.gif'); 
+}
+
+/* k2.css */
+.catItemHeader .catItemTitle span sup,
+.itemHeader .itemTitle span sup {
+		color: #d94e2d;
+}
+.catItemTagsBlock ul.catItemTags li a:hover,
+.itemTagsBlock ul.itemTags li a:hover {
+		color: #d94e2d;
+}
+.itemAuthorBlock {
+		border-top-color: #d94e2d;
+		background-image: url('../images/style2/bg_dotted.png');
+}
+.itemAuthorDetails h3.itemAuthorName {
+		color: #d94e2d;
+}
+.itemAuthorDetails h3.itemAuthorName a {
+		color: #d94e2d;
+}
+.itemAuthorContent li {
+		background-image: url('../images/style2/bottom_bullet.png');
+}
+.commentAuthorName a {
+		color: #5e98be;
+}
+.itemCommentsForm form span#formLog {
+		color:#d94e2d;
+}
+.subCategory h3 span {
+		color: #d94e2d;
+}
+#itemListLinks ul li {
+		background-image: url('../images/style2/bullet_red.png');
+}
+a.itemCommentsLink {
+		background-image: url('../images/style2/comment.png');
+}
+table.calendar tr td.calendarCurrentMonth {
+		color: #5e98be
+}
+table.calendar tr td.calendarToday {
+		background:#5e98be;
+}
+table.calendar tr td.calendarTodayLinked a:hover {
+		background:#ea5f3e;
+}
+
+/* vm.css */
+.general-bg,
+input.vm-default,
+a.product-details,
+a.details,
+div.details {
+		color: #5e98be;
+}
+.terms-of-service h5 a,
+.terms-of-service h5 a:visited {
+		color:#5e98be;
+}
+.vm-button-correct,
+.vm-button-correct:link,
+.vm-button-correct:visited {
+		background: #5e98be;
+}
+.VMmenu li:hover {
+		background-image: url('../images/style2/bg_menu_arrow.png');
+}
+span.PricesalesPrice {
+		color: #EA3C3C
+}
+input.addtoCart:hover {
+		background: #6fa9cf;
+}
+.catProductPrice .PricesalesPrice {
+		color: #ea3c3c;
+}
+ul#tabs {
+		border-bottom: 3px solid #5e98be
+}
+#ui-tabs ul#tabs li.current {
+		background:#6fa9cf;
+}
+#ui-tabs h4 {
+		color: #5e98be
+}
+#facebox .popup > div > div > a:hover {
+		background: #d94e2d;
+}
