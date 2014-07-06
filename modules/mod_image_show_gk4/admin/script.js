@@ -3,38 +3,39 @@ $currently_opened = 0;
 
 window.addEvent("load",function(){
 	// fix for SqueezeBox based on: http://joomlacode.org/gf/project/joomla/tracker/?action=TrackerItemEdit&tracker_item_id=24556
-	SqueezeBox.extend({
-		applyContent: function(content, size) {
-			if (!this.isOpen && !this.applyTimer) return;
-			this.applyTimer = $clear(this.applyTimer);
-			this.hideContent();
-			if (!content) {
-				this.toggleLoading(true);
-			} else {
-				if (this.isLoading) this.toggleLoading(false);
-				this.fireEvent('onUpdate', [this.content], 20);
-			}
-			if (content) {
-				if (typeOf(content) == 'string' || typeOf(content) == 'array') {
-					this.content.set('html', content);
-				} else if (typeOf(content) == 'element' &&
-	!this.content.hasChild(content)) {
-					this.content.adopt(content);
-				} else {
-					this.content.set('html', '');
-				}
-			}
-			this.callChain();
-			if (!this.isOpen) {
-				this.toggleListeners(true);
-				this.resize(size, true);
-				this.isOpen = true;
-				this.fireEvent('onOpen', [this.content]);
-			} else {
-				this.resize(size);
-			}
-		}
-	});
+// kngo comment coz fixbug modal form not showing
+//	SqueezeBox.extend({
+//		applyContent: function(content, size) {
+//			if (!this.isOpen && !this.applyTimer) return;
+//			this.applyTimer = $clear(this.applyTimer);
+//			this.hideContent();
+//			if (!content) {
+//				this.toggleLoading(true);
+//			} else {
+//				if (this.isLoading) this.toggleLoading(false);
+//				this.fireEvent('onUpdate', [this.content], 20);
+//			}
+//			if (content) {
+//				if (typeOf(content) == 'string' || typeOf(content) == 'array') {
+//					this.content.set('html', content);
+//				} else if (typeOf(content) == 'element' &&
+//	!this.content.hasChild(content)) {
+//					this.content.adopt(content);
+//				} else {
+//					this.content.set('html', '');
+//				}
+//			}
+//			this.callChain();
+//			if (!this.isOpen) {
+//				this.toggleListeners(true);
+//				this.resize(size, true);
+//				this.isOpen = true;
+//				this.fireEvent('onOpen', [this.content]);
+//			} else {
+//				this.resize(size);
+//			}
+//		}
+//	});
 	// get the updates
 	getUpdates();
 	var add_form = document.id('gk_tab_add_form');
@@ -538,11 +539,12 @@ window.addEvent("load",function(){
 });
 // function to generate the updates list
 function getUpdates() {
+return;
 	document.id('jform_params_module_updates-lbl').destroy(); // remove unnecesary label
 	var update_url = 'https://www.gavick.com/updates.raw?task=json&tmpl=component&query=product&product=mod_image_show_gk4_j16';
 	var update_div = document.id('gk_module_updates');
 	update_div.innerHTML = '<div id="gk_update_div"><span id="gk_loader"></span>Loading update data from GavicPro Update service...</div>';
-	
+	$GK_UPDATE = new Array();
 	new Asset.javascript(update_url,{
 		id: "new_script",
 		onload: function(){
