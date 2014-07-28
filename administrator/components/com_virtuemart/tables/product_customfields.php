@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: calc.php 3002 2011-04-08 12:35:45Z alatak $
+* @version $Id: product_medias.php 3002 2011-04-08 12:35:45Z alatak $
 */
 
 defined('_JEXEC') or die();
@@ -39,7 +39,7 @@ class TableProduct_customfields extends VmTable {
 	var $virtuemart_custom_id		= 0;
 
     /** @var string custom value */
-	var $custom_value	= '';
+	var $custom_value	= null;
     /** @var string price  */
 	var $custom_price	= null;
 
@@ -52,15 +52,27 @@ class TableProduct_customfields extends VmTable {
 
 	/**
 	 * @author Max Milbers
-	 * @param $db A database connector object
+	 * @param JDataBase $db
 	 */
 	function __construct(&$db){
 		parent::__construct('#__virtuemart_product_customfields', 'virtuemart_customfield_id', $db);
 
-		//$this->setPrimaryKey('virtuemart_product_id');
-		//$this->setSecondaryKey('virtuemart_customfield_id');
+		$this->setPrimaryKey('virtuemart_product_id');
+		// $this->setSecondaryKey('virtuemart_customfield_id');
 		$this->setLoggable();
 		$this->setOrderable();
 
 	}
+
+	function check(){
+
+		if(!empty($this->custom_price)){
+			$this->custom_price = str_replace(array(',',' '),array('.',''),$this->custom_price);
+		} else {
+			$this->custom_price = null;
+		}
+
+		return parent::check();
+	}
+
 }

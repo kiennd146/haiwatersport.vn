@@ -14,7 +14,7 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: paymentmethods.php 4869 2011-11-29 23:27:15Z alatak $
+ * @version $Id: paymentmethods.php 5366 2012-02-02 17:40:47Z Milbo $
  */
 defined('_JEXEC') or die();
 
@@ -62,7 +62,7 @@ class TablePaymentmethods extends VmTable {
 
     /**
      * @author Max Milbers
-     * @param $db A database connector object
+     * @param JDataBase $db
      */
     function __construct(&$db) {
 	parent::__construct('#__virtuemart_paymentmethods', 'virtuemart_paymentmethod_id', $db);
@@ -72,6 +72,7 @@ class TablePaymentmethods extends VmTable {
 	$this->setLoggable();
 	$this->setTranslatable(array('payment_name', 'payment_desc'));
 	$this->setSlug('payment_name');
+// 	$this->setUniqueName('ordering');
     }
 
 }

@@ -21,58 +21,83 @@ defined('_JEXEC') or die();
 
 define('USE_SQL_CALC_FOUND_ROWS' , true);
 
+if(!class_exists('JModel')) require JPATH_VM_LIBRARIES.DS.'joomla'.DS.'application'.DS.'component'.DS.'model.php';
+
 class VmModel extends JModel {
 
 	var $_id 			= 0;
 	var $_data			= null;
-	var $_total			= null;
 	var $_query 		= null;
-	var $_pagination 	= 0;
 
+	var $_total			= null;
+	var $_pagination 	= 0;
+	var $_limit			= 0;
+	var $_limitStart	= 0;
 	var $_maintable 	= '';	// something like #__virtuemart_calcs
 	var $_maintablename = '';
 	var $_idName		= '';
 	var $_cidName		= 'cid';
 	var $_togglesName	= null;
+	var $_selectedOrderingDir = 'DESC';
+
 	private $_withCount = true;
 	var $_noLimit = false;
 
-	public function __construct($cidName='cid'){
-		parent::__construct();
+	public function __construct($cidName='cid', $config=array()){
+		parent::__construct($config);
 
 		$this->_cidName = $cidName;
 
-		// Get the pagination request variables
-		$mainframe = JFactory::getApplication() ;
-		$limit = $mainframe->getUserStateFromRequest('global.list.limit', 'limit', $mainframe->getCfg('list_limit'), 'int');
-		$limitstart = $mainframe->getUserStateFromRequest(JRequest::getWord('option').JRequest::getWord('view').'.limitstart', 'limitstart', 0, 'int');
-
-		// Set the state pagination variables
-		$this->setState('limit', $limit);
-		$this->setState('limitstart', $limitstart);
-
 		// Get the task
-		$task = JRequest::getWord('task');
+		$task = JRequest::getWord('task','');
 		if($task!=='add'){
 			// Get the id or array of ids.
 			$idArray = JRequest::getVar($this->_cidName,  0, '', 'array');
+			if(empty($idArray[0])) $idArray[0] = 0;
 			$this->setId((int)$idArray[0]);
 		}
 
+		$this->setToggleName('published');
 	}
 
-	public function setMainTable($maintablename,$maintable=0){
+	static private $_vmmodels = array();
 
-		$this->_maintablename = $maintablename;
-		if(empty($maintable)){
-			$this->_maintable = '#__virtuemart_'.$maintablename;
-		} else {
-			$this->_maintable = $maintable;
+	/**
+	 *
+	 * @author Patrick Kohl
+	 * @author Max Milbers
+	 */
+	static function getModel($name=false){
+
+		if (!$name){
+			$name = JRequest::getCmd('view','');
+// 			vmdebug('Get standard model of the view');
 		}
-		$defaultTable = $this->getTable($this->_maintablename);
-		$this->_idName = $defaultTable->getKeyName();
+		$name = strtolower($name);
+		$className = 'VirtueMartModel'.ucfirst($name);
 
-		$this->setDefaultValidOrderingFields($defaultTable);
+
+		if(empty(self::$_vmmodels[strtolower($className)])){
+			if( !class_exists($className) ){
+
+				$modelPath = JPATH_VM_ADMINISTRATOR.DS."models".DS.$name.".php";
+
+				if( file_exists($modelPath) ){
+					require( $modelPath );
+				}
+				else{
+					JError::raiseWarning( 0, 'Model '. $name .' not found.' );
+					echo 'File for Model '. $name .' not found.';
+					return false;
+				}
+			}
+
+			self::$_vmmodels[strtolower($className)] = new $className();
+			return self::$_vmmodels[strtolower($className)];
+		} else {
+			return self::$_vmmodels[strtolower($className)];
+		}
+
 	}
 
 	public function setIdName($idName){
@@ -97,13 +122,43 @@ class VmModel extends JModel {
 		if(is_array($id) && count($id)!==0) $id = $id[0];
 		if($this->_id!=$id){
 			$this->_id = (int)$id;
-			//			$idName = $this->_idName;
-			//			$this->$idName = $this->_id;
 			$this->_data = null;
 		}
 		return $this->_id;
 	}
 
+
+	public function setMainTable($maintablename,$maintable=0){
+
+		$this->_maintablename = $maintablename;
+		if(empty($maintable)){
+			$this->_maintable = '#__virtuemart_'.$maintablename;
+		} else {
+			$this->_maintable = $maintable;
+		}
+		$defaultTable = $this->getTable($this->_maintablename);
+		$this->_idName = $defaultTable->getKeyName();
+
+		$this->setDefaultValidOrderingFields($defaultTable);
+		$this->_selectedOrdering = $this->_validOrderingFieldName[0];
+
+	}
+
+	function getDefaultOrdering(){
+		return $this->_selectedOrdering;
+	}
+
+
+	function addvalidOrderingFieldName($add){
+		$this->_validOrderingFieldName = array_merge($this->_validOrderingFieldName,$add);
+	}
+
+	function removevalidOrderingFieldName($name){
+		$key=array_search($name, $this->_validOrderingFieldName);
+		if($key!==false){
+			unset($this->_validOrderingFieldName[$key]) ;
+		}
+	}
 
 	var $_tablePreFix = '';
 	/**
@@ -120,13 +175,6 @@ class VmModel extends JModel {
 
 		$this->_tablePreFix = $defaultTable->_tablePreFix;
 		$dTableArray = get_object_vars($defaultTable);
-
-// 		if($defaultTable->_translatable){
-// 			foreach ($defaultTable->getTranslatableFields() as $v){
-// 				$this->_validOrderingFieldName[] = 'l.'.$v;
-// 				unset($dTableArray[$v]);
-// 			}
-// 		}
 
 		// Iterate over the object variables to build the query fields and values.
 		foreach ($dTableArray as $k => $v){
@@ -145,103 +193,63 @@ class VmModel extends JModel {
 
 	}
 
-	function addvalidOrderingFieldName($add){
-		$this->_validOrderingFieldName = array_merge($this->_validOrderingFieldName,$add);
+
+	function _getOrdering($preTable='') {
+		if(empty($this->_selectedOrdering)) vmTrace('empty _getOrdering');
+		if(empty($this->_selectedOrderingDir)) vmTrace('empty _selectedOrderingDir');
+		return ' ORDER BY '.$preTable.$this->_selectedOrdering.' '.$this->_selectedOrderingDir ;
 	}
 
-	function removevalidOrderingFieldName($name){
-		unset($this->_validOrderingFieldName[$name]) ;
+
+	var $_validOrderingFieldName = array();
+
+	function checkFilterOrder($toCheck){
+
+		if(empty($toCheck)) return $this->_selectedOrdering;
+
+		//vmdebug('checkFilterOrder',$this->_validOrderingFieldName);
+		if(!in_array($toCheck, $this->_validOrderingFieldName)){
+
+			$break = false;
+			vmSetStartTime();
+			foreach($this->_validOrderingFieldName as $name){
+				if(!empty($name) and strpos($name,$toCheck)!==FALSE){
+					$this->_selectedOrdering = $name;
+					$break = true;
+					break;
+				}
+			}
+			if(!$break){
+				$app = JFactory::getApplication();
+				$view = JRequest::getWord('view','virtuemart');
+				$app->setUserState( 'com_virtuemart.'.$view.'.filter_order',$this->_selectedOrdering);
+			}
+			//vmdebug('checkValidOrderingField:'.get_class($this).' programmer choosed invalid ordering '.$toCheck.', use '.$this->_selectedOrdering);
+		} else {
+			$this->_selectedOrdering = $toCheck;
+		}
+
+		return $this->_selectedOrdering;
 	}
 
 	var $_validFilterDir = array('ASC','DESC');
-	function getValidFilterDir($default = null){
+	function checkFilterDir($toCheck){
 
-		$view = JRequest::getWord('view');
-		$mainframe = JFactory::getApplication() ;
-		if($default!==null){
-// 			vmdebug('Default not null');
-			$filter_order_Dir = strtoupper($default);
-		} else {
-			$filter_order_Dir = strtoupper($mainframe->getUserStateFromRequest( 'com_virtuemart'.$view.'.filter_order_Dir', 'filter_order_Dir', $default, 'word' ));
-		}
-		if(!empty($filter_order_Dir)){
-			if(!in_array($filter_order_Dir, $this->_validFilterDir)){
-				$filter_order_Dir = '';
-				$mainframe->setUserState( 'com_virtuemart'.$view.'.filter_order_Dir',$filter_order_Dir);
-				vmdebug('checkValidOrderingField: programmer choosed invalid ordering direction, model _validDefaultOrderingFieldName used');
-			}
+		$filter_order_Dir = strtoupper($toCheck);
 
+		if(empty($filter_order_Dir) or !in_array($filter_order_Dir, $this->_validFilterDir)){
+// 			vmdebug('checkFilterDir: programmer choosed invalid ordering direction '.$filter_order_Dir,$this->_validFilterDir);
+// 			vmTrace('checkFilterDir');
+			$filter_order_Dir = $this->_selectedOrderingDir;
+			$view = JRequest::getWord('view','virtuemart');
+			$app = JFactory::getApplication();
+			$app->setUserState( 'com_virtuemart.'.$view.'.filter_order_Dir',$filter_order_Dir);
 		}
-		return $filter_order_Dir;
+// 		vmdebug('checkFilterDir '.$filter_order_Dir);
+
+		$this->_selectedOrderingDir = $filter_order_Dir;
+		return $this->_selectedOrderingDir;
 	}
-
-	// 	var $_validDefaultOrderingFieldName = 'ordering';
-	var $_validOrderingFieldName = null;
-
-	function getValidFilterOrdering($overwrite=null,$overWriteDefault=null){
-
-		$mainframe = JFactory::getApplication() ;
-		$view = JRequest::getWord('view');
-
-		$defaultValue = $this->_validOrderingFieldName[0];
-		if($overWriteDefault!==null){
-			$defaultValue = $overWriteDefault;
-// 			vmdebug('getValidFilterOrdering use $overWriteDefault '.$overWriteDefault);
-		}
-
-
-		if($overwrite!==null){
-			$filter_order = $overwrite;
-// 			vmdebug('getValidFilterOrdering use $overwrite '.$filter_order);
-		} else {
-// 			if($this->_noLimit){
-// 				$filter_order = $defaultValue;
-// 				vmdebug('getValidFilterOrdering use listmode and default value '.$filter_order);
-// 			} else {
-				$filter_order = strtolower($mainframe->getUserStateFromRequest( 'com_virtuemart'.$view.'.filter_order', 'filter_order',$defaultValue , 'cmd' ));
-// 				vmdebug('getValidFilterOrdering use getUserStateFromRequest '.$filter_order);
-// 			}
-		}
-
-		if(!empty($filter_order)){
-			$dotps = strrpos($filter_order, '.');
-/*			if($dotps===false && !empty($this->_tablePreFix) ){
-// 				vmdebug('No dot found '.$filter_order.' add table prefix '.$this->_tablePreFix.'  in class '.get_class($this));
-				$filter_order = $this->_tablePreFix . $filter_order;
-
-			}*/
-
-			if(!in_array($filter_order, $this->_validOrderingFieldName)){
-
-				vmdebug('checkValidOrderingField:'.get_class($this).' programmer choosed invalid ordering '.$filter_order.', use '.$defaultValue);
-				$filter_order = $defaultValue;
-
-				$mainframe->setUserState( 'com_virtuemart.'.$view.'.filter_order',$filter_order);
-
-			}
-		}
-
-
-		return $filter_order;
-	}
-
-	/**
-	 * Get the SQL Ordering statement
-	 *
-	 * @return string text to add to the SQL statement
-	 */
-	function _getOrdering($default=null,$order_dir = null) {
-
-		$return ='';
-		$filter_order     = $this->getValidFilterOrdering($default);
-		if(!empty($filter_order)){
-			$filter_order_Dir = $this->getValidFilterDir($order_dir);
-			$return = ' ORDER BY '.$filter_order.' '.$filter_order_Dir ;
-		}
-// 		vmdebug('_getOrdering return ',$return);
-		return $return;
-	}
-
 
 
 	/**
@@ -249,28 +257,50 @@ class VmModel extends JModel {
 	 *
 	 * @author Max Milbers
 	 */
-	public function getPagination($total=0,$limitStart=0,$limit=0,$perRow = 5) {
+	public function getPagination($perRow = 5) {
 
-
-		if ($this->_pagination == null || $perRow!==5) {
-
-			if(empty($limit) ){
-				$limits = $this->setPaginationLimits();
-			} else {
-				$limits[0] = $limitStart;
-				$limits[1] = $limit;
+			if(empty($this->_limit) ){
+				$this->setPaginationLimits();
 			}
 
-			if(empty($total)){
-				$total = $this->_total;
-			}
-			// TODO, this give result when result = 0 >>> if(empty($total)) $total = $this->getTotal();
+			$this->_pagination = new VmPagination($this->_total , $this->_limitStart, $this->_limit , $perRow );
 
-			$this->_pagination = new VmPagination($total , $limits[0], $limits[1] , $perRow );
-
-		}
-		// 		vmdebug('my pagination',$this->_pagination);
+// 		}
+// 		vmdebug('$this->pagination $total '.$this->_total,$this->_pagination);vmTrace('getPagination');
 		return $this->_pagination;
+	}
+
+	public function setPaginationLimits(){
+
+		$app = JFactory::getApplication();
+		$view = JRequest::getWord('view',$this->_maintablename);
+
+		$limit = (int)$app->getUserStateFromRequest('com_virtuemart.'.$view.'.limit', 'limit');
+		if(empty($limit)){
+			if($app->isSite()){
+				$limit = VmConfig::get ('llimit_init_FE');
+			} else {
+				$limit = VmConfig::get ('llimit_init_BE');
+			}
+			if(empty($limit)){
+				$limit = 30;
+			}
+		}
+
+		$this->setState('limit', $limit);
+		$this->setState('com_virtuemart.'.$view.'.limit',$limit);
+		$this->_limit = $limit;
+
+		$limitStart = $app->getUserStateFromRequest('com_virtuemart.'.$view.'.limitstart', 'limitstart',  JRequest::getInt('limitstart',0), 'int');
+
+		//There is a strange error in the frontend giving back 9 instead of 10, or 24 instead of 25
+		//This functions assures that the steps of limitstart fit with the limit
+		$limitStart = ceil((float)$limitStart/(float)$limit) * $limit;
+		$this->setState('limitstart', $limitStart);
+		$this->setState('com_virtuemart.'.$view.'.limitstart',$limitStart);
+		$this->_limitStart = $limitStart;
+
+		return array($this->_limitStart,$this->_limit);
 	}
 
 	/**
@@ -285,7 +315,7 @@ class VmModel extends JModel {
 			$query = 'SELECT `'.$this->_db->getEscaped($this->_idName).'` FROM `'.$this->_db->getEscaped($this->_maintable).'`';;
 			$this->_db->setQuery( $query );
 			if(!$this->_db->query()){
-				if(empty($this->_maintable)) $this->setError('Model '.get_class( $this ).' has no maintable set');
+				if(empty($this->_maintable)) vmError('Model '.get_class( $this ).' has no maintable set');
 				$this->_total = 0;
 			} else {
 				$this->_total = $this->_db->getNumRows();
@@ -294,32 +324,6 @@ class VmModel extends JModel {
 		}
 
 		return $this->_total;
-	}
-
-
-	public function setPaginationLimits(){
-
-		$mainframe = JFactory::getApplication();
-		$view = JRequest::getWord('view');
-
-		$limit = $mainframe->getUserStateFromRequest('com_virtuemart.'.$view.'.limit', 'limit',  VmConfig::get('list_limit',10), 'int');
-		$this->setState('limit', $limit);
-		if(version_compare(JVERSION,'1.6.0','ge')) {
-			$limitStart = $mainframe->getUserStateFromRequest('com_virtuemart.'.$view.'.limitstart', 'limitstart',  0, 'int');
-		} else {
-			$limitStart = JRequest::getInt('limitstart',0);
-		}
-
-		//There is a strange error in the frontend giving back 9 instead of 10, or 24 instead of 25
-		//This functions assures that the steps of limitstart fit with the limit
-		if(!empty($limit)){
-			$limitStart = ceil((float)$limitStart/(float)$limit) * $limit;
-		}
-
-		$this->setState('limitstart', $limitStart);
-
-// 		vmdebug('limitstart',$limitStart, $limit);
-		return array($limitStart,$limit);
 	}
 
 
@@ -349,7 +353,7 @@ class VmModel extends JModel {
 		// 		if(USE_SQL_CALC_FOUND_ROWS){
 
 		//and the where conditions
-		$joinedTables .= $whereString .$groupBy .$orderBy .$filter_order_Dir ;
+		$joinedTables .="\n".$whereString."\n".$groupBy."\n".$orderBy.' '.$filter_order_Dir ;
 		// 			$joinedTables .= $whereString .$groupBy .$orderBy;
 
 		if($nbrReturnProducts){
@@ -372,15 +376,14 @@ class VmModel extends JModel {
 			$q = 'SELECT '.$select.$joinedTables;
 		}
 
-		if($this->_noLimit || empty($limit)){
+		if($this->_noLimit or empty($limit)){
 // 			vmdebug('exeSortSearchListQuery '.get_class($this).' no limit');
 			$this->_db->setQuery($q);
 		} else {
 			$this->_db->setQuery($q,$limitStart,$limit);
 // 			vmdebug('exeSortSearchListQuery '.get_class($this).' with limit');
 		}
-
-// 		vmdebug('my $limitStart '.$limitStart.'  $limit '.$limit.' q ',$this->_db->getQuery() );
+ 		//vmdebug('exeSortSearchListQuery '.$orderBy .$filter_order_Dir,$q);
 
 		if($object == 2){
 			 $this->ids = $this->_db->loadResultArray();
@@ -389,6 +392,10 @@ class VmModel extends JModel {
 		} else {
 			 $this->ids = $this->_db->loadObjectList();
 		}
+		if($err=$this->_db->getErrorMsg()){
+			vmError('exeSortSearchListQuery '.$err);
+		}
+ 		//vmdebug('my $limitStart '.$limitStart.'  $limit '.$limit.' q ',$q );
 
 		if($this->_withCount){
 
@@ -399,7 +406,10 @@ class VmModel extends JModel {
 				$count = 0;
 			}
 			$this->_total = $count;
-			if($limitStart>$count){
+			if($limitStart>=$count){
+				if(empty($limit)){
+					$limit = 1.0;
+				}
 				$limitStart = floor($count/$limit);
 				$this->_db->setQuery($q,$limitStart,$limit);
 				if($object == 2){
@@ -410,7 +420,7 @@ class VmModel extends JModel {
 					$this->ids = $this->_db->loadObjectList();
 				}
 			}
-			$this->getPagination($count,$limitStart,$limit);
+// 			$this->getPagination(true);
 
 		} else {
 			$this->_withCount = true;
@@ -434,7 +444,7 @@ class VmModel extends JModel {
 
 	/**
 	 *
-	 * @author Max Milberes
+	 * @author Max Milbers
 	 *
 	 */
 
@@ -447,7 +457,7 @@ class VmModel extends JModel {
 			//just an idea
 			if(isset($this->_data->virtuemart_vendor_id) && empty($this->_data->virtuemart_vendor_id)){
 				if(!class_exists('VirtueMartModelVendor')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'vendor.php');
-				$this->_data->virtuemart_vendor_id = VirtueMartModelVendor::getLoggedVendor();;
+				$this->_data->virtuemart_vendor_id = VirtueMartModelVendor::getLoggedVendor();
 			}
 		}
 
@@ -463,8 +473,9 @@ class VmModel extends JModel {
 
 		$errors = $table->getErrors();
 		foreach($errors as $error){
-			$this->setError( get_class( $this ).'::store '.$error);
+			vmError( get_class( $this ).'::store '.$error);
 		}
+
 		if(is_object($data)){
 			$_idName = $this->_idName;
 			return $data->$_idName;
@@ -485,7 +496,7 @@ class VmModel extends JModel {
 		$table = $this->getTable($this->_maintablename);
 		foreach($ids as $id) {
 			if (!$table->delete((int)$id)) {
-				$this->setError(get_class( $this ).'::remove '.$id.' '.$table->getError());
+				vmError(get_class( $this ).'::remove '.$id.' '.$table->getError());
 				return false;
 			}
 		}
@@ -504,22 +515,26 @@ class VmModel extends JModel {
 	 * @param string $postName the name of id Post  (Primary Key in table Class constructor)
 	 */
 
-	function toggle($field,$val = NULL, $cidName = 0 ) {
+	function toggle($field,$val = NULL, $cidname = 0,$tablename = 0  ) {
 		$ok = true;
-		$this->setToggleName('published');
+
 		if (!in_array($field, $this->_togglesName)) {
 			return false ;
 		}
-		$table = $this->getTable($this->_maintablename);
-		//		if(empty($cidName)) $cidName = $this->_cidName;
+		if($tablename === 0) $tablename = $this->_maintablename;
+		if($cidname === 0) $cidname = $this->_cidName;
 
-		$ids = JRequest::getVar( $this->_cidName, JRequest::getVar('cid',array(0)), 'post', 'array' );
+		$table = $this->getTable($tablename);
+		//if(empty($cidName)) $cidName = $this->_cidName;
+
+		$ids = JRequest::getVar( $cidname, JRequest::getVar('cid',array(0)), 'post', 'array' );
 
 		foreach($ids as $id){
 			$table->load( (int)$id );
+
 			if (!$table->toggle($field, $val)) {
 				//			if (!$table->store()) {
-				JError::raiseError(500, get_class( $this ).'::toggle '.$table->getError() );
+				vmError(get_class( $this ).'::toggle '.$table->getError() .' '.$id);
 				$ok = false;
 			}
 		}
@@ -539,12 +554,12 @@ class VmModel extends JModel {
 	{
 		$table = $this->getTable($this->_maintablename);
 		if (!$table->load($this->_id)) {
-			$this->setError($this->_db->getErrorMsg());
+			vmError('VmModel move '.$this->_db->getErrorMsg());
 			return false;
 		}
-		if ($filter) ' '.$filter.' = '.(int) $table->$filter.' AND published >= 0 ';
+
 		if (!$table->move( $direction, $filter )) {
-			$this->setError($this->_db->getErrorMsg());
+			vmError('VmModel move '.$this->_db->getErrorMsg());
 			return false;
 		}
 
@@ -574,7 +589,7 @@ class VmModel extends JModel {
 			{
 				$table->ordering = $order[$i];
 				if (!$table->store()) {
-					$this->setError($this->_db->getErrorMsg());
+					vmError('VmModel saveorder '.$this->_db->getErrorMsg());
 					return false;
 				}
 			}
@@ -603,10 +618,9 @@ class VmModel extends JModel {
 
 	public function addImages($obj,$limit=0){
 
-		if(!class_exists('VirtueMartModelMedia')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'media.php');
-		if(empty($this->mediaModel))$this->mediaModel = new VirtueMartModelMedia();
+		$mediaModel = VmModel::getModel('Media');
 
-		$this->mediaModel->attachImages($obj,$this->_maintablename,'image',$limit);
+		$mediaModel->attachImages($obj,$this->_maintablename,'image',$limit);
 
 	}
 
@@ -642,70 +656,98 @@ class VmPagination extends JPagination {
 	 * @since   11.1
 	 */
 
-	function getLimitBox()
+	function setSequence($sequence){
+		$this->_sequence = $sequence;
+	}
+
+	function getLimitBox($sequence=0)
 	{
 		$app = JFactory::getApplication();
 
 		// Initialize variables
 		$limits = array ();
-
-		// Make the option list
-		//for 3 = 3,6,12,24,60,90 rows, 4 rows, 6 rows
-		$sequence = VmConfig::get('pagination_sequence',0);
-
-
-		$limits[] = JHTML::_('select.option', '0', JText::_('all'));
-
 		$selected = $this->_viewall ? 0 : $this->limit;
+
 		// Build the select list
 		if ($app->isAdmin()) {
+
+			if(empty($sequence)){
+				$sequence = VmConfig::get('pagseq',0);
+			}
+
 			if(!empty($sequence)){
 				$sequenceArray = explode(',', $sequence);
-				foreach($sequenceArray as $items){
-					$limits[]=JHtml::_('select.option', $items);
+				if(count($sequenceArray>1)){
+					foreach($sequenceArray as $items){
+						$limits[$items]=JHtml::_('select.option', $items);
+					}
 				}
-
-			} else {
-				if($this->_perRow===1) $this->_perRow = 5;
-				$iterationAmount = 4;
-				for ($i = 1; $i <= $iterationAmount; $i ++) {
-					$limits[] = JHtml::_('select.option', $i*$this->_perRow);
-				}
-
-				$limits[] = JHTML::_('select.option', $this->_perRow * 10);
-				$limits[] = JHTML::_('select.option', $this->_perRow * 20);
-	// 			vmdebug('getLimitBox',$this->_perRow);
 			}
-			$html = JHTML::_('select.genericlist',  $limits, 'limit', 'class="inputbox" size="1" onchange="submitform();"', 'value', 'text', $selected);
+
+			if(empty($limits)){
+				$limits[15] = JHTML::_('select.option', 15);
+				$limits[30] = JHTML::_('select.option', 30);
+				$limits[50] = JHTML::_('select.option', 50);
+				$limits[100] = JHTML::_('select.option', 100);
+				$limits[200] = JHTML::_('select.option', 200);
+				$limits[400] = JHTML::_('select.option', 400);
+			}
+
+			if(!array_key_exists($this->limit,$limits)){
+				$limits[$this->limit] = JHTML::_('select.option', $this->limit);
+				ksort($limits);
+			}
+			$namespace = '';
+			if (JVM_VERSION!==1) {
+				$namespace = 'Joomla.';
+			}
+
+			$html = JHTML::_('select.genericlist',  $limits, 'limit', 'class="inputbox" size="1" onchange="'.$namespace.'submitform();"', 'value', 'text', $selected);
 		} else {
+
 			$getArray = (JRequest::get( 'get' ));
 			$link ='';
-			if (array_key_exists('limit', $getArray)) unset ($getArray['limit']);
+			unset ($getArray['limit']);
 
-			foreach ($getArray as $key => $value ) $link .= '&'.$key.'='.$value;
+			// foreach ($getArray as $key => $value ) $link .= '&'.$key.'='.$value;
+			foreach ($getArray as $key => $value ){
+				if (is_array($value)){
+					foreach ($value as $k => $v ){
+						$link .= '&'.$key.'['.$k.']'.'='.$v;
+					}
+				} else {
+					$link .= '&'.$key.'='.$value;
+				}
+			}
 			$link[0] = "?";
 			$link = 'index.php'.$link ;
+			if(empty($sequence)){
+				$sequence = VmConfig::get('pagseq_'.$this->_perRow);
+			}
 			if(!empty($sequence)){
 				$sequenceArray = explode(',', $sequence);
-				foreach($sequenceArray as $items){
-					$limits[]=JHtml::_('select.option', JRoute::_( $link.'&limit='. $items), $items);
+				if(count($sequenceArray>1)){
+					foreach($sequenceArray as $items){
+						$limits[$items]=JHtml::_('select.option', JRoute::_( $link.'&limit='. $items, false), $items);
+					}
 				}
-
-			} else {
-				if($this->_perRow===1) $this->_perRow = 5;
-				$iterationAmount = 4;
-				for ($i = 1; $i <= $iterationAmount; $i ++) {
-					$limits[] = JHtml::_('select.option',JRoute::_( $link.'&limit='. $i*$this->_perRow) ,$i*$this->_perRow );
-				}
-
-				$limits[] = JHTML::_('select.option',JRoute::_( $link.'&limit='. $this->_perRow * 10) , $this->_perRow * 10 );
-				$limits[] = JHTML::_('select.option',JRoute::_( $link.'&limit='. $this->_perRow * 20) , $this->_perRow * 20 );
-	// 			vmdebug('getLimitBox',$this->_perRow);
 			}
-			$selected= JRoute::_( $link.'&limit='. $selected) ;
-			$js = 'onchange="window.top.location.href=this.options[this.selectedIndex].value">';
 
-			$html = JHTML::_('select.genericlist',  $limits, 'limit', 'class="inputbox" size="1" '.$js , 'value', 'text', $selected);
+			if(empty($limits) or !is_array($limits)){
+				if($this->_perRow===1) $this->_perRow = 5;
+				$limits[$this->_perRow * 5] = JHtml::_('select.option',JRoute::_( $link.'&limit='. $this->_perRow * 5, false) ,$this->_perRow * 5);
+				$limits[$this->_perRow * 10] = JHTML::_('select.option',JRoute::_( $link.'&limit='. $this->_perRow * 10, false) , $this->_perRow * 10 );
+				$limits[$this->_perRow * 20] = JHTML::_('select.option',JRoute::_( $link.'&limit='. $this->_perRow * 20, false) , $this->_perRow * 20 );
+				$limits[$this->_perRow * 50] = JHTML::_('select.option',JRoute::_( $link.'&limit='. $this->_perRow * 50, false) , $this->_perRow * 50 );
+			}
+			if(!array_key_exists($this->limit,$limits)){
+				$limits[$this->limit] = JHTML::_('select.option', JRoute::_( $link.'&limit='.$this->limit,false),$this->limit);
+				ksort($limits);
+			}
+			$selected= JRoute::_( $link.'&limit='. $selected,false) ;
+			$js = 'onchange="window.top.location.href=this.options[this.selectedIndex].value"';
+
+			$html = JHTML::_('select.genericlist',  $limits, '', 'class="inputbox" size="1" '.$js , 'value', 'text', $selected);
 		}
 		return $html;
 	}

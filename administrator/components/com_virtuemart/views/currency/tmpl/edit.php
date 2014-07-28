@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit.php 5013 2011-12-10 16:20:21Z electrocity $
+* @version $Id: edit.php 5225 2012-01-06 01:50:19Z electrocity $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_CURRENCY_DETAILS');
 ?>
 
@@ -31,7 +31,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_CURRENCY_DETAILS');
 	<legend><?php echo JText::_('COM_VIRTUEMART_CURRENCY_DETAILS'); ?></legend>
 	<table class="admintable">
 		<?php echo VmHTML::row('input','COM_VIRTUEMART_CURRENCY_NAME','currency_name',$this->currency->currency_name); ?>
-		<?php echo VmHTML::row('booleanlist','COM_VIRTUEMART_PUBLISH','published',$this->currency->published); ?>
+		<?php echo VmHTML::row('booleanlist','COM_VIRTUEMART_PUBLISHED','published',$this->currency->published); ?>
 		<?php echo VmHTML::row('input','COM_VIRTUEMART_CURRENCY_EXCHANGE_RATE','currency_exchange_rate',$this->currency->currency_exchange_rate,'class="inputbox"','',6); ?>
 		<?php echo VmHTML::row('input','COM_VIRTUEMART_CURRENCY_CODE_2','currency_code_2',$this->currency->currency_code_2,'class="inputbox"','',2,2); ?>
 		<?php echo VmHTML::row('input','COM_VIRTUEMART_CURRENCY_CODE_3','currency_code_3',$this->currency->currency_code_3,'class="inputbox"','',3,3); ?>
@@ -50,7 +50,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_CURRENCY_DETAILS');
 </div>
 	<input type="hidden" name="virtuemart_vendor_id" value="<?php echo $this->currency->virtuemart_vendor_id; ?>" />
 	<input type="hidden" name="virtuemart_currency_id" value="<?php echo $this->currency->virtuemart_currency_id; ?>" />
-	<?php echo VmHTML::HiddenEdit('currency') ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 

@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: manufacturer.php 3595 2011-07-02 15:29:14Z electrocity $
+* @version $Id: manufacturer.php 6071 2012-06-06 15:33:04Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -44,28 +44,15 @@ class VirtuemartControllerManufacturer extends VmController {
 	function __construct() {
 		parent::__construct('virtuemart_manufacturer_id');
 
-		$document = JFactory::getDocument();
-		$viewType	= $document->getType();
-		$view = $this->getView('manufacturer', $viewType);
-
-		// Push a model into the view
-		$model = $this->getModel('manufacturer');
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
-		$model1 = $this->getModel('manufacturercategories');
-		if (!JError::isError($model1)) {
-			$view->setModel($model1, false);
-		}
 	}
 
 	/**
 	 * Handle the save task
-	 * Checks already in the controller the rights todo so and sets the data by filtering the post
+	 * Checks already in the controller the rights and sets the data by filtering the post
 	 *
 	 * @author Max Milbers
 	 */
-	function save(){
+	function save($data = 0){
 
 		/* Load the data */
 		$data = JRequest::get('post');

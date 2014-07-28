@@ -1,4 +1,5 @@
 <?php
+defined('_JEXEC') or die();
 
 /**
  *
@@ -36,10 +37,13 @@ class VmElementVmCategories extends VmElements {
     function getInput() {
         $key = ($this->element['key_field'] ? $this->element['key_field'] : 'value');
         $val = ($this->element['value_field'] ? $this->element['value_field'] : $this->name);
-        JPlugin::loadLanguage('com_virtuemart', JPATH_ADMINISTRATOR);
+	    VmConfig::loadJLang('com_virtuemart', false);
+
+
+
         $categorylist = ShopFunctions::categoryListTree(array($this->value));
-        $class = '';
-        $html = '<select class="inputbox"   name="' . $this->name . '" >';
+
+        $html = '<select class="inputbox "   name="' . $this->name . '" >';
         $html .= '<option value="0">' . JText::_('COM_VIRTUEMART_CATEGORY_FORM_TOP_LEVEL') . '</option>';
         $html .= $categorylist;
         $html .="</select>";
@@ -49,9 +53,9 @@ class VmElementVmCategories extends VmElements {
     function fetchElement($name, $value, &$node, $control_name) {
         JPlugin::loadLanguage('com_virtuemart', JPATH_ADMINISTRATOR);
         $categorylist = ShopFunctions::categoryListTree(array($value));
+	    $class = ($node->attributes('class') ? 'class="' . $node->attributes('class') . '"' : '');
 
-        $class = '';
-        $html = '<select class="inputbox"   name="' . $control_name . '[' . $name . ']' . '" >';
+        $html = '<select class="inputbox '.$class.'"   name="' . $control_name . '[' . $name . ']' . '" >';
         $html .= '<option value="0">' . JText::_('COM_VIRTUEMART_CATEGORY_FORM_TOP_LEVEL') . '</option>';
         $html .= $categorylist;
         $html .="</select>";
@@ -60,7 +64,8 @@ class VmElementVmCategories extends VmElements {
 
 }
 
-if (version_compare(JVERSION, '1.6.0', 'ge') ) {
+
+if (JVM_VERSION === 2 ) {
 
     class JFormFieldVmCategories extends VmElementVmCategories {
 

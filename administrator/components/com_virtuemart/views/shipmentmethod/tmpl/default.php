@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4787 2011-11-22 07:36:17Z alatak $
+* @version $Id: default.php 5628 2012-03-08 09:00:21Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 
@@ -32,7 +32,7 @@ AdminUIHelper::startAdminArea();
 				<input type="checkbox" name="toggle" value="" onclick="checkAll(<?php echo count($this->shipments); ?>);" />
 			</th>
 			<th>
-				<?php echo JText::_('COM_VIRTUEMART_SHIPMENT_NAME_LBL'); ?>
+				<?php echo $this->sort('shipment_name', 'COM_VIRTUEMART_SHIPMENT_NAME_LBL'); ?>
 			</th>
                         <th>
 				<?php echo JText::_('COM_VIRTUEMART_SHIPMENT_LIST_DESCRIPTION_LBL'); ?>
@@ -41,12 +41,13 @@ AdminUIHelper::startAdminArea();
 				<?php echo JText::_('COM_VIRTUEMART_SHIPPING_SHOPPERGROUPS'); ?>
 			</th>
                         <th>
-				<?php echo JText::_('COM_VIRTUEMART_SHIPMENTMETHOD'); ?>
+				<?php echo $this->sort('shipment_element', 'COM_VIRTUEMART_SHIPMENTMETHOD'); ?>
 			</th>
 			<th>
-				<?php echo JText::_('COM_VIRTUEMART_LIST_ORDER'); ?>
+				<?php echo $this->sort('ordering', 'COM_VIRTUEMART_LIST_ORDER'); ?>
 			</th>
-			<th width="20"><?php echo JText::_('COM_VIRTUEMART_PUBLISHED'); ?></th>
+			<th width="20"><?php echo $this->sort('published', 'COM_VIRTUEMART_PUBLISHED'); ?></th>
+			 <th><?php echo $this->sort('virtuemart_shipmentmethod_id', 'COM_VIRTUEMART_ID')  ?></th>
 		</tr>
 		</thead>
 		<?php
@@ -81,6 +82,9 @@ AdminUIHelper::startAdminArea();
 					<?php echo JText::_($row->ordering); ?>
 				</td>
 				<td><?php echo $published; ?></td>
+				<td align="center">
+					<?php echo $row->virtuemart_shipmentmethod_id; ?>
+				</td>
 			</tr>
 			<?php
 			$k = 1 - $k;
@@ -96,12 +100,7 @@ AdminUIHelper::startAdminArea();
 	</table>
 </div>
 
-	<input type="hidden" name="option" value="com_virtuemart" />
-	<input type="hidden" name="controller" value="shipmentmethod" />
-	<input type="hidden" name="view" value="shipmentmethod" />
-	<input type="hidden" name="task" value="" />
-	<input type="hidden" name="boxchecked" value="0" />
-	<?php echo JHTML::_( 'form.token' ); ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 

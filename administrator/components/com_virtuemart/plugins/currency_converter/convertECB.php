@@ -3,7 +3,7 @@ if( !defined( '_JEXEC' ) ) die( 'Direct Access to '.basename(__FILE__).' is not 
 /**
 * ECB Currency Converter Module
 *
-* @version $Id: convertECB.php 5039 2011-12-12 19:23:59Z electrocity $
+* @version $Id: convertECB.php 6172 2012-06-28 07:24:53Z Milbo $
 * @package VirtueMart
 * @subpackage classes
 * @copyright Copyright (C) 2004-2008 soeren - All rights reserved.
@@ -40,45 +40,49 @@ class convertECB {
 	 * @param string $currB defaults to
 	 * @return mixed The converted amount when successful, false on failure
 	 */
-	function convert( $amountA, $currA='', $currB='' ) {
+// 	function convert( $amountA, $currA='', $currB='', $a2b = true ) {
+	function convert( $amountA, $currA='', $currB='', $a2rC = true, $relatedCurrency = 'EUR') {
 
 		// cache subfolder(group) 'convertECB', cache method: callback
-		$cache= & JFactory::getCache('convertECB','callback');
-		 
+		$cache= JFactory::getCache('convertECB','callback');
+
 		// save configured lifetime
 		@$lifetime=$cache->lifetime;
-		 
+
 		$cache->setLifeTime(86400/4); // check 4 time per day
-		
+
 		// save cache conf
-		
-		$conf =& JFactory::getConfig();
-		 
+
+		$conf = JFactory::getConfig();
+
 		// check if cache is enabled in configuration
-		 
+
 		$cacheactive = $conf->getValue('config.caching');
-		
+
 		$cache->setCaching(1); //enable caching
-		
+
 		$globalCurrencyConverter = $cache->call( array( 'convertECB', 'getSetExchangeRates' ),$this->document_address );
-		
+
 		// revert configuration
-		 
+
 		$cache->setCaching($cacheactive);
-		
+
+
 		if(!$globalCurrencyConverter ){
+			//vmdebug('convert convert No $globalCurrencyConverter convert '.$amountA);
 			return $amountA;
 		} else {
 			$valA = isset( $globalCurrencyConverter[$currA] ) ? $globalCurrencyConverter[$currA] : 1.0;
 			$valB = isset( $globalCurrencyConverter[$currB] ) ? $globalCurrencyConverter[$currB] : 1.0;
 
 			$val = (float)$amountA * (float)$valB / (float)$valA;
+			//vmdebug('convertECB with '.$currA.' '.$amountA.' * '.$valB.' / '.$valA.' = '.$val,$globalCurrencyConverter[$currA]);
 
 			return $val;
 		}
 	}
 
-	function getSetExchangeRates($ecb_filename){
+	static function getSetExchangeRates($ecb_filename){
 
 			$archive = true;
 			setlocale(LC_TIME, "en-GB");
@@ -126,15 +130,19 @@ class convertECB {
 
 			if( !is_writable( $store_path )) {
 				$archive = false;
-				JError::raiseWarning(1, "The file $archivefile_name can't be created. The directory $store_path is not writable" );
+				vmError( "The file $archivefile_name can't be created. The directory $store_path is not writable" );
 			}
 			//			JError::raiseNotice(1, "The file $archivefile_name should be in the directory $store_path " );
 			if( $curr_filename == $ecb_filename ) {
 				// Fetch the file from the internet
 				if(!class_exists('VmConnector')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'connection.php');
 				//				JError::raiseNotice(1, "Updating currency " );
-				$contents = VmConnector::handleCommunication( $curr_filename );
-				$last_updated = date('Ymd');
+				if (!$contents = VmConnector::handleCommunication( $curr_filename )) {
+					if (isset($file_datestamp)) {
+						$contents = @file_get_contents( $curr_filename );
+					}
+				} else $last_updated = date('Ymd');
+
 			}
 			else {
 				$contents = @file_get_contents( $curr_filename );
@@ -153,8 +161,8 @@ class convertECB {
 
 				if( !$xmlDoc->loadXML($contents) ) {
 					//todo
-					JError::raiseWarning(1,  'Failed to parse the Currency Converter XML document.');
-					JError::raiseWarning(1,  'The content: '.$contents);
+					vmError('Failed to parse the Currency Converter XML document.');
+					vmError('The content: '.$contents);
 					//					$GLOBALS['product_currency'] = $vendor_currency;
 					return false;
 				}
@@ -174,7 +182,7 @@ class convertECB {
 			}
 			else {
 				$globalCurrencyConverter = false;
-				JError::raiseWarning(1, 'Failed to retrieve the Currency Converter XML document.');
+				vmError( 'Failed to retrieve the Currency Converter XML document.');
 // 				return false;
 			}
 

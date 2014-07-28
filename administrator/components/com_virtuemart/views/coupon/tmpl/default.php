@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4690 2011-11-12 14:47:46Z electrocity $
+* @version $Id: default.php 5628 2012-03-08 09:00:21Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 
@@ -46,6 +46,10 @@ AdminUIHelper::startAdminArea();
 		    <th>
 			<?php echo JText::_('COM_VIRTUEMART_COUPON_VALUE_VALID_AT'); ?>
 		    </th>
+			<th>
+				<?php echo JText::_('COM_VIRTUEMART_COUPON_USED'); ?>
+			</th>
+		     <th><?php echo $this->sort('virtuemart_coupon_id', 'COM_VIRTUEMART_ID')  ?></th>
 		</tr>
 	    </thead>
 	    <?php
@@ -76,6 +80,20 @@ AdminUIHelper::startAdminArea();
 		</td>
 		<td align="left">
 			<?php echo JText::_($row->coupon_value_valid); ?> <?php echo $this->vendor_currency; ?>
+		</td>
+		    <td align="center">
+			    <?php
+			    if( $row->coupon_type=='gift'){
+				    if ($row->coupon_used ) {
+					    echo JText::_('COM_VIRTUEMART_YES');
+				    } else  {
+					    echo JText::_('COM_VIRTUEMART_NO');
+				    }
+			     }
+			    ?>
+		    </td>
+		<td align="left">
+			<?php echo JText::_($row->virtuemart_coupon_id); ?>
 		</td>
 	    </tr>
 		<?php

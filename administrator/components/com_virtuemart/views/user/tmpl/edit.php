@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit.php 4700 2011-11-14 05:50:36Z electrocity $
+* @version $Id: edit.php 6285 2012-07-16 16:11:17Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 // Implement Joomla's form validation
 JHTML::_('behavior.formvalidation')
@@ -43,9 +43,10 @@ label.invalid {
 $tabarray = array();
 if($this->userDetails->user_is_vendor){
 	$tabarray['vendor'] = 'COM_VIRTUEMART_VENDOR';
+	$tabarray['vendorletter'] = 'COM_VIRTUEMART_VENDORLETTER';
 }
 $tabarray['shopper'] = 'COM_VIRTUEMART_SHOPPER_FORM_LBL';
-$tabarray['user'] = 'COM_VIRTUEMART_USER_FORM_TAB_GENERALINFO';
+//$tabarray['user'] = 'COM_VIRTUEMART_USER_FORM_TAB_GENERALINFO';
 if ($this->shipToId != 0 || $this->new) {
 	$tabarray['shipto'] = 'COM_VIRTUEMART_USER_FORM_SHIPTO_LBL';
 }
@@ -54,11 +55,11 @@ if (($_ordcnt = count($this->orderlist)) > 0) {
 }
 
 
-AdminUIHelper::buildTabs ( $tabarray,'vm-user' );
+AdminUIHelper::buildTabs ( $this, $tabarray,'vm-user');
 
 ?>
 
-<?php echo VmHTML::HiddenEdit() ?>
+<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 <script language="javascript">
 function myValidator(f) {
@@ -74,7 +75,9 @@ function myValidator(f) {
 		 msg += '</li></ul></dd></dl><div>';
 		jQuery('#element-box').before(msg);
 	}
-	event.preventDefault();
+	//Funny, works for chrome etc, but throws error on FF, but the error stops the script, so the effect is the same
+    jQuery().event.preventDefault();
+    return false;
 }
 </script>
 <?php AdminUIHelper::endAdminArea(); ?>

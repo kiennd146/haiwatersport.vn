@@ -19,9 +19,6 @@
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-// Load the model framework
-jimport( 'joomla.application.component.model');
-
 if(!class_exists('VmModel'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmmodel.php');
 
 /**
@@ -73,17 +70,20 @@ class VirtueMartModelCoupon extends VmModel {
      * @author RickG, Oscar van Eijk
      * @return mixed False if the save was unsuccessful, the coupon ID otherwise.
 	 */
-    function store($data)
+    function store(&$data)
 	{
 		$table = $this->getTable('coupons');
 		//$data = JRequest::get('post');
-      $table->bindChecknStore($data);
+		$table->bindChecknStore($data);
 		// Convert selected dates to MySQL format for storing.
-		$startDate = JFactory::getDate($data['coupon_start_date']);
-		$data['coupon_start_date'] = $startDate->toMySQL();
-		$expireDate = JFactory::getDate($data['coupon_expiry_date']);
-		$data['coupon_expiry_date'] = $expireDate->toMySQL();
-
+		if ($data['coupon_start_date']) {
+		    $startDate = JFactory::getDate($data['coupon_start_date']);
+		    $data['coupon_start_date'] = $startDate->toMySQL();
+		}
+		if ($data['coupon_expiry_date']) {
+		    $expireDate = JFactory::getDate($data['coupon_expiry_date']);
+		    $data['coupon_expiry_date'] = $expireDate->toMySQL();
+		}
 		parent::store($data);
                 return $table->virtuemart_coupon_id;
 	}
@@ -100,7 +100,7 @@ class VirtueMartModelCoupon extends VmModel {
 		$whereString = '';
 // 		if (count($where) > 0) $whereString = ' WHERE '.implode(' AND ', $where) ;
 
-		return $this->_data = $this->exeSortSearchListQuery(0,'*',' FROM `#__virtuemart_coupons`',$whereString,'',$this->_getOrdering('virtuemart_coupon_id'));
+		return $this->_data = $this->exeSortSearchListQuery(0,'*',' FROM `#__virtuemart_coupons`',$whereString,'',$this->_getOrdering());
 
 	}
 }

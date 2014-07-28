@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit.php 4746 2011-11-17 22:10:50Z alatak $
+* @version $Id: edit.php 5225 2012-01-06 01:50:19Z electrocity $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_MANUFACTURER_CATEGORY_DETAILS');
 ?>
 
@@ -31,7 +31,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_MANUFACTURER_CATEGORY_DETAILS
 	<legend><?php echo JText::_('COM_VIRTUEMART_MANUFACTURER_CATEGORY_DETAILS'); ?></legend>
 	<table class="admintable">
 		<?php echo VmHTML::row('input','COM_VIRTUEMART_MANUFACTURER_CATEGORY_NAME','mf_category_name',$this->manufacturerCategory->mf_category_name); ?>
-		<?php echo VmHTML::row('booleanlist','COM_VIRTUEMART_PUBLISH','published',$this->manufacturerCategory->published); ?>
+		<?php echo VmHTML::row('booleanlist','COM_VIRTUEMART_PUBLISHED','published',$this->manufacturerCategory->published); ?>
 		<?php echo VmHTML::row('textarea','COM_VIRTUEMART_MANUFACTURER_CATEGORY_DESCRIPTION','mf_category_desc',$this->manufacturerCategory->mf_category_desc); ?>
 
 	</table>
@@ -40,7 +40,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_MANUFACTURER_CATEGORY_DETAILS
 
 
 	<input type="hidden" name="virtuemart_manufacturercategories_id" value="<?php echo $this->manufacturerCategory->virtuemart_manufacturercategories_id; ?>" />
-	<?php echo VmHTML::HiddenEdit() ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 <?php

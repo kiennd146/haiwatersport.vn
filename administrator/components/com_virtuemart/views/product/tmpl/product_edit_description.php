@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: product_edit_description.php 4708 2011-11-15 04:19:09Z electrocity $
+* @version $Id: product_edit_description.php 6046 2012-05-24 12:43:43Z alatak $
 */
  
 // Check to ensure this file is included in Joomla!
@@ -25,42 +25,11 @@ defined('_JEXEC') or die('Restricted access');?>
 			
 <fieldset>
 	<legend><?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_DESCRIPTION') ?></legend>		
-	<?php echo $this->editor->display('product_desc',  $this->product->product_desc, '100%;', '550', '75', '20', array('pagebreak', 'readmore') ) ; ?>
+	<?php echo $this->editor->display('product_desc',  $this->product->product_desc, '100%;', '450', '75', '20', array('pagebreak', 'readmore') ) ; ?>
 </fieldset>
 
 <fieldset>
-	<legend><?php echo JText::_('COM_VIRTUEMART_META_INFORMATION') ?></legend>
-	<table valign="top">
-		<tr>
-			<td valign="top"><div style="text-align:right;font-weight:bold;"><?php echo JText::_('COM_VIRTUEMART_METADESC'); ?> </div></td>
-			<td valign="top">
-				<textarea class="inputbox" name="metadesc" id="metadesc" cols="60" rows="6"><?php echo $this->product->metadesc; ?></textarea>
-			</td>
-		</tr>
-		<tr>
-			<td >
-				<div style="text-align:right;font-weight:bold;"><?php echo JText::_('COM_VIRTUEMART_METAKEY'); ?> </div>
-			</td>
-			<td valign="top">
-				<textarea class="inputbox" name="metakey" id="metakey" cols="60" rows="6"><?php echo $this->product->metakey; ?></textarea>
-			</td>
-		</tr>
-		<tr>
-			<td >
-				<div style="text-align:right;font-weight:bold;"><?php echo JText::_('COM_VIRTUEMART_METAROBOT'); ?> </div>
-			</td>
-			<td valign="top">
-				<input type="text" class="inputbox" size="60" name="metarobot" value="<?php echo $this->product->metarobot ?>" />
-			</td>
-		</tr>
-		<tr>
-			<td >
-				<div style="text-align:right;font-weight:bold;"><?php echo JText::_('COM_VIRTUEMART_METAAUTHOR'); ?> </div>
-			</td>
-			<td valign="top">
-				<input type="text" class="inputbox" size="60" name="metaauthor" value="<?php echo $this->product->metaauthor ?>" />
-			</td>
-		</tr>
-	</table>
+	<legend><?php echo JText::_('COM_VIRTUEMART_METAINFO') ?></legend>
+	<?php echo shopFunctions::renderMetaEdit($this->product); ?>
 </fieldset>
 

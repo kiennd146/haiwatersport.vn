@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: orderstates.php 3957 2011-08-25 21:50:38Z alatak $
+* @version $Id: orderstates.php 6475 2012-09-21 11:54:21Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -42,6 +42,10 @@ class TableOrderstates extends VmTable {
 	var $order_status_name			= null;
 	/** @var string Order status description */
 	var $order_status_description	= null;
+	/** @var string Order status description 
+	 *  Default ='A' : available
+	 **/
+	var $order_stock_handle = 'A';
 	/** @var int Order in which the order status is listed */
 	var $ordering					= 0;
 	 /** @var int published or unpublished */
@@ -57,6 +61,7 @@ class TableOrderstates extends VmTable {
 
 		$this->setObligatoryKeys('order_status_code');
 		$this->setObligatoryKeys('order_status_name');
+		$this->setObligatoryKeys('order_stock_handle');
 		$this->setLoggable();
 
 	}
@@ -66,16 +71,7 @@ class TableOrderstates extends VmTable {
 	 *
 	 * @return boolean True if the table buffer is contains valid data, false otherwise.
 	 */
-	function check()
-	{
-//        if (empty($this->order_status_code)) {
-//			$this->setError(JText::_('COM_VIRTUEMART_ORDER_TABLE_ERROR_CODE'));
-//			return false;
-//		}
-//		if (empty($this->order_status_name)) {
-//			$this->setError(JText::_('COM_VIRTUEMART_ORDER_TABLE_ERROR_NAME'));
-//			return false;
-//		}
+	function check(){
 
 		$db = JFactory::getDBO();
 		$q = 'SELECT count(*),virtuemart_orderstate_id FROM `#__virtuemart_orderstates` ';
@@ -86,7 +82,7 @@ class TableOrderstates extends VmTable {
 		if(is_array($row)){
 			if($row[0]>0){
 				if($row[1] != $this->virtuemart_orderstate_id){
-					$this->setError(JText::_('COM_VIRTUEMART_ORDER_STATUS_CODE_EXISTS'));
+					vmError(JText::_('COM_VIRTUEMART_ORDER_STATUS_CODE_EXISTS'));
 					return false;
 				}
 			}

@@ -13,14 +13,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.html.php 5098 2011-12-15 21:45:16Z Milbo $
+* @version $Id: view.html.php 6299 2012-07-25 22:53:11Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 jimport('joomla.html.pane');
 jimport('joomla.version');
 
@@ -31,25 +31,27 @@ jimport('joomla.version');
  * @subpackage 	Config
  * @author 		RickG
  */
-class VirtuemartViewConfig extends JView {
+class VirtuemartViewConfig extends VmView {
 
 	function display($tpl = null) {
 
-		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('image');
-		$this->loadHelper('html');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
+		if (!class_exists('VmImage'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'image.php');
 
-		$model = $this->getModel();
-		$usermodel = $this->getModel('user');
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
 
-		 JToolBarHelper::title( JText::_('COM_VIRTUEMART_CONFIG') , 'head vm_config_48');
+		$model = VmModel::getModel();
+		$usermodel = VmModel::getModel('user');
 
-		shopFunctions::addStandardEditViewCommands();
+		JToolBarHelper::title( JText::_('COM_VIRTUEMART_CONFIG') , 'head vm_config_48');
+
+		$this->addStandardEditViewCommands();
 
 		$config = VmConfig::loadConfig();
+		if(!empty($config->_params)){
+			unset ($config->_params['pdf_invoice']); // parameter remove and replaced by inv_os
+		}
 
 		$this->assignRef('config', $config);
 
@@ -66,12 +68,6 @@ class VirtuemartViewConfig extends JView {
 		$vmLayoutList = $model->getLayoutList('virtuemart');
 		$this->assignRef('vmLayoutList', $vmLayoutList);
 
-// Outcommented to revert rev. 2916
-//		$vendorList = ShopFunctions::renderVendorList(VmConfig::get('default_virtuemart_vendor_id'));
-//		// We must replace the fieldname and ID 'virtuemart_vendor_id' to 'default_vendor'
-//		$vendorList = preg_replace('/"virtuemart_vendor_id"/', '"default_virtuemart_vendor_id"', $vendorList);
-//		$this->assignRef('vendorList', $vendorList);
-
 		$categoryLayoutList = $model->getLayoutList('category');
 		$this->assignRef('categoryLayoutList', $categoryLayoutList);
 
@@ -81,22 +77,39 @@ class VirtuemartViewConfig extends JView {
 		$noimagelist = $model->getNoImageList();
 		$this->assignRef('noimagelist', $noimagelist);
 
-/*		if(!class_exists('VirtueMartModelOrderstatus'))require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'orderstatus.php');
-		$oderstatusModel = new VirtueMartModelOrderstatus();
-		$orderStatusList = $oderstatusModel->getOrderStatusList();
-		$this->assignRef('orderStatusList', $orderStatusList);
-*/
+		$orderStatusModel=VmModel::getModel('orderstatus');
+		$this->assignRef('orderStatusModel', $orderStatusModel);
+
 		$currConverterList = $model->getCurrencyConverterList();
 		$this->assignRef('currConverterList', $currConverterList);
 		$moduleList = $model->getModuleList();
 		$this->assignRef('moduleList', $moduleList);
-		//$contentLinks = $model->getContentLinks();
-		//$this->assignRef('contentLinks', $contentLinks);
+
 		$activeLanguages = $model->getActiveLanguages( VmConfig::get('active_languages') );
 		$this->assignRef('activeLanguages', $activeLanguages);
 
-		$orderByFields = $model->getProductFilterFields('browse_orderby_fields');
-		$this->assignRef('orderByFields', $orderByFields);
+		$orderByFieldsProduct = $model->getProductFilterFields('browse_orderby_fields');
+		$this->assignRef('orderByFieldsProduct', $orderByFieldsProduct);
+
+		VmModel::getModel('category');
+
+		foreach (VirtueMartModelCategory::$_validOrderingFields as $key => $field ) {
+			if($field=='c.category_shared') continue;
+			$fieldWithoutPrefix = $field;
+			$dotps = strrpos($fieldWithoutPrefix, '.');
+			if($dotps!==false){
+				$prefix = substr($field, 0,$dotps+1);
+				$fieldWithoutPrefix = substr($field, $dotps+1);
+			}
+
+			$text = JText::_('COM_VIRTUEMART_'.strtoupper($fieldWithoutPrefix)) ;
+
+			$orderByFieldsCat[] =  JHTML::_('select.option', $field, $text) ;
+		}
+
+
+		//$orderByFieldsCat = $model->get;
+		$this->assignRef('orderByFieldsCat', $orderByFieldsCat);
 
 		$searchFields = $model->getProductFilterFields( 'browse_search_fields');
 		$this->assignRef('searchFields', $searchFields);
@@ -104,17 +117,44 @@ class VirtuemartViewConfig extends JView {
 		$aclGroups = $usermodel->getAclGroupIndentedTree();
 		$this->assignRef('aclGroups', $aclGroups);
 
-		if(is_Dir(VmConfig::get('vmtemplate').DS.'images'.DS.'availability'.DS)){
-			$imagePath = VmConfig::get('vmtemplate').'/images/availability/';
+		if(!class_exists('shopFunctionsF'))require(JPATH_VM_SITE.DS.'helpers'.DS.'shopfunctionsf.php');
+		$vmtemplate = shopFunctionsF::loadVmTemplateStyle();
+
+		if(is_Dir(JPATH_ROOT.DS.'templates'.DS.$vmtemplate.DS.'images'.DS.'availability'.DS)){
+			$imagePath = '/templates/'.$vmtemplate.'/images/availability/';
 		} else {
 			$imagePath = '/components/com_virtuemart/assets/images/availability/';
 		}
 		$this->assignRef('imagePath', $imagePath);
 
+		shopFunctions::checkSafePath();
+		$this -> checkVmUserVendor();
+
 		parent::display($tpl);
 	}
 
+	private function checkVmUserVendor(){
 
+		$db = JFactory::getDBO();
+		$multix = Vmconfig::get('multix','none');
+
+		$q = 'select * from #__virtuemart_vmusers where user_is_vendor = 1';// and virtuemart_vendor_id '.$vendorWhere.' limit 1';
+		$db->setQuery($q);
+		$r = $db->loadAssocList();
+
+		if (empty($r)){
+			vmWarn('Your Virtuemart installation contains an error: No user as marked as vendor. Please fix this in your phpMyAdmin and set #__virtuemart_vmusers.user_is_vendor = 1 and #__virtuemart_vmusers.virtuemart_vendor_id = 1 to one of your administrator users. Please update all users to be associated with virtuemart_vendor_id 1.');
+		} else {
+			if($multix=='none' and count($r)!=1){
+				vmWarn('You are using single vendor mode, but it seems more than one user is set as vendor');
+			}
+			foreach($r as $entry){
+				if(empty($entry['virtuemart_vendor_id'])){
+					vmWarn('The user with virtuemart_user_id = '.$entry['virtuemart_user_id'].' is set as vendor, but has no referencing vendorId.');
+				}
+			}
+		}
+	}
 
 }
 // pure php no closing tag

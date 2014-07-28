@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 5013 2011-12-10 16:20:21Z electrocity $
+* @version $Id: default.php 6475 2012-09-21 11:54:21Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 
@@ -39,10 +39,10 @@ AdminUIHelper::startAdminArea();
 			<input type="checkbox" name="toggle" value="" onclick="checkAll(<?php echo count($this->currencies); ?>);" />
 		    </th>
 		    <th >
-				<?php echo JHTML::_('grid.sort', JText::_('COM_VIRTUEMART_CURRENCY')." ".JText::_('COM_VIRTUEMART_NAME'), 'currency_name', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?>
+				<?php  echo $this->sort('currency_name','COM_VIRTUEMART_CURRENCY') ; ?>
 		    </th>
 		    <th width="80">
-			<?php echo JText::_('COM_VIRTUEMART_CURRENCY_EXCHANGE_RATE'); ?>
+			<?php echo $this->sort('currency_exchange_rate') ?>
 		    </th>
 		    <th width="20">
 			<?php echo JText::_('COM_VIRTUEMART_CURRENCY_SYMBOL'); ?>
@@ -51,7 +51,7 @@ AdminUIHelper::startAdminArea();
 			<?php echo JText::_('COM_VIRTUEMART_CURRENCY_LIST_CODE_2'); ?>
 		    </th> */?>
 		    <th width="20">
-			<?php echo JText::_('COM_VIRTUEMART_CURRENCY_CODE_3'); ?>
+			<?php  echo $this->sort('currency_code_3') ?>
 		    </th>
              <th width="20">
 			<?php echo JText::_('COM_VIRTUEMART_CURRENCY_NUMERIC_CODE'); ?>
@@ -66,7 +66,7 @@ AdminUIHelper::startAdminArea();
 				<?php echo JText::_('COM_VIRTUEMART_PUBLISHED'); ?>
 			</th>
 		<?php /*	<th width="10">
-				<?php echo JText::_('COM_VIRTUEMART_CALC_SHARED'); ?>
+				<?php echo JText::_('COM_VIRTUEMART_SHARED'); ?>
 			</th> */ ?>
 		</tr>
 	    </thead>

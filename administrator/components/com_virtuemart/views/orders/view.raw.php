@@ -12,7 +12,7 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: view.raw.php 4703 2011-11-14 11:10:15Z Milbo $
+ * @version $Id: view.raw.php 5522 2012-02-21 14:40:10Z Milbo $
  */
 
 // Check to ensure this file is included in Joomla!
@@ -27,26 +27,26 @@ jimport( 'joomla.application.component.view');
  * @package		VirtueMart
  * @author
  */
-class VirtuemartViewOrders extends JView {
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
+
+class VirtuemartViewOrders extends VmView {
 
 	function display($tpl = null) {
 
-		$mainframe = JFactory::getApplication();
-		$option = JRequest::getWord('option');
-		$lists = array();
+		//Load helpers
 
-		/* Load helpers */
-		$this->loadHelper('adminui');
-		$this->loadHelper('currencydisplay');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
+		if (!class_exists('CurrencyDisplay'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'currencydisplay.php');
+
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
 
 		if(!class_exists('vmPSPlugin')) require(JPATH_VM_PLUGINS.DS.'vmpsplugin.php');
 
 		// Load addl models
-		$orderModel = $this->getModel('orders');
-		$userFieldsModel = $this->getModel('userfields');
-		$productModel = $this->getModel('product');
+		$orderModel = VmModel::getModel();
+		$userFieldsModel = VmModel::getModel('userfields');
+		$productModel = VmModel::getModel('product');
 
 		/* Get the data */
 
@@ -59,6 +59,7 @@ class VirtuemartViewOrders extends JView {
 
 		$currency = CurrencyDisplay::getInstance('',$order['details']['BT']->virtuemart_vendor_id);
 		$this->assignRef('currency', $currency);
+
 
 		$_userFields = $userFieldsModel->getUserFields(
 				 'registration'
@@ -109,7 +110,7 @@ class VirtuemartViewOrders extends JView {
 		//$_shipmentInfo = ShopFunctions::getShipmentRateDetails($orderbt->virtuemart_shipmentmethod_id);
 
 		/* Assign the data */
-		$this->assignRef('order', $order);
+		$this->assignRef('orderdetails', $order);
 		$this->assignRef('orderNumber', $orderNumber);
 		$this->assignRef('userfields', $userfields);
 		$this->assignRef('shipmentfields', $shipmentfields);

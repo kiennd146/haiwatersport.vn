@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: calc.php 3752 2011-07-27 11:24:27Z Milbo $
+* @version $Id: calc.php 6442 2012-09-13 13:04:33Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -43,23 +43,6 @@ class VirtuemartControllerCalc extends VmController {
 
 	}
 
-	/**
-	 * Handle the edit task
-	 *
-     * @author Max Milbers
-	 */
-	public function edit(){
-
-		$document = JFactory::getDocument();
-		$viewType = $document->getType();
-		$view = $this->getView($this->_cname, $viewType);
-
-		$view->setModel( $this->getModel( 'currency', 'VirtueMartModel' ));
-		$view->setModel( $this->getModel( 'user', 'VirtueMartModel' ));
-
-		parent::edit();
-
-	}
 
 
 	/**
@@ -67,7 +50,7 @@ class VirtuemartControllerCalc extends VmController {
 	 *
 	 * @author Max Milbers
 	 */
-	function save(){
+	function save($data = 0){
 
 		$data = JRequest::get('post');
 
@@ -88,7 +71,6 @@ class VirtuemartControllerCalc extends VmController {
 		// Check token
 		JRequest::checkToken() or jexit( 'Invalid Token' );
 
-		//capturing virtuemart_calc_id
 		$id = 0;
 		$cid	= JRequest::getVar( 'cid', array(), 'post', 'array' );
 		JArrayHelper::toInteger($cid);
@@ -101,7 +83,7 @@ class VirtuemartControllerCalc extends VmController {
 		}
 
 		//getting the model
-		$model = $this->getModel('calc');
+		$model = VmModel::getModel('calc');
 
 		if ($model->orderCalc($id, -1)) {
 			$msg = JText::_('COM_VIRTUEMART_ITEM_MOVED_UP');
@@ -123,7 +105,6 @@ class VirtuemartControllerCalc extends VmController {
 		// Check token
 		JRequest::checkToken() or jexit( 'Invalid Token' );
 
-		//capturing virtuemart_calc_id
 		$id = 0;
 		$cid	= JRequest::getVar( 'cid', array(), 'post', 'array' );
 		JArrayHelper::toInteger($cid);
@@ -136,7 +117,7 @@ class VirtuemartControllerCalc extends VmController {
 		}
 
 		//getting the model
-		$model = $this->getModel('calc');
+		$model = VmModel::getModel('calc');
 
 		if ($model->orderCalc($id, 1)) {
 			$msg = JText::_('COM_VIRTUEMART_ITEM_MOVED_DOWN');
@@ -159,7 +140,7 @@ class VirtuemartControllerCalc extends VmController {
 		$cid	= JRequest::getVar( 'cid', array(), 'post', 'array' );
 		JArrayHelper::toInteger($cid);
 
-		$model = $this->getModel('calc');
+		$model = VmModel::getModel('calc');
 
 		$order	= JRequest::getVar('order', array(), 'post', 'array');
 		JArrayHelper::toInteger($order);

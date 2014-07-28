@@ -22,7 +22,7 @@
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 vmJsApi::cssSite();
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_REVIEW_DETAILS');
 ?>
 
@@ -41,9 +41,8 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_REVIEW_DETAILS');
 		<?php
 		$rating_options = array();
 		for ($i=0;$i<=$this->max_rating;$i++) {
-			// $text = JHTML::_('image', JURI::root().'/components/com_virtuemart/assets/images/stars/'.$i.'.gif','');
 
-                        $title = (JText::_("COM_VIRTUEMART_RATING_TITLE").' : '. $i . '/' . $this->max_rating) ;
+            $title = (JText::_("COM_VIRTUEMART_RATING_TITLE").' : '. $i . '/' . $this->max_rating) ;
 			$stars  = '<span class="floatleft vmiconFE vm2-stars'.$i.'" title="'.$title.'"></span>';
 			$rating_options[] = JHTML::_('select.option',$i,$stars);
 
@@ -97,15 +96,11 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_REVIEW_DETAILS');
 </fieldset>
 </div>
 <!-- Hidden Fields -->
-<input type="hidden" name="task" value="ratings" />
-<input type="hidden" name="option" value="com_virtuemart" />
-<input type="hidden" name="view" value="ratings" />
+	<?php echo $this->addStandardHiddenToForm(); ?>
 <input type="hidden" name="virtuemart_rating_review_id" value="<?php echo $this->rating->virtuemart_rating_review_id; ?>" />
 <input type="hidden" name="virtuemart_product_id" value="<?php echo $this->rating->virtuemart_product_id; ?>" />
 <input type="hidden" name="created_by" value="<?php echo $this->rating->created_by; ?>" />
 
-<input type="hidden" name="boxchecked" value="0" />
-<?php echo JHTML::_( 'form.token' ); ?>
 </form>
 
 <?php
@@ -122,13 +117,11 @@ function submitbutton(pressbutton) {
 
 	 if (pressbutton == 'cancel') {
 		submitform( pressbutton );
-		return;
 	}
 	else {
 		if (document.adminForm.counter.value > <?php echo VmConfig::get('reviews_maximum_comment_length'); ?>) alert('<?php echo addslashes( JText::sprintf('COM_VIRTUEMART_REVIEW_ERR_COMMENT2_JS',VmConfig::get('reviews_maximum_comment_length')) ); ?>');
 		else if (document.adminForm.counter.value < <?php echo VmConfig::get('reviews_minimum_comment_length'); ?>) alert('<?php echo addslashes( JText::sprintf('COM_VIRTUEMART_REVIEW_ERR_COMMENT1_JS',VmConfig::get('reviews_minimum_comment_length')) ); ?>');
 		else submitform( pressbutton );
-		return;
 	}
 }
 </script>

@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4690 2011-11-12 14:47:46Z electrocity $
+* @version $Id: default.php 6326 2012-08-08 14:14:28Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 $states = JText::_('COM_VIRTUEMART_STATE_S');
 ?>
 
@@ -46,24 +46,23 @@ $states = JText::_('COM_VIRTUEMART_STATE_S');
 				<input type="checkbox" name="toggle" value="" onclick="checkAll(<?php echo count($this->countries); ?>);" />
 			</th>
 			<th>
-				<?php echo JHTML::_('grid.sort'
-					, JText::_('COM_VIRTUEMART_COUNTRY_NAME')
-					, 'country_name'
-					, $this->lists['filter_order_Dir']
-					, $this->lists['filter_order']); ?>
+				<?php echo $this->sort('country_name') ?>
 		    </th>
 				<?php /* TODO not implemented				    <th>
 				<?php echo JText::_('COM_VIRTUEMART_ZONE_ASSIGN_CURRENT_LBL'); ?>
 				</th> */ ?>
 		    <th>
-				<?php echo JText::_('COM_VIRTUEMART_COUNTRY_2_CODE'); ?>
+				<?php echo $this->sort('country_2_code') ?>
 		    </th>
 		    <th>
-				<?php echo JText::_('COM_VIRTUEMART_COUNTRY_3_CODE'); ?>
+				<?php echo $this->sort('country_3_code') ?>
 		    </th>
 		    <th width="20">
 				<?php echo JText::_('COM_VIRTUEMART_PUBLISHED'); ?>
 		    </th>
+			<th width="20">
+				<?php echo $this->sort('virtuemart_country_id') ?>
+			</th>
 		</tr>
 	    </thead>
 	    <?php
@@ -81,10 +80,20 @@ $states = JText::_('COM_VIRTUEMART_STATE_S');
 			<?php echo $checked; ?>
 		</td>
 		<td align="left">
-		    <a href="<?php echo $editlink; ?>"><?php echo $row->country_name; ?></a>&nbsp;
-		    <a title="<?php echo JText::sprintf('COM_VIRTUEMART_STATES_VIEW_LINK', $row->country_name ); ?>" href="<?php echo $statelink; ?>">[<?php echo $states ?>]</a>
+			<?php
+			$prefix="COM_VIRTUEMART_COUNTRY_";
+			$country_string= Jtext::_($prefix.$row->country_3_code); ?>
+		    <a href="<?php echo $editlink; ?>"><?php echo $row->country_name ?> </a>&nbsp;
+			<?php
+			$lang =JFactory::getLanguage();
+			if ($lang->hasKey($prefix.$row->country_3_code)) {
+				echo "(".$country_string.") ";
+			}
+			?>
+
+		    <a title="<?php echo JText::sprintf('COM_VIRTUEMART_STATES_VIEW_LINK', $country_string ); ?>" href="<?php echo $statelink; ?>">[<?php echo $states ?>]</a>
 		</td>
-<?php /* TODO not implemented				<td align="left">
+		<?php /* TODO not implemented				<td align="left">
 			<?php echo $row->virtuemart_worldzone_id; ?>
 		</td> */ ?>
 		<td> 
@@ -96,6 +105,9 @@ $states = JText::_('COM_VIRTUEMART_STATE_S');
 		<td align="center">
 			<?php echo $published; ?>
 		</td>
+			<td align="center">
+				<?php echo $row->virtuemart_country_id; ?>
+			</td>
 	    </tr>
 		<?php
 		$k = 1 - $k;

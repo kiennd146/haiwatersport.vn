@@ -14,7 +14,7 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: product_prices.php 4241 2011-10-03 22:52:05Z Milbo $
+ * @version $Id: product_prices.php 5913 2012-04-16 15:07:25Z Milbo $
  */
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
@@ -40,16 +40,16 @@ class TableProduct_prices extends VmTableData {
 
     /** @var string Product price */
     var $product_price = null;
-    var $override = 0;
-    var $product_override_price = 0;
-    var $product_tax_id = 0;
-    var $product_discount_id = 0;
+    var $override = null;
+    var $product_override_price = null;
+    var $product_tax_id = null;
+    var $product_discount_id = null;
 
     /** @var string Product currency */
-    var $product_currency = 0;
+    var $product_currency = null;
 
-    var $product_price_vdate = null;
-    var $product_price_edate = null;
+    var $product_price_publish_up = 0;
+    var $product_price_publish_down = 0;
 
     /** @var int Price quantity start */
     var $price_quantity_start = null;
@@ -58,14 +58,15 @@ class TableProduct_prices extends VmTableData {
 
     /**
      * @author RolandD
-     * @param $db A database connector object
+     * @param JDataBase $db
      */
     function __construct(&$db) {
         parent::__construct('#__virtuemart_product_prices', 'virtuemart_product_price_id', $db);
 
-        $this->setPrimaryKey('virtuemart_product_id');
+        $this->setPrimaryKey('virtuemart_product_price_id');
 		$this->setLoggable();
 		$this->setTableShortCut('pp');
+		$this->_updateNulls = true;
     }
 
     /**
@@ -77,11 +78,11 @@ class TableProduct_prices extends VmTableData {
 
 		if(!empty($this->product_price)){
 			$this->product_price = str_replace(array(',',' '),array('.',''),$this->product_price);
-		} else {
-			$this->product_price = null;
 		}
 
-
+		if(isset($this->product_override_price)){
+			$this->product_override_price = str_replace(array(',',' '),array('.',''),$this->product_override_price);
+		}
 
 		return parent::check();
 	}

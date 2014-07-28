@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: shoppergroup.php 3746 2011-07-25 09:45:59Z electrocity $
+* @version $Id: shoppergroup.php 5419 2012-02-10 19:27:53Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -50,15 +50,16 @@ class VirtuemartControllerShopperGroup extends VmController
 		/* Load the view object */
 		$view = $this->getView('shoppergroup', 'html');
 
-		$model = $this->getModel('shoppergroup');
+		$model = VmModel::getModel('shoppergroup');
 		$msgtype = '';
 		$cids = JRequest::getVar('virtuemart_shoppergroup_id',array());
-		if ($model->makeDefault((int)$cids[0])) $msg = JText::_('COM_VIRTUEMART_SET_TO_DEFAUT_SUCCESSFULLY');
+		if ($model->makeDefault((int)$cids[0])) $msg = JText::_('COM_VIRTUEMART_SET_TO_DEFAULT_SUCCESSFULLY');
 		else {
-			$msg = JText::_('COM_VIRTUEMART_SET_TO_DEFAUT_ERROR');
+			$msg = '';
+// 			$msg = JText::_('COM_VIRTUEMART_SET_TO_DEFAULT_ERROR');
 			$msgtype = 'error';
 		}
-		$mainframe->redirect('index.php?option=com_virtuemart&view=shoppergroup', $msg, $msgtype);		
+		$mainframe->redirect('index.php?option=com_virtuemart&view=shoppergroup', $msg, $msgtype);
 	}
 }
 // pure php no closing tag

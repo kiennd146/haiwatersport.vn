@@ -1,5 +1,5 @@
 <?php
-
+defined('_JEXEC') or die();
 /**
  *
  * @package	VirtueMart
@@ -19,8 +19,6 @@ if (!class_exists('VmConfig'))
 
 if (!class_exists('ShopFunctions'))
     require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'shopfunctions.php');
-if (!class_exists('VirtueMartModelManufacturer'))
-    JLoader::import('manufacturer', JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_virtuemart' . DS . 'models');
 
 if (!class_exists('VmElements'))
     require(JPATH_VM_ADMINISTRATOR . DS . 'elements' . DS . 'vmelements.php');
@@ -38,10 +36,10 @@ class JElementVmManufacturersmenu extends JElement {
 
     function fetchElement($name, $value, &$node, $control_name) {
 
-	JPlugin::loadLanguage('com_virtuemart', JPATH_ADMINISTRATOR);
-	$model = new VirtueMartModelManufacturer();
-	$manufacturers = $model->getManufacturers(true, true, false);
-	       return JHTML::_('select.genericlist', $manufacturers, $control_name . '[' . $name . ']', '', $name, 'mf_name', $value, $control_name . $name);
+		VmConfig::loadJLang('com_virtuemart');
+		$model = VmModel::getModel('Manufacturer');
+		$manufacturers = $model->getManufacturers(true, true, false);
+	    return JHTML::_('select.genericlist', $manufacturers, $control_name . '[' . $name . ']', '', $name, 'mf_name', $value, $control_name . $name);
 
     }
 

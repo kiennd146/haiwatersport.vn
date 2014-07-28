@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: state.php 3471 2011-06-09 17:26:05Z Milbo $
+* @version $Id: state.php 5399 2012-02-08 19:29:45Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -35,8 +35,7 @@ class VirtueMartControllerState extends JController
 	public function __construct() {
 		parent::__construct();
 
-		$stateModel = new VirtueMartModelState();
-
+		$stateModel = VmModel::getModel('state');
 		$states = array();
 
 		//retrieving countries id
@@ -44,7 +43,7 @@ class VirtueMartControllerState extends JController
 		$countries = explode(',', $countries);
 
 		foreach($countries as $country){
-			$states[$country] = $stateModel->getStates( JFilterInput::clean($country, 'INTEGER'),true );
+			$states[$country] = $stateModel->getStates( JFilterInput::clean($country, 'INTEGER'),true,true );
 		}
 		echo json_encode($states);
 

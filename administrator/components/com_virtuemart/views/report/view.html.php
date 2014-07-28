@@ -1,9 +1,9 @@
 <?php
-if( !defined( '_JEXEC' ) ) die( 'Direct Access to '.basename(__FILE__).' is not allowed.' );
+if( !defined( '_JEXEC' ) ) die('Restricted access');
 
 /**
 *
-* @version $Id: view.html.php 4890 2011-11-30 21:50:22Z electrocity $
+* @version $Id: view.html.php 6489 2012-10-01 23:17:36Z Milbo $
 * @package VirtueMart
 * @subpackage Report
 * @copyright Copyright (C) VirtueMart Team - All rights reserved.
@@ -17,7 +17,7 @@ if( !defined( '_JEXEC' ) ) die( 'Direct Access to '.basename(__FILE__).' is not 
 * http://virtuemart.org
 */
 
-jimport('joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * Report View class
@@ -26,51 +26,54 @@ jimport('joomla.application.component.view');
  * @subpackage Report
  * @author Wicksj
  */
-class VirtuemartViewReport extends JView {
+class VirtuemartViewReport extends VmView {
 
 	/**
 	 * Render the view
 	 */
 	function display($tpl = null){
 
-		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('html');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
-		$this->loadHelper('currencydisplay');
-		$this->loadHelper('reportFunctions');
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
+		if (!class_exists('CurrencyDisplay'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'currencydisplay.php');
 
-		$model		= $this->getModel();
-		// $config		= JFactory::getConfig();
-		// $tzoffset	= $config->getValue('config.offset');
+
+		$model		= VmModel::getModel();
+
 		JRequest::setvar('task','');
-		// set period
-		//$date_presets = $model->getDatePresets();
 
-		$viewName = ShopFunctions::SetViewTitle('REPORT');
-		$this->assignRef('viewName', $viewName);
-
-		$lists['select_date'] = $model->renderDateSelectList();
-		$lists['state_list'] = $model->renderOrderstatesList();
-		$lists['intervals'] = $model->renderIntervalsList();
+		$this->SetViewTitle('REPORT');
 
 		$myCurrencyDisplay = CurrencyDisplay::getInstance();
 
-		$revenueBasic = $model->getRevenue();
-// 		vmdebug('VirtuemartViewReport revenue',$revenueBasic);
-		if($revenueBasic){
-			$totalReport['revenueTotal']= $totalReport['number_of_ordersTotal'] = $totalReport['itemsSoldTotal'] = 0 ;
-			foreach($revenueBasic as &$j){
+		//update order items button
+		$q = 'SELECT * FROM #__virtuemart_order_items WHERE `product_discountedPriceWithoutTax` IS NULL ';
+		$db = JFactory::getDBO();
+		$db->setQuery($q);
+		$res = $db->loadRow();
+		if($res) {
+			JToolBarHelper::customX('updateOrderItems', 'new', 'new', JText::_('COM_VIRTUEMART_REPORT_UPDATEORDERITEMS'),false);
+			vmError('COM_VIRTUEMART_REPORT_UPDATEORDERITEMS_WARN');
+		}
 
-				$totalReport['revenueTotal'] += $j['order_subtotal'];
+		$this->addStandardDefaultViewLists($model);
+		$revenueBasic = $model->getRevenue();
+
+		if($revenueBasic){
+			$totalReport['revenueTotal_brutto']= $totalReport['revenueTotal_netto']= $totalReport['number_of_ordersTotal'] = $totalReport['itemsSoldTotal'] = 0 ;
+			foreach($revenueBasic as &$j){
+				vmdebug('VirtuemartViewReport revenue',$j);
+				$totalReport['revenueTotal_netto'] += $j['order_subtotal_netto'];
+				$totalReport['revenueTotal_brutto'] += $j['order_subtotal_brutto'];
 				$totalReport['number_of_ordersTotal'] += $j['count_order_id'];
-				$j['order_subtotal'] = $myCurrencyDisplay->priceDisplay($j['order_subtotal'],'',false);
-				$j['product_quantity'] = $model->getItemsByRevenue($j);
+				$j['order_subtotal_netto'] = $myCurrencyDisplay->priceDisplay($j['order_subtotal_netto']);
+				$j['order_subtotal_brutto'] = $myCurrencyDisplay->priceDisplay($j['order_subtotal_brutto']);
+				//$j['product_quantity'] = $model->getItemsByRevenue($j);
 				$totalReport['itemsSoldTotal'] +=$j['product_quantity'];
 			}
-			$totalReport['revenueTotal'] = $myCurrencyDisplay->priceDisplay($totalReport['revenueTotal'],'',false);
-
+			$totalReport['revenueTotal_netto'] = $myCurrencyDisplay->priceDisplay($totalReport['revenueTotal_netto']);
+			$totalReport['revenueTotal_brutto'] = $myCurrencyDisplay->priceDisplay($totalReport['revenueTotal_brutto']);
 			// if ( 'product_quantity'==JRequest::getWord('filter_order')) {
 				// foreach ($revenueBasic as $key => $row) {
 					// $created_on[] =$row['created_on'];
@@ -94,11 +97,16 @@ class VirtuemartViewReport extends JView {
 		// $productList = $model->getOrderItems();
 		// $this->assignRef('productList', $productList);
 
-		$lists = array_merge ($lists ,ShopFunctions::addStandardDefaultViewLists($model));
-		$this->assignRef('lists', $lists);
-
+		$orderstatusM =VmModel::getModel('orderstatus');
+		$this->lists['select_date'] = $model->renderDateSelectList();
+		$orderstates = JRequest::getVar ('order_status_code', array('C','S'));
+		$this->lists['state_list'] = $orderstatusM->renderOSList($orderstates,'order_status_code',TRUE);
+		$this->lists['intervals'] = $model->renderIntervalsList();
 		$this->assignRef('from_period', $model->from_period);
 		$this->assignRef('until_period', $model->until_period);
+
+		$pagination = $model->getPagination();
+		$this->assignRef('pagination', $pagination);
 
 		parent::display($tpl);
 	}

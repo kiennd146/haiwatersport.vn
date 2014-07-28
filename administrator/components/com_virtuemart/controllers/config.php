@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: config.php 4817 2011-11-25 02:54:19Z Milbo $
+* @version $Id: config.php 6188 2012-06-29 09:38:30Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -41,22 +41,9 @@ class VirtuemartControllerConfig extends VmController {
 	 * @author
 	 */
 	function __construct() {
+		VmConfig::loadJLang('com_virtuemart_config');
 		parent::__construct();
 
-//		$this->setMainLangKey('CONFIG');
-		$document = JFactory::getDocument();
-		$viewType = $document->getType();
-		$view = $this->getView('config', $viewType);
-
-		// Push a model into the view
-		$model = $this->getModel('config');
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
-		$model = $this->getModel('user');
-		if (!JError::isError($model)) {
-			$view->setModel($model, false);
-		}
 	}
 
 
@@ -65,13 +52,12 @@ class VirtuemartControllerConfig extends VmController {
 	 *
 	 * @author RickG
 	 */
-	function save(){
+	function save($data = 0){
 
 		JRequest::checkToken() or jexit( 'Invalid Token' );
-		$model = $this->getModel('config');
+		$model = VmModel::getModel('config');
 
 		$data = JRequest::get('post');
-// 		vmdebug ('post', $data);
 		$data['offline_message'] = JRequest::getVar('offline_message','','post','STRING',JREQUEST_ALLOWHTML);
 
 		if(strpos($data['offline_message'],'|')!==false){
@@ -96,32 +82,6 @@ class VirtuemartControllerConfig extends VmController {
 
 
 	}
-
-
-	/**
-	 * Handle the apply task
-	 *
-	 * @author RickG
-	 */
-//	function apply(){
-//
-//		JRequest::checkToken() or jexit( 'Invalid Token' );
-//		$model = $this->getModel('config');
-//
-//		$data = JRequest::get('post');
-//		$data['offline_message'] = JRequest::getVar('offline_message','','post','STRING',JREQUEST_ALLOWHTML);
-//
-//		if ($model->store($data)) {
-//			$msg = JText::_('COM_VIRTUEMART_CONFIG_SAVED');
-//			// Load the newly saved values into the session.
-//			VmConfig::getInstance();
-//		}
-//		else {
-//			$msg = JText::_($model->getError());
-//		}
-//
-//		$this->setRedirect('index.php?option=com_virtuemart&view=config', $msg);
-//	}
 
 
 	/**

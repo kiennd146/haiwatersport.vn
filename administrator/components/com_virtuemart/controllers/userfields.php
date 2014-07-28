@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: userfields.php 3504 2011-06-16 13:46:23Z Milbo $
+* @version $Id: userfields.php 5644 2012-03-09 22:36:32Z electrocity $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -50,33 +50,16 @@ class VirtuemartControllerUserfields extends VmController {
 		$document = JFactory::getDocument();
 		$viewType = $document->getType();
 		$view = $this->getView('userfields', $viewType);
-		$view->loadHelper('paramhelper');
 
-		// Push a model into the view
-		$model = $this->getModel('userfields');
-
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
 		parent::display();
 	}
+	function viewJson() {
 
+		// Create the view object.
+		$view = $this->getView('userfields', 'json');
 
-	/**
-	 * Handle the edit task
-	 */
-	function edit(){
-
-		$document = JFactory::getDocument();
-		$viewType = $document->getType();
-		$view = $this->getView('userfields', $viewType);
-
-		// Load the additional models
-		$view->setModel( $this->getModel( 'vendor', 'VirtueMartModel' ));
-		$view->setModel( $this->getModel( 'shoppergroup', 'VirtueMartModel' ));
-
-		
-		parent::edit();
+		// Now display the view.
+		$view->display(null);
 	}
 
 }

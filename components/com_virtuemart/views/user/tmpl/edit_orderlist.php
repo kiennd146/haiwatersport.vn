@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit_orderlist.php 4231 2011-10-03 11:59:44Z alatak $
+* @version $Id: edit_orderlist.php 5351 2012-02-01 13:40:13Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -42,11 +42,11 @@ defined('_JEXEC') or die('Restricted access'); ?>
 	<?php
 		$k = 0;
 		foreach ($this->orderlist as $i => $row) {
-			$editlink = JROUTE::_('index.php?option=com_virtuemart&view=orders&task=details&order_number=' . $row->order_number);
+			$editlink = JRoute::_('index.php?option=com_virtuemart&view=orders&layout=details&order_number=' . $row->order_number);
 			?>
 			<tr class="<?php echo "row$k"; ?>">
 				<td align="left">
-					<a href="<?php echo $editlink; ?>"><?php echo $row->order_number; ?></a>
+					<a href="<?php echo $editlink; ?>" rel="nofollow"><?php echo $row->order_number; ?></a>
 				</td>
 				<td align="left">
 					<?php echo JHTML::_('date', $row->created_on); ?>

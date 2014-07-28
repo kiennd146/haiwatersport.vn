@@ -1,20 +1,20 @@
 <?php
 /**
-*
-* Orders controller
-*
-* @package	VirtueMart
-* @subpackage
-* @author RolandD
-* @link http://www.virtuemart.net
-* @copyright Copyright (c) 2004 - 2010 VirtueMart Team. All rights reserved.
-* @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
-* VirtueMart is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* @version $Id: orders.php 4975 2011-12-08 00:35:58Z Milbo $
-*/
+ *
+ * Orders controller
+ *
+ * @package	VirtueMart
+ * @subpackage
+ * @author Max Milbers, Valerie Isaksen
+ * @link http://www.virtuemart.net
+ * @copyright Copyright (c) 2004 - 2010 VirtueMart Team. All rights reserved.
+ * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
+ * VirtueMart is free software. This version may have been modified pursuant
+ * to the GNU General Public License, and as distributed it includes or
+ * is derivative of works licensed under the GNU General Public License or
+ * other free or open source software licenses.
+ * @version $Id: orders.php 6188 2012-06-29 09:38:30Z Milbo $
+ */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
@@ -26,11 +26,11 @@ if(!class_exists('VmController'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.
 
 
 /**
-* Orders Controller
-*
-* @package    VirtueMart
-* @author
-*/
+ * Orders Controller
+ *
+ * @package    VirtueMart
+ * @author
+ */
 class VirtuemartControllerOrders extends VmController {
 
 	/**
@@ -40,78 +40,28 @@ class VirtuemartControllerOrders extends VmController {
 	 * @author
 	 */
 	function __construct() {
+		VmConfig::loadJLang('com_virtuemart_orders',TRUE);
 		parent::__construct();
 
 	}
 
 	/**
-	* Shows the product list screen
-	*/
-	public function Orders() {
-		/* Create the view object */
-		$view = $this->getView('orders', 'html');
+	 * Shows the order details
+	 */
+	public function edit($layout='order'){
 
-		/* Default model */
-		$view->setModel( $this->getModel( 'orders', 'VirtueMartModel' ), true );
-
-		/* Set the layout */
-		$view->setLayout('orders');
-
-		/* Now display the view. */
-		$view->display();
-	}
-
-	/**
-	* Print the order details
-	*/
-	public function orderPrint()
-	{
-		/* Create the view object */
-		$view = $this->getView('orders', 'pdf');
-
-		/* Default model */
-		$view->setModel( $this->getModel( 'orders', 'VirtueMartModel' ), true );
-		/* Additional models */
-		$view->setModel( $this->getModel( 'userfields', 'VirtueMartModel' ));
-		$view->setModel( $this->getModel( 'product', 'VirtueMartModel' ));
-
-		/* Set the layout */
-		$view->setLayout('order_print');
-
-		/* Now display the view. */
-		$view->display();
-	}
-
-	/**
-	* Shows the order details
-	*/
-	public function edit()
-	{
-		/* Create the view object */
-		$view = $this->getView('orders', 'html');
-
-		/* Default model */
-		$view->setModel( $this->getModel( 'orders', 'VirtueMartModel' ), true );
-		/* Additional models */
-		$view->setModel( $this->getModel( 'userfields', 'VirtueMartModel' ));
-		$view->setModel( $this->getModel( 'product', 'VirtueMartModel' ));
-
-		/* Set the layout */
-		$view->setLayout('order');
-
-		/* Now display the view. */
-		$view->display();
+		parent::edit($layout);
 	}
 
 	/**
 	 * NextOrder
-	 * TODO rename, the name is ambigous notice by Max Milbers
+	 * renamed, the name was ambigous notice by Max Milbers
 	 * @author Kohl Patrick
 	 */
-	public function next($dir = 'ASC'){
-		$model = $this->getModel('orders');
+	public function nextItem($dir = 'ASC'){
+		$model = VmModel::getModel('orders');
 		$id = JRequest::getInt('virtuemart_order_id');
-		if (!$order_id = $model->GetOrderId($dir,$id)) {
+		if (!$order_id = $model->getOrderId($id, $dir)) {
 			$order_id  = $id;
 			$msg = JText::_('COM_VIRTUEMART_NO_MORE_ORDERS');
 		} else {
@@ -122,12 +72,12 @@ class VirtuemartControllerOrders extends VmController {
 
 	/**
 	 * NextOrder
-	 * TODO rename, the name is ambigous notice by Max Milbers
+	 * renamed, the name was ambigous notice by Max Milbers
 	 * @author Kohl Patrick
 	 */
-	public function prev(){
+	public function prevItem(){
 
-		$this->next('DESC');
+		$this->nextItem('DESC');
 	}
 	/**
 	 * Generic cancel task
@@ -139,26 +89,26 @@ class VirtuemartControllerOrders extends VmController {
 		$this->setRedirect('index.php?option=com_virtuemart&view=orders' );
 	}
 	/**
-	* Shows the order details
-	* @deprecated
-	*/
+	 * Shows the order details
+	 * @deprecated
+	 */
 	public function editOrderStatus() {
-		//vmdebug('editOrderStatus');
+
 		/* Create the view object */
 		$view = $this->getView('orders', 'html');
 
 		/* Default model */
-		$model = $this->getModel('orders');
+		$model = VmModel::getModel('orders');
 		$model->updateOrderStatus();
 		/* Now display the view. */
 		$view->display();
 	}
 
 	/**
-	* Update an order status
-	*
-	* @author RolandD
-	*/
+	 * Update an order status
+	 *
+	 * @author Max Milbers
+	 */
 	public function updatestatus() {
 		//vmdebug('updatestatus');
 		$mainframe = Jfactory::getApplication();
@@ -168,12 +118,8 @@ class VirtuemartControllerOrders extends VmController {
 		/* Load the view object */
 		$view = $this->getView('orders', 'html');
 
-		/* Load the helper */
-		$view->loadHelper('shopFunctions');
-		$view->loadHelper('vendorHelper');
-
 		/* Update the statuses */
-		$model = $this->getModel('orders');
+		$model = VmModel::getModel('orders');
 
 		if ($lastTask == 'updatestatus') {
 			// single order is in POST but we need an array
@@ -188,11 +134,11 @@ class VirtuemartControllerOrders extends VmController {
 
 		$msg='';
 		if ($result['updated'] > 0)
-		    $msg = JText::sprintf('COM_VIRTUEMART_ORDER_UPDATED_SUCCESSFULLY', $result['updated'] );
+		$msg = JText::sprintf('COM_VIRTUEMART_ORDER_UPDATED_SUCCESSFULLY', $result['updated'] );
 		else if ($result['error'] == 0)
-			 $msg .= JText::_('COM_VIRTUEMART_ORDER_NOT_UPDATED');
+		$msg .= JText::_('COM_VIRTUEMART_ORDER_NOT_UPDATED');
 		if ($result['error'] > 0)
-		    $msg .= JText::sprintf('COM_VIRTUEMART_ORDER_NOT_UPDATED_SUCCESSFULLY', $result['error'] , $result['total']);
+		$msg .= JText::sprintf('COM_VIRTUEMART_ORDER_NOT_UPDATED_SUCCESSFULLY', $result['error'] , $result['total']);
 		if ('updatestatus'== $lastTask ) {
 			$mainframe->redirect('index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id='.$virtuemart_order_id , $msg);
 		}
@@ -208,20 +154,16 @@ class VirtuemartControllerOrders extends VmController {
 	 */
 	public function saveItemStatus() {
 		//vmdebug('saveItemStatus');
-	    $mainframe = Jfactory::getApplication();
+		$mainframe = Jfactory::getApplication();
 
-	    /* Load the view object */
-	    $view = $this->getView('orders', 'html');
+		/* Load the view object */
+		$view = $this->getView('orders', 'html');
 
-	    /* Load the helper */
-	    $view->loadHelper('shopFunctions');
-	    $view->loadHelper('vendorHelper');
+		$data = JRequest::get('post');
+		$model = VmModel::getModel();
+		$model->updateItemStatus(JArrayHelper::toObject($data), $data['new_status']);
 
-	    $data = JRequest::get('post');
-	    $model = $this->getModel('orders');
-	    $model->updateItemStatus(JArrayHelper::toObject($data), $data['new_status']);
-
-	    $mainframe->redirect('index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id='.$data['virtuemart_order_id']);
+		$mainframe->redirect('index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id='.$data['virtuemart_order_id']);
 	}
 
 
@@ -230,25 +172,22 @@ class VirtuemartControllerOrders extends VmController {
 	 */
 	public function editOrderItem() {
 		//vmdebug('editOrderItem');
-	    JRequest::setVar('layout', 'orders_editorderitem');
-	    JRequest::setVar('hidemenu', 1);
+		JRequest::setVar('layout', 'orders_editorderitem');
+		// 	    JRequest::setVar('hidemenu', 1);
 
-	    parent::display();
+		parent::display();
 	}
 
 
 	/**
 	 * correct position, working with json? actually? WHat ist that?
 	 *
-	* Get a list of related products
-	* @author RolandD
-	*/
+	 * Get a list of related products
+	 * @author Max Milbers
+	 */
 	public function getProducts() {
 		/* Create the view object */
 		$view = $this->getView('orders', 'json');
-
-		/* Default model */
-		$view->setModel( $this->getModel( 'product', 'VirtueMartModel' ), true );
 
 		$view->setLayout('orders_editorderitem');
 
@@ -264,7 +203,7 @@ class VirtuemartControllerOrders extends VmController {
 	{
 		//vmdebug('updateOrderItemStatus');
 		$mainframe = Jfactory::getApplication();
-		$model = $this->getModel('orders');
+		$model = VmModel::getModel();
 		$_items = JRequest::getVar('item_id',  0, '', 'array');
 		//JArrayHelper::toInteger($_items);
 
@@ -273,60 +212,125 @@ class VirtuemartControllerOrders extends VmController {
 		foreach ($_items as $key=>$value) {
 			//vmdebug('updateOrderItemStatus VAL  ',$value);
 			if (!isset($value['comments'])) $value['comments'] = '';
-			$model->updateSingleItem((int)$key, $value['order_status'],$value['comments'],$_orderID);
-		}
 
+			$data = (object)$value;
+			$data->virtuemart_order_id = $_orderID;
+			// 			$model->updateSingleItem((int)$key, $value['order_status'],$value['comments'],$_orderID);
+			$model->updateSingleItem((int)$key, $data, true);
+		}
+		$model->deleteInvoice($_orderID);
 		$mainframe->redirect('index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id='.$_orderID);
+	}
+
+	public function updateOrderHead()
+	{
+		$mainframe = Jfactory::getApplication();
+		$model = VmModel::getModel();
+		$_items = JRequest::getVar('item_id',  0, '', 'array');
+		$_orderID = JRequest::getInt('virtuemart_order_id', '');
+		$model->UpdateOrderHead((int)$_orderID, JRequest::get('post'));
+		$model->deleteInvoice($_orderID);
+		$mainframe->redirect('index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id='.$_orderID);
+	}
+
+	public function CreateOrderHead()
+	{
+		$mainframe = Jfactory::getApplication();
+		$model = VmModel::getModel();
+		$orderid = $model->CreateOrderHead();
+		$mainframe->redirect('index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id='.$orderid );
 	}
 
 	/**
 	 * Update a single order item
 
-	public function updateOrderItem()
-	{
+	 public function updateOrderItem()
+	 {
 		//vmdebug('updateOrderItem');
 		$mainframe = Jfactory::getApplication();
-		$model = $this->getModel('orders');
-	//	$model->updateSingleItem();
+		$model = VmModel::getModel('orders');
+		//	$model->updateSingleItem();
 		$mainframe->redirect('index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id='.JRequest::getInt('virtuemart_order_id', ''));
-	}
- */
-	/**
-	* Save the given order item
-	*/
-	public function saveOrderItem() {
-		//vmdebug('saveOrderItem');
-	    $orderId = JRequest::getInt('virtuemart_order_id', '');
-	    $model = $this->getModel('orders');
-	    $msg = '';
-	    $data = JRequest::get('post');
-	    if (!$model->saveOrderLineItem()) {
-		$msg = $model->getError();
-	    }
+		}
+		*/
 
-	    $editLink = 'index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id=' . $orderId;
-	    $this->setRedirect($editLink, $msg);
+	public function newOrderItem() {
+		//vmdebug('newOrderItem');
+		$orderId = JRequest::getInt('virtuemart_order_id', '');
+		$model = VmModel::getModel();
+		$msg = '';
+		$data = JRequest::get('post');
+		if (!$model->saveOrderLineItem($data)) {
+			$msg = $model->getError();
+		}
+		$model->deleteInvoice($orderId);
+		$editLink = 'index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id=' . $orderId;
+		$this->setRedirect($editLink, $msg);
 	}
 
-
 	/**
-	* Removes the given order item
-	*/
+	 * Removes the given order item
+	 */
 	public function removeOrderItem() {
 		//vmdebug('removeOrderItem');
-	    $model = $this->getModel('orders');
-	    $msg = '';
-	    $orderId = JRequest::getInt('orderId', '');
+		$model = VmModel::getModel();
+		$msg = '';
+		$orderId = JRequest::getInt('orderId', '');
 		// TODO $orderLineItem as int ???
-	    $orderLineItem = JRequest::getVar('orderLineId', '');
+		$orderLineItem = JRequest::getVar('orderLineId', '');
 
-	    if (!$model->removeOrderLineItem($orderLineItem)) {
+		if (!$model->removeOrderLineItem($orderLineItem)) {
 			$msg = $model->getError();
-	    }
-
-	    $editLink = 'index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id=' . $orderId;
-	    $this->setRedirect($editLink, $msg);
+		}
+		$model->deleteInvoice($orderId);
+		$editLink = 'index.php?option=com_virtuemart&view=orders&task=edit&virtuemart_order_id=' . $orderId;
+		$this->setRedirect($editLink, $msg);
 	}
+
+	public function exportOrdersAsCSV(){
+
+		$model = VmModel::getModel();
+
+		$idArray = JRequest::getVar('cid',  0, '', 'array');
+
+		$orders = array();
+		foreach($idArray as $orderId){
+			$orders[] = $model -> getOrder($orderId);
+		}
+
+		$csv = '';
+
+		$head = array('virtuemart_order_userinfo_id','virtuemart_vendor_id','order_number','order_total','order_subtotal','order_tax','order_status','user_currency_rate','customer_note');
+
+		foreach($head as $item){
+			$csv .= '"'.$item.'";"';
+		}
+
+		foreach($orders as $order){
+// 			$order = (array) $order;7
+// 			$order['details']
+// 			$order['items']
+// 			$order['calc_rules']
+			$attribs = get_object_vars($order['details']['BT']);
+
+// 			$csv = '"BT"';
+// 			foreach($attribs as $k=>$v){
+// 				$csv .= ';"'.$k.':'$v;
+// 			}
+// 			$csv .= "\n";
+		}
+
+		$jUser = JFactory::getUser();
+		$date = date("Y-m-d");
+		$name = $jUser->name.$date.'.csv';
+// 		header("Content-Disposition: attachment; filename=\"".JFile::getName($media->file_url)."\"");
+// 		header("Content-Disposition: attachment; filename=\"".$name."\"");
+// 		echo $csv;
+		parent::display();
+// 		jExit();
+	}
+
+
 }
 // pure php no closing tag
 

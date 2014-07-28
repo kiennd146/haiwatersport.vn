@@ -13,11 +13,30 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: edit.php 4746 2011-11-17 22:10:50Z alatak $
+ * @version $Id: edit.php 6386 2012-08-29 11:29:26Z alatak $
  */
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-AdminUIHelper::startAdminArea();
+		$js = '
+	jQuery(document).ready(function( $ ) {
+			if ( $("#custom_price_display").is(\':checked\') ) {
+				$("#show_hide_prices").show();
+			} else {
+				$("#show_hide_prices").hide();
+			}
+		 $("#custom_price_display").click(function() {
+			if ( $("#custom_price_display").is(\':checked\') ) {
+				$("#show_hide_prices").show();
+			} else {
+				$("#show_hide_prices").hide();
+			}
+		});
+	});
+	';
+
+$document = JFactory::getDocument();
+$document->addScriptDeclaration($js);
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start', 'COM_VIRTUEMART_SHOPPERGROUP_NAME');
 ?>
 
@@ -74,9 +93,13 @@ AdminUIHelper::imitateTabs('start', 'COM_VIRTUEMART_SHOPPERGROUP_NAME');
 <?php echo JText::_('COM_VIRTUEMART_SHOPPERGROUP_ENABLE_PRICE_DISPLAY'); ?>
 		    </td>
 		    <td>
-<?php echo VmHTML::checkbox('custom_price_display', $this->shoppergroup->custom_price_display) ?>
+<?php
+			     $attributes='';
+			    echo VmHTML::checkbox('custom_price_display', $this->shoppergroup->custom_price_display,1,0,$attributes) ?>
 		    </td>
 		</tr>
+		</table>
+		<table class="admintable" id="show_hide_prices">
 		<tr>
 		    <td>
 			<span class="hasTip" title="<?php echo JText::_('COM_VIRTUEMART_ADMIN_CFG_SHOW_PRICES_EXPLAIN'); ?>">
@@ -87,7 +110,6 @@ AdminUIHelper::imitateTabs('start', 'COM_VIRTUEMART_SHOPPERGROUP_NAME');
 		    </td>
 		</tr>
 
-		<table class="admintable">
 		    <tr>
 			<th></th>
 			<th><?php echo JText::_('COM_VIRTUEMART_ADMIN_CFG_PRICES_LABEL'); ?></th>
@@ -105,14 +127,16 @@ echo ShopFunctions::writePriceConfigLine($this->shoppergroup->price_display, 'sa
 echo ShopFunctions::writePriceConfigLine($this->shoppergroup->price_display, 'priceWithoutTax', 'COM_VIRTUEMART_ADMIN_CFG_PRICE_SALESPRICE_WOTAX');
 echo ShopFunctions::writePriceConfigLine($this->shoppergroup->price_display, 'discountAmount', 'COM_VIRTUEMART_ADMIN_CFG_PRICE_DISC_AMOUNT');
 echo ShopFunctions::writePriceConfigLine($this->shoppergroup->price_display, 'taxAmount', 'COM_VIRTUEMART_ADMIN_CFG_PRICE_TAX_AMOUNT');
+echo ShopFunctions::writePriceConfigLine($this->shoppergroup->price_display, 'unitPrice', 'COM_VIRTUEMART_ADMIN_CFG_PRICE_UNITPRICE');
 ?>
 		</table>
+
 	</fieldset>
     </div>
 
     <input type="hidden" name="default" value="<?php echo $this->shoppergroup->default ?>" />
     <input type="hidden" name="virtuemart_shoppergroup_id" value="<?php echo $this->shoppergroup->virtuemart_shoppergroup_id; ?>" />
-<?php echo VmHTML::HiddenEdit() ?>
+<?php echo $this->addStandardHiddenToForm(); ?>
 
 </form>
 

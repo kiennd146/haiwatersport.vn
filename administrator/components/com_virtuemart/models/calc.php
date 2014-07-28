@@ -1,4 +1,6 @@
 <?php
+// Check to ensure this file is included in Joomla!
+defined('_JEXEC') or die('Restricted access');
 /**
 *
 * Data module for shop calculation rules
@@ -6,6 +8,7 @@
 * @package	VirtueMart
 * @subpackage  Calculation tool
 * @author Max Milbers
+* @author mediaDESIGN> St.Kraft 2013-02-24 manufacturer relation added
 * @link http://www.virtuemart.net
 * @copyright Copyright (c) 2004 - 2010 VirtueMart Team. All rights reserved.
 * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
@@ -13,13 +16,9 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: calc.php 5113 2011-12-17 11:47:26Z Milbo $
+* @version $Id: calc.php 6396 2012-09-05 17:35:36Z Milbo $
 */
 
-// Check to ensure this file is included in Joomla!
-defined('_JEXEC') or die('Restricted access');
-
-jimport( 'joomla.application.component.model');
 
 if(!class_exists('VmModel'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmmodel.php');
 
@@ -37,11 +36,13 @@ class VirtueMartModelCalc extends VmModel {
 
     	parent::__construct();
 
-		$this->setMainTable('calcs');
-		$this->setToggleName('calc_shopper_published');
-		$this->setToggleName('calc_vendor_published');
-
-		$this->addvalidOrderingFieldName(array('virtuemart_category_id','virtuemart_country_id','virtuemart_state_id','virtuemart_shoppergroup_id'));
+			$this->setMainTable('calcs');
+			$this->setToggleName('calc_shopper_published');
+			$this->setToggleName('calc_vendor_published');
+	  	$this->setToggleName('shared');
+			$this->addvalidOrderingFieldName(array('virtuemart_category_id','virtuemart_country_id','virtuemart_state_id','virtuemart_shoppergroup_id'
+				,'virtuemart_manufacturer_id'
+			)); 
     }
 
 
@@ -51,55 +52,63 @@ class VirtueMartModelCalc extends VmModel {
      * @author Max Milbers
      */
 	public function getCalc(){
-		if(empty($this->_db)) $this->_db = JFactory::getDBO();
 
-  		if (empty($this->_data)) {
+  	if (empty($this->_data)) {
+  		if(empty($this->_db)) $this->_db = JFactory::getDBO();
+
    		$this->_data = $this->getTable('calcs');
    		$this->_data->load((int)$this->_id);
 
 			$xrefTable = $this->getTable('calc_categories');
 			$this->_data->calc_categories = $xrefTable->load($this->_id);
 			if ( $xrefTable->getError() ) {
-				$this->setError(get_class( $this ).' calc_categories '.$xrefTable->getError());
+				vmError(get_class( $this ).' calc_categories '.$xrefTable->getError());
 			}
 
 			$xrefTable = $this->getTable('calc_shoppergroups');
 			$this->_data->virtuemart_shoppergroup_ids = $xrefTable->load($this->_id);
 			if ( $xrefTable->getError() ) {
-				$this->setError(get_class( $this ).' calc_shoppergroups '.$xrefTable->getError());
+				vmError(get_class( $this ).' calc_shoppergroups '.$xrefTable->getError());
 			}
 
 			$xrefTable = $this->getTable('calc_countries');
 			$this->_data->calc_countries = $xrefTable->load($this->_id);
 			if ( $xrefTable->getError() ) {
-				$this->setError(get_class( $this ).' calc_countries '.$xrefTable->getError());
+				vmError(get_class( $this ).' calc_countries '.$xrefTable->getError());
 			}
 
 			$xrefTable = $this->getTable('calc_states');
 			$this->_data->virtuemart_state_ids = $xrefTable->load($this->_id);
 			if ( $xrefTable->getError() ) {
-				$this->setError(get_class( $this ).' virtuemart_state_ids '.$xrefTable->getError());
+				vmError(get_class( $this ).' virtuemart_state_ids '.$xrefTable->getError());
 			}
 
+			$xrefTable = $this->getTable('calc_manufacturers');
+			$this->_data->virtuemart_manufacturers = $xrefTable->load($this->_id);
+			if ( $xrefTable->getError() ) {
+				vmError(get_class( $this ).' calc_manufacturers '.$xrefTable->getError());
+			}
+
+			
 			JPluginHelper::importPlugin('vmcalculation');
 			$dispatcher = JDispatcher::getInstance();
 			$dispatcher->trigger('plgVmGetPluginInternalDataCalc',array(&$this->_data));
 
-  		}
+  	}
 
-		if($errs = $this->getErrors()){
-			$app = JFactory::getApplication();
-			foreach($errs as $err){
-				$app->enqueueMessage($err);
-			}
-		}
+// 		if($errs = $this->getErrors()){
+// 			$app = JFactory::getApplication();
+// 			foreach($errs as $err){
+// 				$app->enqueueMessage($err);
+// 			}
+// 		}
 
 // 		vmdebug('my calc',$this->_data);
   		return $this->_data;
 	}
 
 	/**
-	 * Retireve a list of calculation rules from the database.
+	 * Retrieve a list of calculation rules from the database.
 	 *
      * @author Max Milbers
      * @param string $onlyPuiblished True to only retreive the published Calculation rules, false otherwise
@@ -108,33 +117,20 @@ class VirtueMartModelCalc extends VmModel {
 	 */
 	public function getCalcs($onlyPublished=false, $noLimit=false, $search=false){
 
-		if(empty($this->_db)) $this->_db = JFactory::getDBO();
-
 		$where = array();
 		$this->_noLimit = $noLimit;
-// 		$query = 'SELECT * FROM `#__virtuemart_calcs` ';
-		/* add filters */
+
+		// add filters
 		if ($onlyPublished) $where[] = '`published` = 1';
-		//if (JRequest::getWord('search', false)) $where[] = '`calc_name` LIKE '.$this->_db->Quote('%'.JRequest::getWord('search').'%');
+
 		if($search){
-			$search = '"%' . $this->_db->getEscaped( $search, true ) . '%"' ;
+			$db = JFactory::getDBO();
+			$search = '"%' . $db->getEscaped( $search, true ) . '%"' ;
 			$where[] = ' `calc_name` LIKE '.$search.' OR `calc_descr` LIKE '.$search.' OR `calc_value` LIKE '.$search.' ';
 		}
 
 		$whereString= '';
 		if (count($where) > 0) $whereString = ' WHERE '.implode(' AND ', $where) ;
-// 		$this->_query .= $this->_getOrdering('calc_name');
-// 		if ($noLimit) {
-// 			$this->_data = $this->_getList($this->_query);
-// 		}
-// 	 	else {
-// 			$this->_data = $this->_getList($this->_query, $this->getState('limitstart'), $this->getState('limit'));
-// 		}
-
-// 		if(count($this->_data) >0){
-// 			$this->_total = $this->_getListCount($this->_query);
-// 		}
-		//$this->_total = $this->_getListCount($this->_query) ;
 
 		$this->_data = $this->exeSortSearchListQuery(0,'*',' FROM `#__virtuemart_calcs`',$whereString,'',$this->_getOrdering());
 
@@ -148,10 +144,13 @@ class VirtueMartModelCalc extends VmModel {
 			$data->calcShoppersList = shopfunctions::renderGuiList('virtuemart_shoppergroup_id','#__virtuemart_calc_shoppergroups','virtuemart_calc_id',$data->virtuemart_calc_id,'shopper_group_name','#__virtuemart_shoppergroups','virtuemart_shoppergroup_id','shoppergroup',4,false);
 
 			/* Write the first 5 countries in the list */
-			$data->calcCountriesList = shopfunctions::renderGuiList('virtuemart_country_id','#__virtuemart_calc_countries','virtuemart_calc_id',$data->virtuemart_calc_id,'country_name','#__virtuemart_countries','virtuemart_country_id','country');
+			$data->calcCountriesList = shopfunctions::renderGuiList('virtuemart_country_id','#__virtuemart_calc_countries','virtuemart_calc_id',$data->virtuemart_calc_id,'country_name','#__virtuemart_countries','virtuemart_country_id','country',4,false);
 
 			/* Write the first 5 states in the list */
-			$data->calcStatesList = shopfunctions::renderGuiList('virtuemart_state_id','#__virtuemart_calc_states','virtuemart_calc_id',$data->virtuemart_calc_id,'state_name','#__virtuemart_states','virtuemart_state_id','state');
+			$data->calcStatesList = shopfunctions::renderGuiList('virtuemart_state_id','#__virtuemart_calc_states','virtuemart_calc_id',$data->virtuemart_calc_id,'state_name','#__virtuemart_states','virtuemart_state_id','state',4,false);
+
+			/* Write the first 5 manufacturers in the list */
+			$data->calcManufacturersList = shopfunctions::renderGuiList('virtuemart_manufacturer_id','#__virtuemart_calc_manufacturers','virtuemart_calc_id',$data->virtuemart_calc_id,'mf_name','#__virtuemart_manufacturers','virtuemart_manufacturer_id','manufacturer');
 
 			$query = 'SELECT `currency_name` FROM `#__virtuemart_currencies` WHERE `virtuemart_currency_id` = "'.(int)$data->calc_currency.'" ';
 			$this->_db->setQuery($query);
@@ -159,7 +158,7 @@ class VirtueMartModelCalc extends VmModel {
 
 			JPluginHelper::importPlugin('vmcalculation');
 			$dispatcher = JDispatcher::getInstance();
-			$error = $dispatcher->trigger('GetPluginInternalDataCalc',array(&$data));
+			$error = $dispatcher->trigger('plgVmGetPluginInternalDataCalcList',array(&$data));
 		}
 
 		return $this->_data;
@@ -171,7 +170,7 @@ class VirtueMartModelCalc extends VmModel {
      * @author Max Milbers
      * @return boolean True is the save was successful, false otherwise.
 	 */
-    public function store($data) {
+    public function store(&$data) {
 
 		JRequest::checkToken() or jexit( 'Invalid Token, in store calc');
 
@@ -191,32 +190,38 @@ class VirtueMartModelCalc extends VmModel {
 
 		$table->bindChecknStore($data);
 		if($table->getError()){
-			$this->setError($table->getError());
+			vmError('Calculation store '.$table->getError());
 			return false;
 		}
 
     	$xrefTable = $this->getTable('calc_categories');
     	$xrefTable->bindChecknStore($data);
     	if($xrefTable->getError()){
-			$this->setError($xrefTable->getError());
+			vmError('Calculation store '.$xrefTable->getError());
 		}
 
 		$xrefTable = $this->getTable('calc_shoppergroups');
     	$xrefTable->bindChecknStore($data);
     	if($xrefTable->getError()){
-			$this->setError($xrefTable->getError());
+			vmError('Calculation store '.$xrefTable->getError());
 		}
 
 		$xrefTable = $this->getTable('calc_countries');
     	$xrefTable->bindChecknStore($data);
     	if($xrefTable->getError()){
-			$this->setError($xrefTable->getError());
+			vmError('Calculation store '.$xrefTable->getError());
 		}
 
 		$xrefTable = $this->getTable('calc_states');
     	$xrefTable->bindChecknStore($data);
     	if($xrefTable->getError()){
-			$this->setError($xrefTable->getError());
+			vmError('Calculation store '.$xrefTable->getError());
+		}
+
+		$xrefTable = $this->getTable('calc_manufacturers');
+    	$xrefTable->bindChecknStore($data);
+    	if($xrefTable->getError()){
+			vmError('Calculation store '.$xrefTable->getError());
 		}
 
 		if (!class_exists('vmCalculationPlugin')) require(JPATH_VM_PLUGINS . DS . 'vmcalculationplugin.php');
@@ -230,45 +235,38 @@ class VirtueMartModelCalc extends VmModel {
 		if(!empty($errMsg)){
 
 			$errNum = $this->_db->getErrorNum();
-			$this->setError('SQL-Error: '.$errNum.' '.$errMsg.' <br /> used query '.$this->_db->getQuery());
+			vmError('SQL-Error: '.$errNum.' '.$errMsg.' <br /> used query '.$this->_db->getQuery());
 		}
 
 		if(!empty($errs)){
 			foreach($errs as $err){
-				if(!empty($err)) $this->setError($err);
-			}
-		}
-
-		if($errs = $this->getErrors()){
-			$app = JFactory::getApplication();
-			foreach($errs as $err){
-				$app->enqueueMessage($err);
+				if(!empty($err)) vmError('Calculation store '.$err);
 			}
 		}
 
 		return $table->virtuemart_calc_id;
 	}
 
-	function getRule($kind){
+	static function getRule($kind){
 
 		if (!is_array($kind)) $kind = array($kind);
-		if(empty($this->_db)) $this->_db = JFactory::getDBO();
+		$db = JFactory::getDBO();
 
-		$this->_nullDate		= $this->_db->getNullDate();
-		$this->_now			= JFactory::getDate()->toMySQL();
+		$nullDate		= $db->getNullDate();
+		$now			= JFactory::getDate()->toMySQL();
 
 		$q = 'SELECT * FROM `#__virtuemart_calcs` WHERE ';
 		foreach ($kind as $field){
-			$q .= '`calc_kind`='.$this->_db->Quote($field).' OR ';
+			$q .= '`calc_kind`='.$db->Quote($field).' OR ';
 		}
 		$q=substr($q,0,-3);
 
-		$q .= 'AND ( publish_up = "' . $this->_db->getEscaped($this->_nullDate) . '" OR publish_up <= "' . $this->_db->getEscaped($this->_now) . '" )
-				AND ( publish_down = "' . $this->_db->getEscaped($this->_nullDate) . '" OR publish_down >= "' . $this->_db->getEscaped($this->_now) . '" ) ';
+		$q .= 'AND ( publish_up = "' . $db->getEscaped($nullDate) . '" OR publish_up <= "' . $db->getEscaped($now) . '" )
+				AND ( publish_down = "' . $db->getEscaped($nullDate) . '" OR publish_down >= "' . $db->getEscaped($now) . '" ) ';
 
 
-		$this->_db->setQuery($q);
-		$data = $this->_db->loadObjectList();
+		$db->setQuery($q);
+		$data = $db->loadObjectList();
 
 		if (!$data) {
    			$data = new stdClass();
@@ -276,22 +274,86 @@ class VirtueMartModelCalc extends VmModel {
   		return $data;
 	}
 
-	function getTaxes() {
+	/**
+	* Delete all calcs selected
+	*
+	* @author Max Milbers
+	* @param  array $cids categories to remove
+	* @return boolean if the item remove was successful
+	*/
+	public function remove($cids) {
 
-		return self::getRule(array('TAX','TaxBill'));
+		JRequest::checkToken() or jexit( 'Invalid Token, in remove category');
+
+		$table = $this->getTable($this->_maintablename);
+		$cat = $this->getTable('calc_categories');
+		$sgrp = $this->getTable('calc_shoppergroups');
+		$countries = $this->getTable('calc_countries');
+		$states = $this->getTable('calc_states');
+		$manufacturers = $this->getTable('calc_manufacturers');
+
+		$ok = true;
+
+		foreach($cids as $id) {
+			$id = (int)$id;
+			vmdebug('remove '.$id);
+			if (!$table->delete($id)) {
+				vmError(get_class( $this ).'::remove '.$id.' '.$table->getError());
+				$ok = false;
+			}
+
+			if (!$cat->delete($id)) {
+				vmError(get_class( $this ).'::remove '.$id.' '.$cat->getError());
+				$ok = false;
+			}
+
+			if (!$sgrp->delete($id)) {
+				vmError(get_class( $this ).'::remove '.$id.' '.$sgrp->getError());
+				$ok = false;
+			}
+
+			if (!$countries->delete($id)) {
+				vmError(get_class( $this ).'::remove '.$id.' '.$countries->getError());
+				$ok = false;
+			}
+
+			if (!$states->delete($id)) {
+				vmError(get_class( $this ).'::remove '.$id.' '.$states->getError());
+				$ok = false;
+			}
+
+			// Mod. <mediaDESIGN> St.Kraft 2013-02-24
+			if (!$manufacturers->delete($id)) {
+				vmError(get_class( $this ).'::remove '.$id.' '.$manufacturers->getError());
+				$ok = false;
+			}
+
+// 			if(!class_exists('vmPSPlugin')) require(JPATH_VM_PLUGINS.DS.'vmpsplugin.php');
+			JPluginHelper::importPlugin('vmcalculation');
+			$dispatcher = JDispatcher::getInstance();
+			$returnValues = $dispatcher->trigger('plgVmDeleteCalculationRow', array( $id));
+
+		}
+
+		return $ok;
 	}
 
-	function getDiscounts(){
+	static function getTaxes() {
+
+		return self::getRule(array('TAX','VatTax','TaxBill'));
+	}
+
+	static function getDiscounts(){
 		return  self::getRule(array('DATax','DATaxBill','DBTax','DBTaxBill'));
 	}
 
-	function getDBDiscounts() {
+	static function getDBDiscounts() {
 
 		return self::getRule(array('DBTax','DBTaxBill'));
 	}
 
-	function getDADiscounts() {
+	static function getDADiscounts() {
 
-		return self::getRule(array('DATax','DATaxBill'));;
+		return self::getRule(array('DATax','DATaxBill'));
 	}
 }

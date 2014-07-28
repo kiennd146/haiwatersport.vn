@@ -18,6 +18,8 @@
  *
  * http://virtuemart.net
  */
+jimport('joomla.application.component.controller');
+if (!class_exists('ShopFunctions')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'shopfunctions.php');
 
 class VmController extends JController{
 
@@ -29,8 +31,8 @@ class VmController extends JController{
 	 *
 	 * @author Max Milbers
 	 */
-	public function __construct($cidName='cid') {
-		parent::__construct();
+	public function __construct($cidName='cid', $config=array()) {
+		parent::__construct($config);
 
 		 $this->_cidName = $cidName;
 
@@ -50,6 +52,77 @@ class VmController extends JController{
 	}
 
 	/**
+	* Typical view method for MVC based architecture
+	*
+	* This function is provide as a default implementation, in most cases
+	* you will need to override it in your own controllers.
+	*
+	* For the virtuemart core, we removed the "Get/Create the model"
+	*
+	* @param   boolean  $cachable   If true, the view output will be cached
+	* @param   array    $urlparams  An array of safe url parameters and their variable types, for valid values see {@link JFilterInput::clean()}.
+	*
+	* @return  JController  A JController object to support chaining.
+	* @since   11.1
+	*/
+	public function display($cachable = false, $urlparams = false)
+	{
+		$document	= JFactory::getDocument();
+		$viewType	= $document->getType();
+		if(JVM_VERSION==2){
+			$viewName	= JRequest::getCmd('view', $this->default_view);
+			$viewLayout	= JRequest::getCmd('layout', 'default');
+
+			$view = $this->getView($viewName, $viewType, '', array('base_path' => $this->basePath));
+		} else {
+			$viewName	= JRequest::getCmd('view', '');
+			$viewLayout	= JRequest::getCmd('layout', 'default');
+
+			$view = $this->getView($viewName, $viewType, '', array('base_path' => $this->_basePath));
+		}
+
+		// Set the layout
+		$view->setLayout($viewLayout);
+
+		$view->assignRef('document', $document);
+
+		$conf = JFactory::getConfig();
+
+		// Display the view
+		if ($cachable && $viewType != 'feed' && $conf->get('caching') >= 1) {
+			$option	= JRequest::getCmd('option');
+			$cache	= JFactory::getCache($option, 'view');
+
+			if (is_array($urlparams)) {
+				$app = JFactory::getApplication();
+
+				$registeredurlparams = $app->get('registeredurlparams');
+
+				if (empty($registeredurlparams)) {
+					$registeredurlparams = new stdClass;
+				}
+
+				foreach ($urlparams as $key => $value)
+				{
+					// Add your safe url parameters with variable type as value {@see JFilterInput::clean()}.
+					$registeredurlparams->$key = $value;
+				}
+
+				$app->set('registeredurlparams', $registeredurlparams);
+			}
+
+			$cache->get($view, 'display');
+
+		}
+		else {
+			$view->display();
+		}
+
+		return $this;
+	}
+
+
+	/**
 	 * Generic edit task
 	 *
 	 * @author Max Milbers
@@ -59,20 +132,18 @@ class VmController extends JController{
 		JRequest::setVar('controller', $this->_cname);
 		JRequest::setVar('view', $this->_cname);
 		JRequest::setVar('layout', $layout);
-		JRequest::setVar('hidemenu', 1);
+// 		JRequest::setVar('hidemenu', 1);
 
 		if(empty($view)){
+			$this->addViewPath(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_virtuemart' . DS . 'views');
 			$document = JFactory::getDocument();
 			$viewType = $document->getType();
 			$view = $this->getView($this->_cname, $viewType);
 		}
 
-		$model = $this->getModel($this->_cname, 'VirtueMartModel');
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
+		$view->setLayout($layout);
 
-		parent::display();
+		$this->display();
 	}
 
 	/**
@@ -85,9 +156,9 @@ class VmController extends JController{
 
 		JRequest::checkToken() or jexit( 'Invalid Token save' );
 
-		if(empty($data))$data = JRequest::get('post');
+		if($data===0)$data = JRequest::get('post');
 
-		$model = $this->getModel($this->_cname);
+		$model = VmModel::getModel($this->_cname);
 		$id = $model->store($data);
 
 		$errors = $model->getErrors();
@@ -101,9 +172,11 @@ class VmController extends JController{
 		}
 
 		$redir = $this->redirectPath;
+		//vmInfo($msg);
 		if(JRequest::getCmd('task') == 'apply'){
-			$redir .= '&task=edit&'.$this->_cidName.'='.$id;
-		}
+
+			$redir .= '&task=edit&'.$this->_cidName.'[]='.$id;
+		} //else $this->display();
 
 		$this->setRedirect($redir, $msg,$type);
 	}
@@ -125,11 +198,11 @@ class VmController extends JController{
 			$msg = JText::_('COM_VIRTUEMART_SELECT_ITEM_TO_DELETE');
 			$type = 'notice';
 		} else {
-			$model = $this->getModel($this->_cname);
-			$model->remove($ids);
+			$model = VmModel::getModel($this->_cname);
+			$ret = $model->remove($ids);
 			$errors = $model->getErrors();
 			$msg = JText::sprintf('COM_VIRTUEMART_STRING_DELETED',$this->mainLangKey);
-			if(!empty($errors)) {
+			if(!empty($errors) or $ret==false) {
 				$msg = JText::sprintf('COM_VIRTUEMART_STRING_COULD_NOT_BE_DELETED',$this->mainLangKey);
 						$type = 'error';
 			}
@@ -162,8 +235,9 @@ class VmController extends JController{
 	public function toggle($field,$val=null){
 
 		JRequest::checkToken() or jexit( 'Invalid Token' );
-		$model = $this->getModel($this->_cname);
-		if (!$model->toggle($field,$val,$this->cidName)) {
+
+		$model = VmModel::getModel($this->_cname);
+		if (!$model->toggle($field,$val,$this->_cidName)) {
 			$msg = JText::sprintf('COM_VIRTUEMART_STRING_TOGGLE_ERROR',$this->mainLangKey);
 		} else{
 			$msg = JText::sprintf('COM_VIRTUEMART_STRING_TOGGLE_SUCCESS',$this->mainLangKey);
@@ -177,18 +251,23 @@ class VmController extends JController{
 	 *
 	 * @author Jseros, Max Milbers
 	 */
-	public function publish(){
+	public function publish($cidname=0,$table=0,$redirect = 0){
 
 		JRequest::checkToken() or jexit( 'Invalid Token' );
 
-		$model = $this->getModel($this->_cname);
-		if (!$model->toggle('published',1)) {
+		$model = VmModel::getModel($this->_cname);
+
+		if($cidname === 0) $cidname = $this->_cidName;
+
+		if (!$model->toggle('published', 1, $cidname, $table)) {
 			$msg = JText::sprintf('COM_VIRTUEMART_STRING_PUBLISHED_ERROR',$this->mainLangKey);
 		} else{
 			$msg = JText::sprintf('COM_VIRTUEMART_STRING_PUBLISHED_SUCCESS',$this->mainLangKey);
 		}
 
-		$this->setRedirect( $this->redirectPath, $msg);
+		if($redirect === 0) $redirect = $this->redirectPath;
+
+		$this->setRedirect( $redirect , $msg);
 	}
 
 
@@ -197,25 +276,30 @@ class VmController extends JController{
 	 *
 	 * @author Max Milbers, Jseros
 	 */
-	function unpublish(){
+	function unpublish($cidname=0,$table=0,$redirect = 0){
 
 		JRequest::checkToken() or jexit( 'Invalid Token' );
 
-		$model = $this->getModel($this->_cname);
-		if (!$model->toggle('published',0)) {
+		$model = VmModel::getModel($this->_cname);
+
+		if($cidname === 0) $cidname = $this->_cidName;
+
+		if (!$model->toggle('published', 0, $cidname, $table)) {
 			$msg = JText::sprintf('COM_VIRTUEMART_STRING_UNPUBLISHED_ERROR',$this->mainLangKey);
 		} else{
 			$msg = JText::sprintf('COM_VIRTUEMART_STRING_UNPUBLISHED_SUCCESS',$this->mainLangKey);
 		}
 
-		$this->setRedirect( $this->redirectPath, $msg);
+		if($redirect === 0) $redirect = $this->redirectPath;
+
+		$this->setRedirect( $redirect, $msg);
 	}
 
 	function orderup() {
 
 		JRequest::checkToken() or jexit( 'Invalid Token' );
 
-		$model = $this->getModel($this->_cname);
+		$model = VmModel::getModel($this->_cname);
 		$model->move(-1);
 		$msg = JText::sprintf('COM_VIRTUEMART_STRING_ORDER_UP_SUCCESS',$this->mainLangKey);
 		$this->setRedirect( $this->redirectPath, $msg);
@@ -225,7 +309,7 @@ class VmController extends JController{
 
 		JRequest::checkToken() or jexit( 'Invalid Token' );
 
-		$model = $this->getModel($this->_cname);
+		$model = VmModel::getModel($this->_cname);
 		$model->move(1);
 		$msg = JText::sprintf('COM_VIRTUEMART_STRING_ORDER_DOWN_SUCCESS',$this->mainLangKey);
 		$this->setRedirect( $this->redirectPath, $msg);
@@ -240,12 +324,31 @@ class VmController extends JController{
 		JArrayHelper::toInteger($cid);
 		JArrayHelper::toInteger($order);
 
-		$model = $this->getModel($this->_cname);
-		if (!$model->saveorder($cid, $order)) $msg = 'error';
-		else $msg = JText::sprintf('COM_VIRTUEMART_STRING_SAVE_ORDER_SUCCESS',$this->mainLangKey);
+		$model = VmModel::getModel($this->_cname);
+		if (!$model->saveorder($cid, $order)) {
+			$msg = 'error';
+		} else {
+			if(JFactory::getApplication()->isAdmin() and VmConfig::showDebug()){
+				$msg = vmText::sprintf('COM_VIRTUEMART_NEW_ORDERING_SAVEDF',$this->mainLangKey);
+			} else {
+				$msg = vmText::sprintf('COM_VIRTUEMART_NEW_ORDERING_SAVED');
+			}
+
+		}
+
 		$this->setRedirect( $this->redirectPath, $msg);
 	}
 
+	/**
+	 * This function just overwrites the standard joomla function, using our standard class VmModel
+	 * for this
+	 * @see JController::getModel()
+	 */
+	function getModel($name = '', $prefix = '', $config = array()){
+		if(!class_exists('ShopFunctions'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'shopfunctions.php');
 
+		if(empty($name)) $name = false;
+		return VmModel::getModel($name);
+	}
 
 }

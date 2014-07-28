@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 5047 2011-12-12 21:12:33Z Milbo $
+* @version $Id: default.php 6370 2012-08-23 16:05:28Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 
@@ -48,6 +48,8 @@ AdminUIHelper::startAdminArea();
 					<?php echo JText::_('COM_VIRTUEMART_VENDOR'); ?>
 				</th>
 				<?php } ?>
+					  <th><?php echo $this->sort('virtuemart_shoppergroup_id', 'COM_VIRTUEMART_ID')  ?></th>
+
 		    </tr>
 	    </thead><?php
 
@@ -63,17 +65,21 @@ AdminUIHelper::startAdminArea();
 				    <?php echo $checked; ?>
 			    </td>
 			    <td align="left">
-			      <a href="<?php echo $editlink; ?>"><?php echo $row->shopper_group_name; ?></a>
+			      <a href="<?php echo $editlink; ?>"><?php echo vmText::_($row->shopper_group_name); ?></a>
 			    </td>
 			    <td align="left">
-				    <?php echo $row->shopper_group_desc; ?>
+				    <?php echo vmText::_($row->shopper_group_desc); ?>
 			    </td>
 			    <td>
 					<?php
 					if ($row->default == 1) {
+					    if (JVM_VERSION===1) {
 						?>
-						<img src="templates/khepri/images/menu/icon-16-default.png" alt="<?php echo JText::_( 'Default' ); ?>" />
+						<img src="templates/khepri/images/menu/icon-16-default.png" alt="<?php echo JText::_( 'COM_VIRTUEMART_SHOPPERGROUP_DEFAULT' ); ?>" />
 						<?php
+					    }  else {
+						echo JHtml::_('image','menu/icon-16-default.png', JText::_('COM_VIRTUEMART_SHOPPERGROUP_DEFAULT'), NULL, true);
+						}
 					} else {
 						?>
 						&nbsp;
@@ -86,6 +92,9 @@ AdminUIHelper::startAdminArea();
             <?php echo $row->virtuemart_vendor_id; ?>
           	</td>
           	<?php } ?>
+		 <td align="left">
+            <?php echo $row->virtuemart_shoppergroup_id; ?>
+          	</td>
 
 	      </tr><?php
 		    $k = 1 - $k;
@@ -93,18 +102,13 @@ AdminUIHelper::startAdminArea();
 	    <tfoot>
 		    <tr>
 		      <td colspan="10">
-			      <?php echo $this->pagination->getListFooter(); ?>
+			      <?php echo $this->sgrppagination->getListFooter(); ?>
 		      </td>
 		    </tr>
 	    </tfoot>
 	  </table>
   </div>
 
-  <input type="hidden" name="option" value="com_virtuemart" />
-  <input type="hidden" name="controller" value="shoppergroup" />
-  <input type="hidden" name="view" value="shoppergroup" />
-  <input type="hidden" name="task" value="" />
-  <input type="hidden" name="boxchecked" value="0" />
-  <?php echo JHTML::_( 'form.token' ); ?>
+	<?php echo $this->addStandardHiddenToForm($this->_name,$this->task); ?>
 </form><?php
 AdminUIHelper::endAdminArea(); ?>

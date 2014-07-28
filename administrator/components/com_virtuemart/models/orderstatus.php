@@ -13,14 +13,12 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: orderstatus.php 4749 2011-11-18 00:07:40Z Milbo $
+ * @version $Id: orderstatus.php 6350 2012-08-14 17:18:08Z Milbo $
  */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-// Load the model framework
-jimport( 'joomla.application.component.model');
 
 if(!class_exists('VmModel'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmmodel.php');
 
@@ -33,6 +31,7 @@ if(!class_exists('VmModel'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmmo
  */
 class VirtueMartModelOrderstatus extends VmModel {
 
+	private $_renderStatusList = array();
 	/**
 	 * constructs a VmModel
 	 * setMainTable defines the maintable of the model
@@ -40,53 +39,13 @@ class VirtueMartModelOrderstatus extends VmModel {
 	 */
 	function __construct() {
 		parent::__construct();
+		VmConfig::loadJLang('com_virtuemart_orders',TRUE);
 		$this->setMainTable('orderstates');
-	}
-
-	/**
-	 * Retrieve the detail record for the current $id if the data has not already been loaded.
-	 */
-	function getOrderStatus()
-	{
-		$db = JFactory::getDBO();
-
-		if (empty($this->_data)) {
-			$this->_data = $this->getTable('orderstates');
-			$this->_data->load((int)$this->_id);
-		}
-
-		if (!$this->_data) {
-			$this->_data = new stdClass();
-			$this->_id = 0;
-			$this->_data = null;
-		}
-
-		return $this->_data;
 	}
 
 	function getVMCoreStatusCode(){
 		return array( 'P','S');
 	}
-
-	public function store(&$data){
-
-		$table = $this->getTable($this->_maintablename);
-
-		$table->bindChecknStore($data,true);
-
-		$errors = $table->getErrors();
-		foreach($errors as $error){
-			$this->setError( get_class( $this ).'::store '.$error);
-		}
-		if(is_object($data)){
-			$_idName = $this->_idName;
-			return $data->$_idName;
-		} else {
-			return $data[$this->_idName];
-		}
-
-	}
-
 
 	/**
 	 * Retrieve a list of order statuses from the database.
@@ -103,84 +62,62 @@ class VirtueMartModelOrderstatus extends VmModel {
 		// 		vmdebug('order data',$this->_data);
 		return $this->_data ;
 	}
-
-
 	/**
-	 * Change the ordering of an Order status
+	 * Return the order status names
 	 *
-	 * @return boolean True on success
+	 * @author Kohl Patrick
+	 * @access public
+	 *
+	 * @param char $_code Order status code
+	 * @return string The name of the order status
 	 */
-	function move($direction)
+	public function getOrderStatusNames ()
 	{
-		$table = $this->getTable('orderstates');
-		if (!$table->load($this->_id)) {
-			$this->setError($this->_db->getErrorMsg());
-			return false;
-		}
-		if (!$table->move($direction)){
-			$this->setError($this->_db->getErrorMsg());
-			return false;
-		}
+		$q = 'SELECT `order_status_name`,`order_status_code` FROM `#__virtuemart_orderstates` order by `ordering` ';
+		$this->_db->setQuery($q);
+		return $this->_db->loadAssocList('order_status_code');
 
-		return true;
 	}
 
-	/**
-	 * Check if stock should be updated when an order status changes/
-	 * TODO This must be implemented in an orderstatus flow in a future release
-	 *
-	 * @deprecated
-	 * @author Oscar van Eijk, null if the order is new (default)
-	 * @param char $_newStat New order status
-	 * @param char $_oldStat Old order status, null if the order is new (default)
-	 * @return integer <0: decrease stock, 0: do nothing, >0 increase stock
-	 */
-	function updateStockAfterStatusChange($_newStat, $_oldStat = null)
-	{
-		if ($_oldStat == null || $_oldStat == 'P' || $_oldStat == 'X' || $_oldStat == 'R') {
-			if ($_newStat == 'C' || $_newStat == 'S') {
-				return -1; // Decrease stock
-			} else {
-				return 0;
-			}
-		} elseif ($_oldStat == 'C' || $_oldStat == 'S') {
-			// Status Shipped shouldn't be changeble...
-			if ($_newStat == 'X' || $_newStat == 'R' || $_newStat == 'P') {
-				return 1; // Increase stock
-			} else {
-				return 0;
-			}
+	function renderOSList($value,$name = 'order_status',$multiple=FALSE,$attrs='',$langkey='' ){
+
+		$idA = $id = $name;
+ 		$attrs .= ' class="inputbox" ';
+		if ($multiple) {
+			$attrs .= ' multiple="multiple" ';
+			if(empty($langkey)) $langkey = 'COM_VIRTUEMART_DRDOWN_SELECT_SOME_OPTIONS';
+			$attrs .=  ' data-placeholder="'.JText::_($langkey).'"';
+			$idA .= '[]';
 		} else {
-			return 0;
+			if(empty($langkey)) $langkey = 'COM_VIRTUEMART_LIST_EMPTY_OPTION';
 		}
-	}
 
-	/**
-	 * Reorder the Order statusus
-	 *
-	 * @return boolean True on success
-	 */
-	function saveorder($cid = array(), $order)
-	{
-		$table = $this->getTable('orderstates');
+		if(is_array($value)){
+			$hashValue = implode($value);
+		} else {
+			$hashValue = $value;
+		}
 
-		// update ordering values
-		for( $i=0; $i < count($cid); $i++ )
-		{
-			$table->load( (int) $cid[$i] );
-			if ($table->ordering != $order[$i])
-			{
-				$table->ordering = $order[$i];
-				if (!$table->store()) {
-					$this->setError($this->_db->getErrorMsg());
-					return false;
-				}
+		$hash = md5($hashValue.$name.$attrs);
+		if (!isset($this->_renderStatusList[$hash])) {
+			$orderStates = $this->getOrderStatusNames();
+			$emptyOption = JHTML::_ ('select.option', -1, JText::_ ($langkey), 'order_status_code', 'order_status_name');
+			array_unshift ($orderStates, $emptyOption);
+			if ($multiple) {
+				$attrs .=' size="'.count($orderStates).'" ';
 			}
-		}
 
-		return true;
+			$this->_renderStatusList[$hash] = JHTML::_('select.genericlist', $orderStates, $idA, $attrs, 'order_status_code', 'order_status_name', $value,$id,true);
+		}
+		return $this->_renderStatusList[$hash] ;
 	}
 
+	function renderOrderStatusList($value, $name = 'order_status[]' )
+	{
+		$id = substr($name,0,-2);
+		return $this->renderOSList($value,$id,TRUE);
+
+	}
 
 }
 

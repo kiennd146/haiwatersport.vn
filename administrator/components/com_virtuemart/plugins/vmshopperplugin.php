@@ -26,9 +26,11 @@ jimport('joomla.plugin.plugin');
 *
 * @package	VirtueMart
 * @subpackage Plugins
-* @author Oscar van Eijk
+* @author Max Milbers
 */
-abstract class vmShopperPlugin extends JPlugin
+if (!class_exists('vmPlugin')) require(JPATH_VM_PLUGINS . DS . 'vmplugin.php');
+
+abstract class vmShopperPlugin extends VmPlugin
 {
 	/**
 	 * Constructor

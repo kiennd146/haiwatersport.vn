@@ -1,10 +1,10 @@
 <?php
 /**
 *
-* Data module for shop calculation rules
+* Model paymentmethod
 *
 * @package	VirtueMart
-* @subpackage  Calculation tool
+* @subpackage  Payment
 * @author Max Milbers
 * @link http://www.virtuemart.net
 * @copyright Copyright (c) 2004 - 2010 VirtueMart Team. All rights reserved.
@@ -13,13 +13,11 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: paymentmethod.php 5118 2011-12-18 17:48:12Z alatak $
+* @version $Id: paymentmethod.php 6474 2012-09-19 18:22:26Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-
-jimport( 'joomla.application.component.model');
 
 if(!class_exists('VmModel'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmmodel.php');
 
@@ -33,6 +31,7 @@ class VirtueMartModelPaymentmethod extends VmModel{
 	function __construct() {
 		parent::__construct();
 		$this->setMainTable('paymentmethods');
+		$this->_selectedOrdering = 'ordering';
 	}
 
 	/**
@@ -54,47 +53,47 @@ class VirtueMartModelPaymentmethod extends VmModel{
      */
 	public function getPayment(){
 
-  		if (empty($this->_data)) {
-   			$this->_data = $this->getTable('paymentmethods');
-   			$this->_data->load((int)$this->_id);
-  		}
+  		if (empty($this->_data[$this->_id])) {
+   			$this->_data[$this->_id] = $this->getTable('paymentmethods');
+   			$this->_data[$this->_id]->load((int)$this->_id);
 
-  		if(empty($this->_data->virtuemart_vendor_id)){
-  		   	if(!class_exists('VirtueMartModelVendor')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'vendor.php');
-   			$this->_data->virtuemart_vendor_id = VirtueMartModelVendor::getLoggedVendor();
-  		}
+			if(empty($this->_data->virtuemart_vendor_id)){
+				if(!class_exists('VirtueMartModelVendor')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'vendor.php');
+				$this->_data[$this->_id]->virtuemart_vendor_id = VirtueMartModelVendor::getLoggedVendor();
+			}
 
-  		if($this->_data->payment_jplugin_id){
-  			JPluginHelper::importPlugin('vmpayment');
-  			$dispatcher = JDispatcher::getInstance();
-  			$retValue = $dispatcher->trigger('plgVmDeclarePluginParamsPayment',array($this->_data->payment_element,$this->_data->payment_jplugin_id,&$this->_data));
-		}
-  		if(!empty($this->_id)){
+			if($this->_data[$this->_id]->payment_jplugin_id){
+				JPluginHelper::importPlugin('vmpayment');
+				$dispatcher = JDispatcher::getInstance();
+				$retValue = $dispatcher->trigger('plgVmDeclarePluginParamsPayment',array($this->_data[$this->_id]->payment_element,$this->_data[$this->_id]->payment_jplugin_id,&$this->_data[$this->_id]));
+			}
 
-			/* Add the paymentmethod shoppergroups */
+			if($this->_data[$this->_id]->getCryptedFields()){
+				if(!class_exists('vmCrypt')){
+					require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmcrypt.php');
+				}
+
+				if(isset($this->_data[$this->_id]->modified_on)){
+					$date = JFactory::getDate($this->_data[$this->_id]->modified_on);
+					$date = $date->toUnix();
+				} else {
+					$date = 0;
+				}
+
+				foreach($this->_data[$this->_id]->getCryptedFields() as $field){
+					if(isset($this->_data[$this->_id]->$field)){
+						$this->_data[$this->_id]->$field = vmCrypt::decrypt($this->_data[$this->_id]->$field,$date);
+					}
+				}
+			}
+
 			$q = 'SELECT `virtuemart_shoppergroup_id` FROM #__virtuemart_paymentmethod_shoppergroups WHERE `virtuemart_paymentmethod_id` = "'.$this->_id.'"';
 			$this->_db->setQuery($q);
-			$this->_data->virtuemart_shoppergroup_ids = $this->_db->loadResultArray();
-
-			if (VmConfig::isJ15()) {
-				$table = '#__plugins';
-				$ext_id = 'id';
-			} else {
-				$table = '#__extensions';
-				$ext_id = 'extension_id';
-			}
-			$q = 'SELECT `params` FROM `' . $table . '` WHERE `' . $ext_id . '` = "'.$this->_data->payment_jplugin_id.'"';
-			$this->_db->setQuery($q);
-
-			$this->_data->param = $this->_db->loadResult();
-
-  		} else {
-  			$this->_data->virtuemart_shoppergroup_ids = '';
-  			$this->_data->param = '';
+			$this->_data[$this->_id]->virtuemart_shoppergroup_ids = $this->_db->loadResultArray();
+			if(empty($this->_data[$this->_id]->virtuemart_shoppergroup_ids)) $this->_data[$this->_id]->virtuemart_shoppergroup_ids = 0;
   		}
 
-
-  		return $this->_data;
+  		return $this->_data[$this->_id];
 	}
 
 	/**
@@ -116,7 +115,7 @@ class VirtueMartModelPaymentmethod extends VmModel{
 
 		$select = ' * FROM `#__virtuemart_paymentmethods_'.VMLANG.'` as l ';
 		$joinedTables = ' JOIN `#__virtuemart_paymentmethods`   USING (`virtuemart_paymentmethod_id`) ';
-		$this->_data =$this->exeSortSearchListQuery(0,$select,$joinedTables,$whereString,' ',$this->_getOrdering('ordering') );
+		$this->_data =$this->exeSortSearchListQuery(0,$select,$joinedTables,$whereString,' ',$this->_getOrdering() );
 
 			//$this->exeSortSearchListQuery(0,'*',' FROM `#__virtuemart_paymentmethods`',$whereString,'',$this->_getOrdering('ordering'));
 
@@ -146,9 +145,12 @@ class VirtueMartModelPaymentmethod extends VmModel{
      * @author Max Milbers
      * @return boolean True is the save was successful, false otherwise.
 	 */
-    public function store($data)
+    public function store(&$data)
 	{
 
+		if(is_object($data)){
+			$data = (array)$data;
+		}
 		if(!empty($data['params'])){
 			foreach($data['params'] as $k=>$v){
 				$data[$k] = $v;
@@ -159,22 +161,33 @@ class VirtueMartModelPaymentmethod extends VmModel{
 	  	   	if(!class_exists('VirtueMartModelVendor')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'vendor.php');
 	   		$data['virtuemart_vendor_id'] = VirtueMartModelVendor::getLoggedVendor();
 	  	}
-		// missing string FIX, Bad way ?
-		if (VmConfig::isJ15()) {
-			$tb = '#__plugins';
-			$ext_id = 'id';
-		} else {
-			$tb = '#__extensions';
-			$ext_id = 'extension_id';
-		}
-		$q = 'SELECT `element` FROM `' . $tb . '` WHERE `' . $ext_id . '` = "'.$data['payment_jplugin_id'].'"';
-		$this->_db->setQuery($q);
-		$data['payment_element'] = $this->_db->loadResult();
 
 		$table = $this->getTable('paymentmethods');
 
-
 		if(isset($data['payment_jplugin_id'])){
+
+			// missing string FIX, Bad way ?
+			if (JVM_VERSION===1) {
+				$tb = '#__plugins';
+				$ext_id = 'id';
+			} else {
+				$tb = '#__extensions';
+				$ext_id = 'extension_id';
+			}
+			$q = 'SELECT `element` FROM `' . $tb . '` WHERE `' . $ext_id . '` = "'.$data['payment_jplugin_id'].'"';
+			$this->_db->setQuery($q);
+			$data['payment_element'] = $this->_db->loadResult();
+
+			$q = 'UPDATE `' . $tb . '` SET `enabled`= 1 WHERE `' . $ext_id . '` = "'.$data['payment_jplugin_id'].'"';
+			$this->_db->setQuery($q);
+			$this->_db->query();
+
+// special case moneybookers
+			if ( strpos($data['payment_element'] , "moneybookers"  ) !==false) {
+				$q = 'UPDATE `#__extensions` SET `enabled`= 1 WHERE  `element` ="moneybookers"';
+				$this->_db->setQuery($q);
+				$this->_db->query();
+			}
 
 			JPluginHelper::importPlugin('vmpayment');
 			$dispatcher = JDispatcher::getInstance();
@@ -185,14 +198,14 @@ class VirtueMartModelPaymentmethod extends VmModel{
 		$table->bindChecknStore($data);
 		$errors = $table->getErrors();
 		foreach($errors as $error){
-				$this->setError($error);
+				vmError($error);
 			}
 
 		$xrefTable = $this->getTable('paymentmethod_shoppergroups');
 		$xrefTable->bindChecknStore($data);
 		$errors = $xrefTable->getErrors();
 		foreach($errors as $error){
-			$this->setError($error);
+			vmError($error);
 		}
 
 		if (!class_exists('vmPSPlugin')) require(JPATH_VM_PLUGINS . DS . 'vmpsplugin.php');
@@ -227,43 +240,7 @@ class VirtueMartModelPaymentmethod extends VmModel{
 		return $href;
 	}*/
 
-	/**
-	 * Publish/Unpublish all the ids selected
-     *
-     * @author jseros
-     *
-     * @return int 1 is the publishing action was successful, -1 is the unsharing action was successfully, 0 otherwise.
-     	* @deprecated
-     */
-	public function changeIsPercentagePublish($quotedId){
 
-//		foreach ($categories as $id){
-
-//			$quotedId = $this->_db->Quote($id);
-			$query = 'SELECT discount_is_percentage
-					  FROM #__virtuemart_paymentmethods
-					  WHERE virtuemart_paymentmethod_id = '. (int)$quotedId;
-
-			$this->_db->setQuery($query);
-			$calc = $this->_db->loadObject();
-
-			$publish = ($calc->calc_shopper_published > 0) ? 0 : 1;
-
-			$query = 'UPDATE #__virtuemart_paymentmethods
-					  SET discount_is_percentage = '.$publish.'
-					  WHERE virtuemart_paymentmethod_id = '.(int)$quotedId;
-
-			$this->_db->setQuery($query);
-
-			if( !$this->_db->query() ){
-				$this->setError( $this->_db->getErrorMsg() );
-				return false;
-			}
-
-//		}
-
-		return ($publish ? 1 : -1);
-	}
 
 
 	/**
@@ -293,39 +270,23 @@ class VirtueMartModelPaymentmethod extends VmModel{
 	}
 
 	/**
-	 * function to render the creditcardlist
+	 * Creates a clone of a given shipmentmethod id
 	 *
-	 * @author Max Milbers
-	 *
-	 * @param radio list of creditcards
-	 * @return html
-	 * @deprecated
+	 * @author Valérie Isaksen
+	 * @param int $virtuemart_shipmentmethod_id
 	 */
 
-	public function renderCreditCardRadioList($selected,$creditcardIds=0){
-		$creditcardIds=0;
-		if(!$creditcardIds){
-			$creditcardIds = self::getPaymentAcceptedCreditCards();
+	public function createClone ($id) {
+
+		$this->setId ($id);
+		$payment = $this->getPayment ();
+		$payment->virtuemart_paymentmethod_id = 0;
+		$payment->payment_name = $payment->payment_name.' Copy';
+
+		if (!$clone = $this->store($payment)) {
+			vmError( 'createClone '. $payment->getError() );
 		}
-
-		if(!class_exists('VirtueMartModelCreditcard')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'creditcard.php');
-		$creditcardModel = new VirtueMartModelCreditcard();
-
-		$listHTML='';
-
-		if($creditcardIds){
-			foreach($creditcardIds as $ccId){
-				$item = $creditcardModel->getCreditCard($ccId);
-				$checked='';
-	//			foreach($selected as $select){
-					if($item->virtuemart_creditcard_id==$selected){
-						$checked='"checked"';
-					}
-	//			}
-				$listHTML .= '<input type="radio" name="creditcard" value="'.$item->virtuemart_creditcard_id.'" '.$checked.'>'.$item->creditcard_name.' <br />';
-			}
-		}
-		return $listHTML;
+		return $clone;
 	}
 
 }

@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: category.php 4930 2011-12-05 10:15:01Z electrocity $
+* @version $Id: category.php 6383 2012-08-27 16:53:06Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -46,26 +46,31 @@ class VirtueMartControllerCategory extends JController {
 	* Function Description
 	*
 	* @author RolandD
+	* @author George
 	* @access public
 	*/
-	public function Category() {
-	
-		/* Create the view */
-		$view = $this->getView('category', 'html');
+	public function display($cachable = false, $urlparams = false)  {
 
-		$this->addModelPath(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_virtuemart' . DS . 'models');
-		/* Add the default model */
-		$view->setModel($this->getModel('category', 'VirtuemartModel'), true);
+		if (JRequest::getvar('search')) {
+			$view = $this->getView('category', 'html');
+			$view->display();
+		} else {
+			// Display it all
+			$document = JFactory::getDocument();
+			$viewType = $document->getType();
+			$viewName = JRequest::getCmd('view', $this->default_view);
+			$viewLayout = JRequest::getCmd('layout', 'default');
 
-		/* Add the product model */
-		$view->setModel($this->getModel('product', 'VirtuemartModel'));
-		
-		if (JRequest::getvar('search')) $view->display();
-		else {
-			/* Display it all */
-			$safeurlparams = array('virtuemart_category_id'=>'INT','virtuemart_manufacturer_id'=>'INT','virtuemart_currency_id'=>'INT','return'=>'BASE64','lang'=>'CMD','orderby'=>'CMD','limitstart'=>'CMD','order'=>'CMD','limit'=>'CMD');
-			parent::display(true, $safeurlparams);
+			$view = $this->getView($viewName, $viewType, '', array('base_path' => $this->basePath, 'layout' => $viewLayout));
+
+			$view->assignRef('document', $document);
+
+			$view->display();
 		}
+		if($categoryId = JRequest::getInt('virtuemart_category_id',0)){
+			shopFunctionsF::setLastVisitedCategoryId($categoryId);
+		}
+		return $this;
 	}
 }
 // pure php no closing tag

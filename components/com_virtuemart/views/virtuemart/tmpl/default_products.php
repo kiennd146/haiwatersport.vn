@@ -1,4 +1,4 @@
-<?php defined('_JEXEC') or die('Restricted access'); 
+<?php defined('_JEXEC') or die('Restricted access');
 
 
 // Separator
@@ -6,14 +6,14 @@ $verticalseparator = " vertical-separator";
 
 foreach ($this->products as $type => $productList ) {
 // Calculating Products Per Row
-$products_per_row = VmConfig::get ( $type.'_products_per_row', 3 ) ;
+$products_per_row = VmConfig::get ( 'homepage_products_per_row', 3 ) ;
 $cellwidth = ' width'.floor ( 100 / $products_per_row );
 
 // Category and Columns Counter
 $col = 1;
 $nb = 1;
 
-$productTitle = JText::_('COM_VIRTUEMART_'.$type.'_PRODUCT')
+$productTitle = JText::_('COM_VIRTUEMART_'.$type.'_PRODUCT');
 
 ?>
 
@@ -22,6 +22,7 @@ $productTitle = JText::_('COM_VIRTUEMART_'.$type.'_PRODUCT')
 	<h4><?php echo $productTitle ?></h4>
 
 <?php // Start the Output
+
 foreach ( $productList as $product ) {
 
 	// Show the horizontal seperator
@@ -48,13 +49,15 @@ foreach ( $productList as $product ) {
 
 					<h3>
 					<?php // Product Name
-					echo JHTML::link ( JRoute::_ ( 'index.php?option=com_virtuemart&view=productdetails&virtuemart_product_id=' . $product->virtuemart_product_id . '&virtuemart_category_id=' . $product->virtuemart_category_id ), $product->product_name, array ('title' => $product->product_name ) ); ?>
+					echo JHTML::link ( JRoute::_ ( 'index.php?option=com_virtuemart&view=productdetails&virtuemart_product_id=' . $product->virtuemart_product_id . '&virtuemart_category_id=' . $product->virtuemart_category_id, FALSE ), $product->product_name, array ('title' => $product->product_name ) ); ?>
 					</h3>
 
 					<div>
 					<?php // Product Image
 					if ($product->images) {
-						echo JHTML::_ ( 'link', JRoute::_ ( 'index.php?option=com_virtuemart&view=productdetails&virtuemart_product_id=' . $product->virtuemart_product_id . '&virtuemart_category_id=' . $product->virtuemart_category_id ), $product->images[0]->displayMediaThumb( 'class="featuredProductImage" border="0"',true,'class="modal"' ) );
+						//echo JHTML::_ ( 'link', JRoute::_ ( 'index.php?option=com_virtuemart&view=productdetails&virtuemart_product_id=' . $product->virtuemart_product_id . '&virtuemart_category_id=' . $product->virtuemart_category_id, FALSE ), $product->images[0]->displayMediaThumb( 'class="featuredProductImage"',true,'class="modal"' ) );
+
+						echo   $product->images[0]->displayMediaThumb( 'class="featuredProductImage"',true,'class="modal"' ) ;
 					}
 					?>
 					</div>
@@ -72,11 +75,18 @@ foreach ( $productList as $product ) {
 						echo $this->currency->createPriceDiv( 'basePriceVariant', 'COM_VIRTUEMART_PRODUCT_BASEPRICE_VARIANT', $product->prices );
 					}
 					echo $this->currency->createPriceDiv( 'variantModification', 'COM_VIRTUEMART_PRODUCT_VARIANT_MOD', $product->prices );
-					echo $this->currency->createPriceDiv( 'basePriceWithTax', 'COM_VIRTUEMART_PRODUCT_BASEPRICE_WITHTAX', $product->prices );
-					echo $this->currency->createPriceDiv( 'discountedPriceWithoutTax', 'COM_VIRTUEMART_PRODUCT_DISCOUNTED_PRICE', $product->prices );
-					echo $this->currency->createPriceDiv( 'salesPriceWithDiscount', 'COM_VIRTUEMART_PRODUCT_SALESPRICE_WITH_DISCOUNT', $product->prices );
+					if (round($product->prices['basePriceWithTax'],$this->currency->_priceConfig['salesPrice'][1]) != $product->prices['salesPrice']) {
+						echo '<div class="price-crossed">' . $this->currency->createPriceDiv( 'basePriceWithTax', 'COM_VIRTUEMART_PRODUCT_BASEPRICE_WITHTAX', $product->prices ) . "</div>";
+					}
+					if (round($product->prices['salesPriceWithDiscount'],$this->currency->_priceConfig['salesPrice'][1]) != $product->prices['salesPrice']) {
+						echo $this->currency->createPriceDiv( 'salesPriceWithDiscount', 'COM_VIRTUEMART_PRODUCT_SALESPRICE_WITH_DISCOUNT', $product->prices );
+					}
 					echo $this->currency->createPriceDiv( 'salesPrice', 'COM_VIRTUEMART_PRODUCT_SALESPRICE', $product->prices );
-					echo $this->currency->createPriceDiv( 'priceWithoutTax', 'COM_VIRTUEMART_PRODUCT_SALESPRICE_WITHOUT_TAX', $product->prices );
+					if ($product->prices['discountedPriceWithoutTax'] != $product->prices['priceWithoutTax']) {
+						echo $this->currency->createPriceDiv( 'discountedPriceWithoutTax', 'COM_VIRTUEMART_PRODUCT_SALESPRICE_WITHOUT_TAX', $product->prices );
+					} else {
+						echo $this->currency->createPriceDiv( 'priceWithoutTax', 'COM_VIRTUEMART_PRODUCT_SALESPRICE_WITHOUT_TAX', $product->prices );
+					}
 					echo $this->currency->createPriceDiv( 'discountAmount', 'COM_VIRTUEMART_PRODUCT_DISCOUNT_AMOUNT', $product->prices );
 					echo $this->currency->createPriceDiv( 'taxAmount', 'COM_VIRTUEMART_PRODUCT_TAX_AMOUNT', $product->prices );
 					} ?>
@@ -84,7 +94,7 @@ foreach ( $productList as $product ) {
 
 					<div>
 					<?php // Product Details Button
-					echo JHTML::link ( JRoute::_ ( 'index.php?option=com_virtuemart&view=productdetails&virtuemart_product_id=' . $product->virtuemart_product_id . '&virtuemart_category_id=' . $product->virtuemart_category_id ), JText::_ ( 'COM_VIRTUEMART_PRODUCT_DETAILS' ), array ('title' => $product->product_name, 'class' => 'product-details' ) );
+					echo JHTML::link ( JRoute::_ ( 'index.php?option=com_virtuemart&view=productdetails&virtuemart_product_id=' . $product->virtuemart_product_id . '&virtuemart_category_id=' . $product->virtuemart_category_id , FALSE), JText::_ ( 'COM_VIRTUEMART_PRODUCT_DETAILS' ), array ('title' => $product->product_name, 'class' => 'product-details' ) );
 					?>
 					</div>
 			</div>
@@ -101,6 +111,7 @@ foreach ( $productList as $product ) {
 	} else {
 		$col ++;
 	}
+	
 }
 // Do we need a final closing row tag?
 if ($col != 1) { ?>
@@ -110,4 +121,4 @@ if ($col != 1) { ?>
 }
 ?>
 </div>
-<?php } 
+<?php }

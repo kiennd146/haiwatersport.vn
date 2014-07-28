@@ -11,19 +11,22 @@ if( !defined( '_JEXEC' ) ) die( 'Direct Access to '.basename(__FILE__).' is not 
  * @subpackage Plugins
  * @author Christopher Roussel
  */
+if (!class_exists('vmPlugin')) require(JPATH_VM_PLUGINS . DS . 'vmplugin.php');
 
-abstract class vmExtendedPlugin extends JPlugin {
+abstract class vmExtendedPlugin extends vmPlugin {
 	/**
 	 * @var string path to this plugin's directory
 	 * @access protected
 	 */
-	abstract protected $_path = '';
+	//abstract protected $_path = '';
+	protected $_path = '';
 
 	/**
 	 * @var string plugin name
 	 * @access private
 	 */
-	protected $_name = '';
+	//protected $_name = '';
+	public $_name = '';
 
 	/**
 	 * Method to get the plugin name
@@ -54,8 +57,11 @@ abstract class vmExtendedPlugin extends JPlugin {
 	 */
 	public function __construct (&$subject, $config=array()) {
 		parent::__construct($subject, $config);
-		$this->_path = JPATH_PLUGINS.DS.$this->getName();
-		JPlugin::loadLanguage('plg_vmextended_'.$this->getName());
+		$this->_path = JPATH_ROOT .DS. 'plugins' .DS. $this->getName();
+
+		$lang = JFactory::getLanguage();
+		$lang->load('plg_vmextended_'.$this->getName(),JPATH_ADMINISTRATOR);
+
 	}
 
 	/**

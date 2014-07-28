@@ -20,7 +20,7 @@
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * HTML View class for the VirtueMart Component
@@ -28,35 +28,36 @@ jimport( 'joomla.application.component.view');
  * @package		VirtueMart
  * @author
  */
-class VirtuemartViewCustom extends JView {
+class VirtuemartViewCustom extends VmView {
 
 	function display($tpl = null) {
 
 		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
-		$this->loadHelper('vmcustomplugin');
-		$model = $this->getModel('custom');
-		$this->loadHelper('permissions');
-		// TODO Make an Icon for custom
-		$viewName=ShopFunctions::SetViewTitle('PRODUCT_CUSTOM_FIELD');
 
-		$this->assignRef('viewName',$viewName);
+
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
+		if(!class_exists('vmCustomPlugin')) require(JPATH_VM_PLUGINS.DS.'vmcustomplugin.php');
+
+		$model = VmModel::getModel();
+		if(!class_exists('Permissions')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'permissions.php');
+		// TODO Make an Icon for custom
+		$this->SetViewTitle('PRODUCT_CUSTOM_FIELD');
 
 		$layoutName = JRequest::getWord('layout', 'default');
 		if ($layoutName == 'edit') {
-			ShopFunctions::addStandardEditViewCommands();
+			$this->addStandardEditViewCommands();
 			$customPlugin = '';
-			$this->loadHelper('parameterparser');
+			if (!class_exists('vmParameters'))
+				require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'parameterparser.php');
 			$custom = $model->getCustom();
-			$customfields = $this->getModel('customfields');
+			$customfields = VmModel::getModel('customfields');
 // 			vmdebug('VirtuemartViewCustom',$custom);
 			JPluginHelper::importPlugin('vmcustom');
 			$dispatcher = JDispatcher::getInstance();
 			$retValue = $dispatcher->trigger('plgVmOnDisplayEdit',array($custom->virtuemart_custom_id,&$customPlugin));
 
-			$viewName=ShopFunctions::SetViewTitle('PRODUCT_CUSTOM_FIELD', $custom->custom_title);
+			$this->SetViewTitle('PRODUCT_CUSTOM_FIELD', $custom->custom_title);
 
 			$selected=0;
 			if(!empty($custom->custom_jplugin_id)) {
@@ -64,7 +65,7 @@ class VirtuemartViewCustom extends JView {
 			}
 			$pluginList = self::renderInstalledCustomPlugins($selected);
 			$this->assignRef('customPlugin',	$customPlugin);
-			$this->assignRef('viewName',$viewName);
+
 			$this->assignRef('pluginList',$pluginList);
 			$this->assignRef('custom',	$custom);
 			$this->assignRef('customfields',	$customfields);
@@ -78,12 +79,14 @@ class VirtuemartViewCustom extends JView {
 			JToolBarHelper::custom('toggle.is_hidden.1', 'publish','', JText::_('COM_VIRTUEMART_TOGGLE_HIDDEN'), true);
 			JToolBarHelper::custom('toggle.is_hidden.0', 'unpublish','', JText::_('COM_VIRTUEMART_TOGGLE_HIDDEN'), true);
 
+			$this->addStandardDefaultViewCommands();
+			$this->addStandardDefaultViewLists($model);
+
 			$customs = $model->getCustoms(JRequest::getInt('custom_parent_id'),JRequest::getWord('keyword'));
 			$this->assignRef('customs',	$customs);
 
-			ShopFunctions::addStandardDefaultViewCommands();
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
-			$this->assignRef('lists', $lists);
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
 
 
 		}
@@ -95,7 +98,7 @@ class VirtuemartViewCustom extends JView {
 	{
 		$db = JFactory::getDBO();
 
-		if (VmConfig::isJ15()) {
+		if (JVM_VERSION===1) {
 			$table = '#__plugins';
 			$enable = 'published';
 			$ext_id = 'id';
@@ -109,12 +112,16 @@ class VirtuemartViewCustom extends JView {
 		$db->setQuery($q);
 
 		$results = $db->loadAssocList($ext_id);
-        $lang =& JFactory::getLanguage();
-		foreach ($results as &$result) {
-        $filename = 'plg_' .strtolower ( $result['name']).'.sys';
 
-        $lang->load($filename, JPATH_ADMINISTRATOR);
-		//print_r($lang);
+		if (!class_exists('vmPlugin'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'plugins' . DS . 'vmplugin.php');
+
+
+        $lang =JFactory::getLanguage();
+		foreach ($results as $result) {
+			//$filename = 'plg_vmcustom_' .  $this->plugin->element;
+			$filename = 'plg_' .strtolower ( $result['name']).'.sys';
+			vmPlugin::loadJLang($filename,'vmcustom',$result['name']);
 		}
 		return VmHTML::select( 'custom_jplugin_id', $results, $selected,"",$ext_id, 'name');
 

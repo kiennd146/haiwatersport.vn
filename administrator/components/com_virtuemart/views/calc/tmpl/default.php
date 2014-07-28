@@ -13,15 +13,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4971 2011-12-07 17:55:42Z electrocity $
+* @version $Id: default.php 6475 2012-09-21 11:54:21Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
-$j15 = VmConfig::isJ15();
 ?>
 
 <form action="index.php" method="post" name="adminForm" id="adminForm">
@@ -30,7 +29,7 @@ $j15 = VmConfig::isJ15();
 		<table>
 		  <tr>
 			 <td align="left">
-				<?php echo ShopFunctions::displayDefaultViewSearch('COM_VIRTUEMART_NAME',$this->lists['search']) ?>
+				<?php echo $this->displayDefaultViewSearch() ?>
 			 </td>
 		  </tr>
 		</table>
@@ -42,36 +41,40 @@ $j15 = VmConfig::isJ15();
 		<table class="adminlist" cellspacing="0" cellpadding="0">
 		<thead>
 		<tr>
-			<th>
-				<?php echo JText::_('COM_VIRTUEMART_#'); ?>
-			</th>
+
 			<th>
 				<input type="checkbox" name="toggle" value="" onclick="checkAll(<?php echo count($this->calcs); ?>);" />
 			</th>
-			<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_NAME', 'calc_name', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
+			<th><?php echo $this->sort('calc_name', 'COM_VIRTUEMART_NAME') ; ?></th>
 			<?php if((Vmconfig::get('multix','none')!='none') && $this->perms->check( 'admin' )){ ?>
 			<th width="20">
-				<?php echo JText::_('COM_VIRTUEMART_CALC_VENDOR');  ?>
+				<?php echo JText::_('COM_VIRTUEMART_VENDOR');  ?>
 			</th><?php }  ?>
-			<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_DESCRIPTION', 'calc_descr', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
-			<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_ORDERING', 'ordering', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
-			<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_CALC_KIND', 'calc_kind', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
+			<th><?php echo $this->sort('calc_descr' , 'COM_VIRTUEMART_DESCRIPTION'); ?></th>
+			<th><?php echo $this->sort('ordering') ; ?></th>
+			<th><?php echo $this->sort('calc_kind') ; ?></th>
 			<th><?php echo JText::_('COM_VIRTUEMART_CALC_VALUE_MATHOP'); ?></th>
-			<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_VALUE', 'calc_value', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
-			<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_CURRENCY', 'calc_currency', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
+			<th><?php echo $this->sort('calc_value' , 'COM_VIRTUEMART_VALUE'); ?></th>
+			<th><?php echo $this->sort('calc_currency' , 'COM_VIRTUEMART_CURRENCY'); ?></th>
 			<th><?php echo JText::_('COM_VIRTUEMART_CATEGORY_S'); ?></th>
-			<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_SHOPPERGROUP_IDS', 'calc_currency', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
-			<th><?php echo JText::_('COM_VIRTUEMART_CALC_VIS_SHOPPER'); ?></th>
-<?php /*	<th width="10"><?php echo JText::_('COM_VIRTUEMART_CALC_VIS_VENDOR'); ?></th> */  ?>
-			<th><?php echo JText::_('COM_VIRTUEMART_START_DATE'); ?></th>
-			<th><?php echo JText::_('COM_VIRTUEMART_END_DATE'); ?></th>
+			<th><?php echo JText::_('COM_VIRTUEMART_MANUFACTURER'); // Mod. <mediaDESIGN> St.Kraft 2013-02-24  ?></th>
+			<th><?php echo JText::_('COM_VIRTUEMART_SHOPPERGROUP_IDS'); ?></th>
+			<?php /*		<th><?php echo JText::_('COM_VIRTUEMART_CALC_VIS_SHOPPER'); ?></th>
+			<th width="10"><?php echo JText::_('COM_VIRTUEMART_CALC_VIS_VENDOR'); ?></th> */  ?>
+			<th><?php echo $this->sort('publish_up' , 'COM_VIRTUEMART_START_DATE'); ?></th>
+			<th><?php echo $this->sort('publish_down' , 'COM_VIRTUEMART_END_DATE'); ?></th>
 <?php /*	<th width="20"><?php echo JText::_('COM_VIRTUEMART_CALC_AMOUNT_COND'); ?></th>
 			<th width="10"><?php echo JText::_('COM_VIRTUEMART_CALC_AMOUNT_DIMUNIT'); ?></th> */  ?>
 			<th><?php echo JText::_('COM_VIRTUEMART_COUNTRY_S'); ?></th>
 			<th><?php echo JText::_('COM_VIRTUEMART_STATE_IDS'); ?></th>
 			<th><?php echo JText::_('COM_VIRTUEMART_PUBLISHED'); ?></th>
+			<?php if((Vmconfig::get('multix','none')!='none') && $this->perms->check( 'admin' )){ ?>
+			<th width="20">
+				<?php echo JText::_( 'COM_VIRTUEMART_SHARED')  ?>
+			</th><?php }  ?>
+			<th><?php echo $this->sort('virtuemart_calc_id', 'COM_VIRTUEMART_ID')  ?></th>
 		<?php /*	<th width="10">
-				<?php echo JText::_('COM_VIRTUEMART_CALC_SHARED'); ?>
+				<?php echo JText::_('COM_VIRTUEMART_SHARED'); ?>
 			</th> */ ?>
 		</tr>
 		</thead>
@@ -83,12 +86,11 @@ $j15 = VmConfig::isJ15();
 			$row = $this->calcs[$i];
 			$checked = JHTML::_('grid.id', $i, $row->virtuemart_calc_id);
 			$published = JHTML::_('grid.published', $row, $i);
+			$shared = $this->toggle($row->shared, $i, 'toggle.shared');
 			$editlink = JROUTE::_('index.php?option=com_virtuemart&view=calc&task=edit&cid[]=' . $row->virtuemart_calc_id);
 			?>
 			<tr class="<?php echo "row".$k; ?>">
-				<td align="right">
-					<?php echo $row->virtuemart_calc_id; ?>
-				</td>
+
 				<td>
 					<?php echo $checked; ?>
 				</td>
@@ -121,36 +123,30 @@ $j15 = VmConfig::isJ15();
 				<td>
 					<?php echo $row->calcCategoriesList; ?>
 				</td>
+        <td>
+        	<?php echo $row->calcManufacturersList; /* Mod. <mediaDESIGN> St.Kraft 2013-02-24 Herstellerrabatt */ ?>
+        </td>
 				<td>
 					<?php echo $row->calcShoppersList; ?>
 				</td>
-				<td align="center">
+				<?php /*				<td align="center">
 					<a href="#" onclick="return listItemTask('cb<?php echo $i;?>', 'toggle.calc_shopper_published')" title="<?php echo ( $row->calc_shopper_published == '1' ) ? JText::_('COM_VIRTUEMART_YES') : JText::_('COM_VIRTUEMART_NO');?>">
-						<?php echo JHtml::_('image.administrator', ($j15 ? '' : 'admin/') . ($row->calc_shopper_published ? 'tick.png' : 'publish_x.png')); ?>
+						<?php echo JHtml::_('image.administrator', ((JVM_VERSION===1) ? '' : 'admin/') . ($row->calc_shopper_published ? 'tick.png' : 'publish_x.png')); ?>
 					</a>
 				</td>
-<?php /*				<td align="center">
+				<td align="center">
 					<a href="#" onclick="return listItemTask('cb<?php echo $i;?>', 'toggle.calc_vendor_published')" title="<?php echo ( $row->calc_vendor_published == '1' ) ? JText::_('COM_VIRTUEMART_YES') : JText::_('COM_VIRTUEMART_NO');?>">
-						<?php echo JHtml::_('image.administrator', ($j15 ? '' : 'admin/') . ($row->calc_vendor_published ? 'tick.png' : 'publish_x.png')); ?>
+						<?php echo JHtml::_('image.administrator', ((JVM_VERSION===1) ? '' : 'admin/') . ($row->calc_vendor_published ? 'tick.png' : 'publish_x.png')); ?>
 					</a>
 				</td> */  ?>
 				<td>
 					<?php
-					$publish_up ='';
-					if (!strcmp($row->publish_up,'0000-00-00 00:00:00')) {
-						echo JText::_('COM_VIRTUEMART_NEVER');
-					} else {
 						echo vmJsApi::date( $row->publish_up, 'LC4',true);
-					}
 					?>
 				</td>
 				<td>
 					<?php
-						if (!strcmp($row->publish_down,'0000-00-00 00:00:00')) {
-							echo JText::_('COM_VIRTUEMART_NEVER');
-						} else {
 							echo vmJsApi::date( $row->publish_down, 'LC4',true);
-						}
 					?>
 				</td>
 <?php /*				<td>
@@ -168,10 +164,18 @@ $j15 = VmConfig::isJ15();
 				<td align="center">
 					<?php echo $published; ?>
 				</td>
-				<?php /*
-				<td align="center">
-					<?php echo $row->shared; ?>
-				</td>	*/?>
+
+				<?php
+				if((Vmconfig::get('multix','none')!='none')) {
+				?><td align="center">
+					   <?php echo $shared; ?>
+			        </td>
+				<?php
+				}
+			?>
+				<td align="right">
+					<?php echo $row->virtuemart_calc_id; ?>
+				</td>
 			</tr>
 			<?php
 			$k = 1 - $k;
@@ -186,14 +190,7 @@ $j15 = VmConfig::isJ15();
 		</tfoot>
 	</table>
 </div>
-	<input type="hidden" name="filter_order" value="<?php echo $this->lists['filter_order']; ?>" />
-	<input type="hidden" name="filter_order_Dir" value="<?php echo $this->lists['filter_order_Dir']; ?>" />
-	<input type="hidden" name="option" value="com_virtuemart" />
-	<input type="hidden" name="controller" value="calc" />
-	<input type="hidden" name="view" value="calc" />
-	<input type="hidden" name="task" value="" />
-	<input type="hidden" name="boxchecked" value="0" />
-	<?php echo JHTML::_( 'form.token' ); ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 

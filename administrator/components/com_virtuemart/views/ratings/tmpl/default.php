@@ -21,7 +21,7 @@
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 /* Get the component name */
 $option = JRequest::getWord('option');
 ?>
@@ -42,16 +42,15 @@ $option = JRequest::getWord('option');
 	<div id="resultscounter" ><?php echo $this->pagination->getResultsCounter();?></div>
 </div>
 
-
 <div style="text-align: left;">
 	<table class="adminlist" cellspacing="0" cellpadding="0">
 	<thead>
 	<tr>
 		<th><input type="checkbox" name="toggle" value="" onclick="checkAll('<?php echo count($this->ratingslist); ?>')" /></th>
-		<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_DATE', 'created_on', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
-		<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_PRODUCT_NAME', 'product_name', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
-		<th><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_RATE_NOM', 'rating', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
-		<th width="20"><?php echo JHTML::_('grid.sort', 'COM_VIRTUEMART_PUBLISHED', 'published', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?></th>
+		<th><?php echo $this->sort('created_on', 'COM_VIRTUEMART_DATE') ; ?></th>
+		<th><?php echo $this->sort('product_name') ; ?></th>
+		<th><?php echo $this->sort('rating', 'COM_VIRTUEMART_RATE_NOM') ; ?></th>
+		<th width="20"><?php echo $this->sort('published') ?></th>
 	</tr>
 	</thead>
 	<tbody>
@@ -74,8 +73,18 @@ $option = JRequest::getWord('option');
 				<?php $link = 'index.php?option='.$option.'&view=product&task=edit&virtuemart_product_id='.$review->virtuemart_product_id ; ?>
 				<td><?php echo JHTML::_('link', JRoute::_($link), $review->product_name, array('title' => JText::_('COM_VIRTUEMART_EDIT').' '.$review->product_name)); ?></td>
 				<!-- Stars rating -->
-				<td>
-				<?php echo JHTML::_('image', JURI::root().'/components/com_virtuemart/assets/images/stars/'.round($review->rating).'.gif',$review->rating,array("title" => (JText::_('COM_VIRTUEMART_RATING_TITLE').' : '. $review->rating . ' :: ' . $this->max_rating))); ?>
+				<td align="center">
+					
+					<?php // Rating Stars output
+					$maxrating = VmConfig::get('vm_maximum_rating_scale', 5);
+				    $ratingwidth = round($review->rating) * 24;
+				    ?>
+	
+				    <span title="<?php echo (JText::_("COM_VIRTUEMART_RATING_TITLE").' '. round($review->rating) . '/' . $maxrating) ?>" class="ratingbox" style="display:inline-block;">
+						<span class="stars-orange" style="width:<?php echo $ratingwidth.'px'; ?>">
+						</span>
+				    </span>
+
 				</td>
 				<!-- published -->
 				<td><?php echo $published; ?></td>
@@ -97,13 +106,7 @@ $option = JRequest::getWord('option');
 	</table>
 </div>
 <!-- Hidden Fields -->
-<input type="hidden" name="filter_order" value="<?php echo $this->lists['filter_order']; ?>" />
-<input type="hidden" name="filter_order_Dir" value="<?php echo $this->lists['filter_order_Dir']; ?>" />
-<input type="hidden" name="task" value="ratings" />
-<input type="hidden" name="option" value="com_virtuemart" />
-<input type="hidden" name="view" value="ratings" />
-<input type="hidden" name="boxchecked" value="0" />
-<?php echo JHTML::_( 'form.token' ); ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 <?php AdminUIHelper::endAdminArea(); ?>
 

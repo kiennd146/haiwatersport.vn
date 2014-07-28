@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: order_items.php 5133 2011-12-19 12:02:41Z Milbo $
+* @version $Id: order_items.php 5339 2012-01-30 16:42:50Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -47,8 +47,20 @@ class TableOrder_items extends VmTable {
 	var $product_quantity = NULL;
 	/** @var decimal Product item price */
 	var $product_item_price = 0.00000;
+	/** @var decimal Product Base price with tax*/
+	var $product_basePriceWithTax = 0.00000;
+	/** @var decimal Product discounted price without tax*/
+	var $product_discountedPriceWithoutTax = 0.00000;
+	/** @var decimal Product final price without tax*/
+	var $product_priceWithoutTax = 0.00000;
+	/** @var tax amount */
+	var $product_tax = 0.00000;
 	/** @var decimal Product final price */
 	var $product_final_price = 0.00000;
+	/** $product_discount_amount */
+	var $product_subtotal_discount = 0.00000;
+	/** $product_discount_amount */
+	var $product_subtotal_with_tax = 0.00000;
 	/** @var string Order item currency */
 	var $order_item_currency = NULL;
 	/** @var char Order status */

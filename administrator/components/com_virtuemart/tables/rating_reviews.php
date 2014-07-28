@@ -53,11 +53,11 @@ class TableRating_reviews extends VmTable {
 
 	/**
 	* @author Max Milbers
-	* @param $db A database connector object
+	* @param JDataBase $db
 	*/
 	function __construct(&$db) {
 		parent::__construct('#__virtuemart_rating_reviews', 'virtuemart_rating_review_id', $db);
-		$this->setPrimaryKey('virtuemart_product_id');
+		$this->setPrimaryKey('virtuemart_rating_review_id');
 		$this->setObligatoryKeys('comment');
 
 		$this->setLoggable();

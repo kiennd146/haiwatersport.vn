@@ -13,18 +13,18 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: default.php 4898 2011-12-01 01:34:46Z electrocity $
+ * @version $Id: default.php 7153 2013-09-02 07:44:54Z alatak $
  */
 
 // Check to ensure this file is included in Joomla!
 defined ( '_JEXEC' ) or die ( 'Restricted access' );
-AdminUIHelper::startAdminArea ();
+AdminUIHelper::startAdminArea ($this);
 ?>
 
 <form action="index.php" method="post" name="adminForm" id="adminForm">
 
 <?php // Loading Templates in Tabs
-AdminUIHelper::buildTabs ( array (
+AdminUIHelper::buildTabs ( $this,  array (
 									'shop' 			=> 	'COM_VIRTUEMART_ADMIN_CFG_SHOPTAB',
 									'shopfront' 	=> 	'COM_VIRTUEMART_ADMIN_CFG_SHOPFRONTTAB',
 									'templates' 	=> 	'COM_VIRTUEMART_ADMIN_CFG_TEMPLATESTAB',

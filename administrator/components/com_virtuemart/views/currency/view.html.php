@@ -13,14 +13,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.html.php 5013 2011-12-10 16:20:21Z electrocity $
+* @version $Id: view.html.php 6043 2012-05-21 21:40:56Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * HTML View class for maintaining the list of currencies
@@ -29,19 +29,19 @@ jimport( 'joomla.application.component.view');
  * @subpackage Currency
  * @author RickG, Max Milbers
  */
-class VirtuemartViewCurrency extends JView {
+class VirtuemartViewCurrency extends VmView {
 
 	function display($tpl = null) {
 
 		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
-
-		$model = $this->getModel();
 
 
-		$db = JFactory::getDBO();
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
+
+		$model = VmModel::getModel();
+
+
 		$config = JFactory::getConfig();
 		$layoutName = JRequest::getWord('layout', 'default');
 		if ($layoutName == 'edit') {
@@ -57,21 +57,23 @@ class VirtuemartViewCurrency extends JView {
 
 			$model->setId($cid);
 			$currency = $model->getCurrency();
-			$viewName=ShopFunctions::SetViewTitle('',$currency->currency_name);
+			$this->SetViewTitle('',$currency->currency_name);
 			$this->assignRef('currency',	$currency);
 
-			ShopFunctions::addStandardEditViewCommands();
+			$this->addStandardEditViewCommands();
 
 		} else {
 
-			$viewName=ShopFunctions::SetViewTitle();
-			ShopFunctions::addStandardDefaultViewCommands();
+			$this->SetViewTitle();
+			$this->addStandardDefaultViewCommands();
+
+			$this->addStandardDefaultViewLists($model,0,'ASC');
 
 			$currencies = $model->getCurrenciesList(JRequest::getWord('search', false));
 			$this->assignRef('currencies',	$currencies);
 
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
-			$this->assignRef('lists', $lists);
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
 
 
 		}

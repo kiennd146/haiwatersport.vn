@@ -15,7 +15,7 @@
 * other free or open source software licenses.
 * @version $Id: manufacturer.php 2420 2010-06-01 21:12:57Z oscar $
 */
- 
+
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
@@ -27,36 +27,28 @@ jimport('joomla.application.component.controller');
  *
  * @package		VirtueMart
  */
+
 class VirtueMartControllerManufacturer extends JController
 {
 
-	function Manufacturer() {
-		$view = $this->getView(JRequest::getWord('view', 'manufacturer'), 'html');
-		
-		/* Load the backend models */
-		/* Push a model into the view */		
-		$this->addModelPath(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_virtuemart' . DS . 'models');
-		/*Manufacturer functions */
-		$view->setModel( $this->getModel( 'manufacturer', 'VirtuemartModel',true ));
-		
-		/* Vendor functions */
-		$view->setModel( $this->getModel( 'vendor', 'VirtuemartModel' ));
-		
-		/* Product functions */
-		$view->setModel( $this->getModel( 'product', 'VirtuemartModel' ));
-		
-		/* Set the layout */
-		$view->setLayout(JRequest::getWord('layout','default'));
-		if (JRequest::getInt('virtuemart_manufacturer_id')) {
-			/* link in product details to display a specific manufacturer */
-			$view->setLayout('details');
-		} else {
-			/* view all manufacturer */
-			$view->setLayout(JRequest::getWord('layout','default'));
-		}
-			
-		/* Display it all */
+	/**
+	 * Override of display to prevent caching
+	 *
+	 * @return  JController  A JController object to support chaining.
+	 */
+	public function display(){
+
+		$document = JFactory::getDocument();
+		$viewType = $document->getType();
+		$viewName = JRequest::getCmd('view', $this->default_view);
+		$viewLayout = JRequest::getCmd('layout', 'default');
+
+		$view = $this->getView($viewName, $viewType, '', array('base_path' => $this->basePath, 'layout' => $viewLayout));
+		$view->assignRef('document', $document);
+
 		$view->display();
+
+		return $this;
 	}
 }
 

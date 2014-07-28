@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: media.php 4853 2011-11-28 22:35:57Z Milbo $
+* @version $Id: media.php 6071 2012-06-06 15:33:04Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -40,36 +40,12 @@ class VirtuemartControllerMedia extends VmController {
 	 * @author
 	 */
 	function __construct() {
+		VmConfig::loadJLang('com_virtuemart_media');
 		parent::__construct('virtuemart_media_id');
 
 	}
 
-	function Media(){
-		/* Create the view object */
-		$view = $this->getView('media', 'html');
 
-		/* Default model */
-		$view->setModel( $this->getModel( 'media', 'VirtueMartModel' ), true );
-
-		parent::display();
-	}
-
-	/**
-	 * Shows the product files list screen
-	 */
-	function edit() {
-		/* Create the view object */
-		$view = $this->getView('media', 'html');
-
-//		/* Default model */
-//		$view->setModel( $this->getModel( 'media', 'VirtueMartModel' ), true );
-
-		$view->setModel( $this->getModel( 'user', 'VirtueMartModel' ), false );
-
-
-		/* Now display the view. */
-		parent::edit();
-	}
 	/**
 	 * for ajax call media
 	 */
@@ -78,16 +54,13 @@ class VirtuemartControllerMedia extends VmController {
 		/* Create the view object. */
 		$view = $this->getView('media', 'json');
 
-		/* Standard model */
-		$view->setModel( $this->getModel( 'media', 'VirtueMartModel' ), true );
-
 		/* Now display the view. */
 		$view->display(null);
 	}
 
-	function save(){
+	function save($data = 0){
 
-		$fileModel = $this->getModel('media');
+		$fileModel = VmModel::getModel('media');
 
 		//Now we try to determine to which this media should be long to
 		$data = JRequest::get('post');
@@ -101,7 +74,7 @@ class VirtuemartControllerMedia extends VmController {
 			$data['file_type'] = $data['media_attributes'];
 		}
 
-		if ($id = $fileModel->store($data)) {
+		if ($id = $fileModel->store($data,$data['file_type'])) {
 			$msg = JText::_('COM_VIRTUEMART_FILE_SAVED_SUCCESS');
 		} else {
 			$msg = $fileModel->getError();

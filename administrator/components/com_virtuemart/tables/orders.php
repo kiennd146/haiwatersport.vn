@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: orders.php 5133 2011-12-19 12:02:41Z Milbo $
+* @version $Id: orders.php 6210 2012-07-04 00:15:41Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -40,9 +40,19 @@ class TableOrders extends VmTable {
 	/** @var int Order number */
 	var $order_number = NULL;
 	var $order_pass = NULL;
-
+	var $customer_number = NULL;
 	/** @var decimal Order total */
 	var $order_total = 0.00000;
+	/** @var decimal Products sales prices */
+	var $order_salesPrice = 0.00000;
+	/** @var decimal Order Bill Tax amount */
+	var $order_billTaxAmount = 0.00000;
+	/** @var string Order Bill Tax */
+	var $order_billTax = 0;
+	/** @var decimal Order Bill Tax amount */
+	var $order_billDiscountAmount = 0.00000;
+	/** @var decimal Order  Products Discount amount */
+	var $order_discountAmount = 0.00000;
 	/** @var decimal Order subtotal */
 	var $order_subtotal = 0.00000;
 	/** @var decimal Order tax */
@@ -78,6 +88,9 @@ class TableOrders extends VmTable {
 	var $customer_note = 0;
 	/** @var string Users IP Address */
 	var $ip_address = 0;
+	/** @var char Order language */
+	var $order_language = NULL;
+	var $delivery_date = NULL;
 
 
 	/**
@@ -95,6 +108,26 @@ class TableOrders extends VmTable {
 		$this->setTableShortCut('o');
 	}
 
+	function check(){
+
+		if(empty($this->order_number)){
+			if(!class_exists('VirtueMartModelOrders')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'orders.php');
+			$this->order_number = VirtueMartModelOrders::generateOrderNumber((string)time());
+		}
+
+		if(empty($this->order_pass)){
+			$this->order_pass = 'p_'.substr( md5((string)time().$this->order_number ), 0, 5);
+		}
+
+		$adminID = JFactory::getSession()->get('vmAdminID');
+		if(isset($adminID)) {
+			$this->created_by = $adminID;
+		}
+
+		return parent::check();
+	}
+
+
 	/**
 	 * Overloaded delete() to delete records from order_userinfo and order payment as well,
 	 * and write a record to the order history (TODO Or should the hist table be cleaned as well?)
@@ -104,11 +137,11 @@ class TableOrders extends VmTable {
 	 * @author Oscar van Eijk
 	 * @author Kohl Patrick
 	 */
-	function delete($id)
-	{
+	function delete( $id=null , $where = 0 ){
+
 		$this->_db->setQuery('DELETE from `#__virtuemart_order_userinfos` WHERE `virtuemart_order_id` = ' . $id);
 		if ($this->_db->query() === false) {
-			$this->setError($this->_db->getError());
+			vmError($this->_db->getError());
 			return false;
 		}
 		/*vm_order_payment NOT EXIST  have to find the table name*/
@@ -118,19 +151,27 @@ class TableOrders extends VmTable {
 
 		$this->_db->setQuery('DELETE from `'.$paymentTable.'` WHERE `virtuemart_order_id` = ' . $id);
 		if ($this->_db->query() === false) {
-			$this->setError($this->_db->getError());
+			vmError($this->_db->getError());
 			return false;
 		}		/*vm_order_shipment NOT EXIST  have to find the table name*/
 		$this->_db->setQuery( 'SELECT `shipment_element` FROM `#__virtuemart_shipmentmethods` , `#__virtuemart_orders`
 			WHERE `#__virtuemart_shipmentmethods`.`virtuemart_shipmentmethod_id` = `#__virtuemart_orders`.`virtuemart_shipmentmethod_id` AND `virtuemart_order_id` = ' . $id );
-		$shipmentTable = '#__virtuemart_shipment_plg_'. $this->_db->loadResult();
+		$shipmentName = $this->_db->loadResult();
 
-		$this->_db->setQuery('DELETE from `'.$shipmentTable.'` WHERE `virtuemart_order_id` = ' . $id);
-		if ($this->_db->query() === false) {
-			$this->setError($this->_db->getError());
-			return false;
+		if(empty($shipmentName)){
+			vmError('Seems the used shipmentmethod got deleted');
+			//Can we securely prevent this just using
+		//	'SELECT `shipment_element` FROM `#__virtuemart_shipmentmethods` , `#__virtuemart_orders`
+		//	WHERE `#__virtuemart_shipmentmethods`.`virtuemart_shipmentmethod_id` = `#__virtuemart_orders`.`virtuemart_shipmentmethod_id` AND `virtuemart_order_id` = ' . $id );
+		} else {
+			$shipmentTable = '#__virtuemart_shipment_plg_'. $shipmentName;
+
+			$this->_db->setQuery('DELETE from `'.$shipmentTable.'` WHERE `virtuemart_order_id` = ' . $id);
+			if ($this->_db->query() === false) {
+				vmError('TableOrders delete Order shipmentTable = '.$shipmentTable.' `virtuemart_order_id` = '.$id.' dbErrorMsg '.$this->_db->getError());
+				return false;
+			}
 		}
-
 
 		$_q = 'INSERT INTO `#__virtuemart_order_histories` ('
 				.	' virtuemart_order_history_id'

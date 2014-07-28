@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: calc.php 3002 2011-04-08 12:35:45Z alatak $
+* @version $Id: shipment_shoppergroups.php 3002 2011-04-08 12:35:45Z alatak $
 */
 
 defined('_JEXEC') or die();
@@ -32,14 +32,13 @@ class TableShipmentmethod_shoppergroups extends VmTableXarray {
 
 	/**
 	 * @author Max Milbers
-	 * @param $db A database connector object
+	 * @param JDataBase $db
 	 */
 	function __construct(&$db){
 		parent::__construct('#__virtuemart_shipmentmethod_shoppergroups', 'id', $db);
 
 		$this->setPrimaryKey('virtuemart_shipmentmethod_id');
 		$this->setSecondaryKey('virtuemart_shoppergroup_id');
-		//$this->setOrderable();
 
 	}
 

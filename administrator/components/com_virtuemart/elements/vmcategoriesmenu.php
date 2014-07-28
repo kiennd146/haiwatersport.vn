@@ -1,4 +1,5 @@
 <?php
+defined('_JEXEC') or die();
 
 /**
  *
@@ -35,10 +36,9 @@ class JElementVmcategoriesmenu extends JElement {
 
 
     function fetchElement($name, $value, &$node, $control_name) {
-        JPlugin::loadLanguage('com_virtuemart', JPATH_ADMINISTRATOR);
+	    VmConfig::loadJLang('com_virtuemart', false);
         $categorylist = ShopFunctions::categoryListTree(array($value));
 
-        $class = '';
         $html = '<select class="inputbox"   name="' . $control_name . '[' . $name . ']' . '" >';
         $html .= '<option value="0">' . JText::_('COM_VIRTUEMART_CATEGORY_FORM_TOP_LEVEL') . '</option>';
         $html .= $categorylist;

@@ -14,7 +14,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: country.php 4657 2011-11-10 12:06:03Z Milbo $
+* @version $Id: country.php 5255 2012-01-10 15:55:50Z electrocity $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -40,36 +40,6 @@ class VirtuemartControllerCountry extends VmController {
 
 	}
 
-	public function Country() {
-
-		$document = JFactory::getDocument();
-		$viewType	= $document->getType();
-		$view = $this->getView($this->_cname, $viewType);
-
-		// Pushing default model
-		$model = $this->getModel();
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
-
-		$model1 = $this->getModel('Worldzones');
-		if (!JError::isError($model1)) {
-			$view->setModel($model1, false);
-		}
-
-		parent::display();
-	}
-
-	function edit(){
-
-		$document = JFactory::getDocument();
-		$viewType = $document->getType();
-		$view = $this->getView($this->_cname, $viewType);
-
-		$view->setModel( $this->getModel( 'WorldZones', 'VirtueMartModel' ));
-
-		parent::edit();
-	}
 }
 
 //pure php no tag

@@ -85,10 +85,10 @@
 
   $.extend($.facebox, {
     settings: {
-      opacity      : 0.2,
+      opacity      : 0.6,
       overlay      : true,
-      loadingImage : 'loading.gif',
-      closeImage   : 'closelabel.png',
+      loadingImage : '/components/com_virtuemart/assets/images/facebox/loading.gif',
+      closeImage   : '/components/com_virtuemart/assets/images/facebox/closelabel.png',
       imageTypes   : [ 'png', 'jpg', 'jpeg', 'gif' ],
       faceboxHtml  : '\
     <div id="facebox" style="display:none;"> \
@@ -97,6 +97,7 @@
         </div> \
         <a href="#" class="close"></a> \
       </div> \
+	  <span></span>\
     </div>'
     },
 
@@ -109,11 +110,14 @@
       $('#facebox .body').children().hide().end().
         append('<div class="loading"><img src="'+$.facebox.settings.loadingImage+'"/></div>')
 
-      $('#facebox').css({
-        top: 100 , //	getPageScroll()[1] + (getPageHeight() / 10),
-        left:	$(window).width() / 2 - 205
-      }).show()
-
+      // $('#facebox').css({
+        // top: 100 , //	getPageScroll()[1] + (getPageHeight() / 10),
+        // left:	$(window).width() / 2 - 205
+      // }).show()
+		$('#facebox').css({
+		  top:    getPageScroll()[1] + ($(window).height() / 10),
+		  left:   ($(window).width() - $('#facebox').width()) / 2
+		}).show()
       $(document).bind('keydown.facebox', function(e) {
         if (e.keyCode == 27) $.facebox.close()
         return true
@@ -316,6 +320,20 @@ function fillFaceboxFromIframe(href, klass, height, width) {
     })
     hideOverlay()
   })
+
+	$(document).bind('afterReveal.facebox', function() {
+		var windowHeight = $(window).height();
+		var faceboxHeight = $('#facebox').height();
+		if(faceboxHeight < windowHeight) {
+			var scrolltop = $(window).scrollTop();
+			var top = Math.floor((windowHeight - faceboxHeight) / 2) + scrolltop;
+			$('#facebox').css('top', (top));
+		}
+	else {
+		$('#facebox').css('top',$(window).scrollTop() );
+	}
+	});
+
 
 })(jQuery);
 

@@ -42,43 +42,19 @@ class VirtuemartControllerCustom extends VmController {
 	function __construct() {
 		parent::__construct('virtuemart_custom_id');
 
-//		$this->setMainLangKey('CUSTOM');
-		$document = JFactory::getDocument();
-		$viewType	= $document->getType();
-		$view = $this->getView('custom', $viewType);
-
-		// Push a model into the view
-		$model = $this->getModel('custom');
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
-
 	}
-	public function edit(){
 
-		$document = JFactory::getDocument();
-		$viewType	= $document->getType();
-		$view = $this->getView($this->_cname, $viewType);
-		JRequest::setVar('layout', 'edit');
-		// Pushing default model
-// 		$view->setModel( $this->getModel( 'custom', 'VirtueMartModel' ), true );
-		$view->setModel( $this->getModel( 'customfields', 'VirtueMartModel' ), false );
-
-		parent::display();
-	}
 
 	function viewJson() {
 
-		/* Create the view object. */
+		// Create the view object.
 		$view = $this->getView('custom', 'json');
 
-		/* Standard model */
-// 		$view->setModel( $this->getModel( 'custom', 'VirtueMartModel' ), true );
-
-		/* Now display the view. */
+		// Now display the view.
 		$view->display(null);
 	}
-	function save() {
+
+	function save($data = 0) {
 		$data = JRequest::get('post');
 		// onSaveCustom plugin;
 		parent::save($data);
@@ -87,7 +63,7 @@ class VirtuemartControllerCustom extends VmController {
 	/**
 	* Clone a product
 	*
-	* @author RolandD, Max Milbers
+	* @author Max Milbers
 	*/
 	public function createClone() {
 		$mainframe = Jfactory::getApplication();
@@ -95,7 +71,7 @@ class VirtuemartControllerCustom extends VmController {
 		/* Load the view object */
 		$view = $this->getView('custom', 'html');
 
-		$model = $this->getModel('custom');
+		$model = VmModel::getModel('custom');
 		$msgtype = '';
 		$cids = JRequest::getVar($this->_cidName, JRequest::getVar('virtuemart_custom_id',array(),'', 'ARRAY'), '', 'ARRAY');
 		jimport( 'joomla.utilities.arrayhelper' );

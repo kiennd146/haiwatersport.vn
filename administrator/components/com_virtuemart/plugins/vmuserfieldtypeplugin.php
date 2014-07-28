@@ -28,9 +28,33 @@ abstract class vmUserfieldPlugin extends vmPlugin {
 
 		parent::__construct($subject, $config);
 
-		$this->_tablename = '#__virtuemart_userfield_' . $this->_name;
-		$this->_createTable();
-		$this->_tableChecked = true;
+		// $this->_tablename = '#__virtuemart_userfield_' . $this->_name;
+		// $this->_createTable();
+		// $this->_tableChecked = true;
 	}
+
+	// add params fields in object 
+	
+	function AddUserfieldParameter($params){
+
+		$plgParams = explode('|', $params);
+		foreach($plgParams as $item){
+			if (empty($item)) continue;
+			$param = explode('=',$item);
+			$this->$param[0] = json_decode($param[1]);
+			//unset($item[0]);
+		}
+
+	}
+	// add params fields in object by name
+	
+	function AddUserfieldParameterByPlgName($plgName){
+		if(empty($this->_db)) $this->_db = JFactory::getDBO();
+		$q = 'SELECT `params` FROM `#__virtuemart_userfields` WHERE `type` = "plugin' . $plgName.'"';
+		$this->_db->setQuery($q);
+		$params = $this->_db->loadResult();
+		$this->AddUserfieldParameter($params);
+	}	
+
 
 }

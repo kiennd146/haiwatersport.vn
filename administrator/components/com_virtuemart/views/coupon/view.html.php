@@ -14,14 +14,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.html.php 5047 2011-12-12 21:12:33Z Milbo $
+* @version $Id: view.html.php 5601 2012-03-04 18:22:24Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * HTML View class for maintaining the list of Coupons
@@ -32,24 +32,22 @@ jimport( 'joomla.application.component.view');
  * @author Valerie Isaksen
  */
 
-if (!class_exists('VirtueMartModelCurrency'))
-    require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'currency.php');
-if (!class_exists('VirtueMartModelVendor'))
-    require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'vendor.php');
-class VirtuemartViewCoupon extends JView {
+
+class VirtuemartViewCoupon extends VmView {
 
 	function display($tpl = null) {
 
 		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
 
-		$model = $this->getModel();
+
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
+
+		$model = VmModel::getModel();
 
 		$coupon = $model->getCoupon();
-		$viewName=ShopFunctions::SetViewTitle('', $coupon->coupon_code);
-		$this->assignRef('viewName',$viewName);
+		$this->SetViewTitle('', $coupon->coupon_code);
+
 
 		$layoutName = JRequest::getWord('layout', 'default');
 
@@ -59,13 +57,13 @@ class VirtuemartViewCoupon extends JView {
 // 				$this->assignRef('vendorList', $vendorList);
 // 		}
 
-		 $vendorModel = new VirtueMartModelVendor();
-	    $vendorModel->setId(1);
-	    $vendor = $vendorModel->getVendor();
+		 $vendorModel = VmModel::getModel('Vendor');
+		$vendorModel->setId(1);
+		$vendor = $vendorModel->getVendor();
 
-	    $currencyModel = new VirtueMartModelCurrency();
-	    $currencyModel = $currencyModel->getCurrency($vendor->vendor_currency);
-	    $this->assignRef('vendor_currency', $currencyModel->currency_symbol);
+		$currencyModel = VmModel::getModel('Currency');
+		$currencyModel = $currencyModel->getCurrency($vendor->vendor_currency);
+		$this->assignRef('vendor_currency', $currencyModel->currency_symbol);
 
 		if ($layoutName == 'edit') {
 			if ($coupon->virtuemart_coupon_id < 1) {
@@ -97,14 +95,18 @@ class VirtuemartViewCoupon extends JView {
 
 			$this->assignRef('coupon',	$coupon);
 
-			ShopFunctions::addStandardEditViewCommands();
+			$this->addStandardEditViewCommands();
         } else {
+
+			$this->addStandardDefaultViewCommands();
+			$this->addStandardDefaultViewLists($model);
 
 			$coupons = $model->getCoupons();
 			$this->assignRef('coupons',	$coupons);
-			ShopFunctions::addStandardDefaultViewCommands();
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
-			$this->assignRef('lists', $lists);
+
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
+
 		}
 
 		parent::display($tpl);

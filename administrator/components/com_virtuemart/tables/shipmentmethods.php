@@ -60,7 +60,7 @@ class TableShipmentmethods extends VmTable {
 
     /**
      * @author Max Milbers
-     * @param $db A database connector object
+     * @param JDataBase $db
      */
     function __construct(&$db) {
 	parent::__construct('#__virtuemart_shipmentmethods', 'virtuemart_shipmentmethod_id', $db);
@@ -71,6 +71,7 @@ class TableShipmentmethods extends VmTable {
 	$this->setLoggable();
 	$this->setTranslatable(array('shipment_name', 'shipment_desc'));
 	$this->setSlug('shipment_name');
+
     }
 
 }

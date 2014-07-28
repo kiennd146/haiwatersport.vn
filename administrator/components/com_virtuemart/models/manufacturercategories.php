@@ -13,14 +13,11 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: manufacturercategories.php 4884 2011-11-30 19:56:42Z Milbo $
+* @version $Id: manufacturercategories.php 6350 2012-08-14 17:18:08Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-
-// Load the model framework
-jimport( 'joomla.application.component.model');
 
 if(!class_exists('VmModel'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmmodel.php');
 
@@ -43,31 +40,31 @@ class VirtuemartModelManufacturercategories extends VmModel {
 		parent::__construct('virtuemart_manufacturercategories_id');
 		$this->setMainTable('manufacturercategories');
 		$this->addvalidOrderingFieldName(array('mf_category_name'));
-		$config=&JFactory::getConfig();
+		$config=JFactory::getConfig();
 	}
 
     /**
      * Retrieve the detail record for the current $id if the data has not already been loaded.
      *
      */
-	function getManufacturerCategory(){
+	// function getManufacturerCategory(){
 
-		//$db = JFactory::getDBO();
+		//// $db = JFactory::getDBO();
 
-  		if (empty($this->_data)) {
-   			$this->_data = $this->getTable('manufacturercategories');
-   			$this->_data->load((int)$this->_id);
-  		}
+  		// if (empty($this->_data)) {
+   			// $this->_data = $this->getTable('manufacturercategories');
+   			// $this->_data->load((int)$this->_id);
+  		// }
 
-		// print_r( $this->_db->_sql );
-  		if (!$this->_data) {
-   			$this->_data = new stdClass();
-   			$this->_id = 0;
-   			$this->_data = null;
-  		}
+		//// print_r( $this->_db->_sql );
+  		// if (!$this->_data) {
+   			// $this->_data = new stdClass();
+   			// $this->_id = 0;
+   			// $this->_data = null;
+  		// }
 
-  		return $this->_data;
-	}
+  		// return $this->_data;
+	// }
 	/**
 	 * Delete all record ids selected
      *
@@ -80,12 +77,12 @@ class VirtuemartModelManufacturercategories extends VmModel {
     	foreach($categoryIds as $categoryId) {
        		if($table->checkManufacturer($categoryId)) {
 	    		if (!$table->delete($categoryId)) {
-	            		$this->setError($table->getError());
+	            		vmError($table->getError());
 	            		return false;
 	       		}
        		}
        		else {
-				$this->setError(get_class( $this ).'::remove '.$id.' '.$table->getError());
+				vmError(get_class( $this ).'::remove '.$categoryId.' '.$table->getError());
        			return false;
        		}
     	}
@@ -115,7 +112,7 @@ class VirtuemartModelManufacturercategories extends VmModel {
 		$whereString = '';
 		if (count($where) > 0) $whereString = ' WHERE '.implode(' AND ', $where) ;
 		if ( JRequest::getCmd('view') == 'manufacturercategories') {
-			$ordering = $this->_getOrdering('mf_category_name');
+			$ordering = $this->_getOrdering();
 		} else {
 			$ordering = ' order by mf_category_name DESC';
 		}

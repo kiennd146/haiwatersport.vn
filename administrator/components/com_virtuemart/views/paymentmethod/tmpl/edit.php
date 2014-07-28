@@ -13,12 +13,12 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit.php 4834 2011-11-27 20:59:48Z Milbo $
+* @version $Id: edit.php 6053 2012-06-05 12:36:21Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 ?>
 <form action="index.php" method="post" name="adminForm" id="adminForm">
 
@@ -27,7 +27,7 @@ $tabarray = array();
 $tabarray['edit'] = 'COM_VIRTUEMART_ADMIN_PAYMENT_FORM';
 $tabarray['config'] = 'COM_VIRTUEMART_ADMIN_PAYMENT_CONFIGURATION';
 
-AdminUIHelper::buildTabs ( $tabarray,$this->payment->virtuemart_paymentmethod_id );
+AdminUIHelper::buildTabs ( $this, $tabarray,$this->payment->virtuemart_paymentmethod_id );
 // Loading Templates in Tabs END ?>
 
 

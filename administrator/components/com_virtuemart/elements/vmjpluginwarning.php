@@ -1,5 +1,5 @@
 <?php
-
+defined('_JEXEC') or die();
 /**
  *
  * @package	VirtueMart
@@ -30,13 +30,14 @@ class JElementVmjpluginwarning extends JElement {
     var $_name = 'vmjpluginwarning';
 
     function fetchElement($name, $value, &$node, $control_name) {
-	JPlugin::loadLanguage('com_virtuemart', JPATH_ADMINISTRATOR);
+	    $lang = JFactory::getLanguage();
+	    $lang->load('com_virtuemart',JPATH_ADMINISTRATOR);
 
 	$option = JRequest::getWord('option');
 	if ($option == 'com_virtuemart')
 	    return null;
 	else
-	    return JTExt::_('COM_VIRTUEMART_PLUGIN_WARNING');
+	    return JText::_('COM_VIRTUEMART_PLUGIN_WARNING');
     }
 
 }

@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit.php 4700 2011-11-14 05:50:36Z electrocity $
+* @version $Id: edit.php 5225 2012-01-06 01:50:19Z electrocity $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 ?>
 
 <form action="index.php" method="post" name="adminForm" id="adminForm">
@@ -89,7 +89,7 @@ AdminUIHelper::startAdminArea();
 	<input type="hidden" name="virtuemart_country_id" value="<?php echo $this->virtuemart_country_id; ?>" />
 	<input type="hidden" name="virtuemart_state_id" value="<?php echo $this->state->virtuemart_state_id; ?>" />
 
-	<?php echo VmHTML::HiddenEdit() ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 

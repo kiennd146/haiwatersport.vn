@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: currency.php 3438 2011-06-06 20:37:06Z Milbo $
+* @version $Id: currency.php 6071 2012-06-06 15:33:04Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -46,25 +46,12 @@ class VirtuemartControllerCurrency extends VmController {
 
 	}
 
-	function Currency() {
-		$document = JFactory::getDocument();
-		$viewType	= $document->getType();
-		$view = $this->getView($this->_cname, $viewType);
-
-		// Push a model into the view
-		$model = $this->getModel($this->_cname);
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
-		parent::display();
-	}
-
 	/**
 	 * We want to allow html so we need to overwrite some request data
 	 *
 	 * @author Max Milbers
 	 */
-	function save(){
+	function save($data = 0){
 
 		$data = JRequest::get('post');
 

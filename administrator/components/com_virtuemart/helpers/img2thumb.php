@@ -56,6 +56,9 @@ class Img2Thumb	{
 		$thumbMaxSize=0, $bgred=0, $bggreen=0, $bgblue=0)
 	{
 
+		//Some big pictures need that
+		VmConfig::ensureMemoryLimit(128);
+
 		//	New modification - checks color int to be sure within range
 		if($thumbMaxSize)
 		{
@@ -105,62 +108,133 @@ class Img2Thumb	{
 // 			$app->enqueueMessage('This server does NOT suppport auto generating Thumbnails by jpg');
 // 		}
 
-		$type = $this->GetImgType($filename);
+		if(function_exists('imagecreatefromstring')){
 
-		$pathinfo = pathinfo( $fileout );
-		if( empty( $pathinfo['extension'])) {
-			$fileout .= '.'.$type;
-		}
-		$this->fileout = $fileout;
-
-		switch($type){
-
-			case "gif":
-				// unfortunately this function does not work on windows
-				// via the precompiled php installation :(
-				// it should work on all other systems however.
-				if( function_exists("imagecreatefromgif") ) {
-					$orig_img = imagecreatefromgif($filename);
+			$content = file_get_contents($filename);
+			if($content){
+				$gd = @imagecreatefromstring($content);
+				if ($gd === false) {
+					vmWarn('Img2Thumb NewImgCreate with imagecreatefromstring failed '.$filename.' ');
 				} else {
-					$app = JFactory::getApplication();
-					$app->enqueueMessage('This server does NOT suppport auto generating Thumbnails by gif');
-					exit;
+					$pathinfo = pathinfo( $fileout );
+					$type = empty($type)? $pathinfo['extension']:$type;
+					$this->fileout = $fileout;
+					$new_img =$this->NewImgResize($gd,$newxsize,$newysize,$filename);
+					if (!empty($fileout))
+					{
+						$this-> NewImgSave($new_img,$fileout,$type);
+					}
+					else
+					{
+						$this->NewImgShow($new_img,$type);
+					}
+
+					ImageDestroy($new_img);
+					ImageDestroy($gd);
 				}
-				break;
-			case "jpg":
-				if( function_exists("imagecreatefromjpeg") ) {
-					$orig_img = imagecreatefromjpeg($filename);
-				} else {
-					$app = JFactory::getApplication();
-					$app->enqueueMessage('This server does NOT suppport auto generating Thumbnails by jpg');
-					exit;
+			}
+
+		} else {
+			$type = $this->GetImgType($filename);
+
+			$pathinfo = pathinfo( $fileout );
+
+			$type = empty($type)? $pathinfo['extension']:$type;
+
+			if( empty( $pathinfo['extension'])) {
+				$fileout .= '.'.$type;
+			}
+			$this->fileout = $fileout;
+
+			switch($type){
+
+				case "gif":
+					// unfortunately this function does not work on windows
+					// via the precompiled php installation :(
+					// it should work on all other systems however.
+					if( function_exists("imagecreatefromgif") ) {
+
+						$orig_img = imagecreatefromgif($filename);
+					} else {
+						$app = JFactory::getApplication();
+						$app->enqueueMessage('This server does NOT suppport auto generating Thumbnails by gif');
+						return false;
+					}
+					break;
+				case "jpg":
+					if( function_exists("imagecreatefromjpeg") ) {
+						if($this->check_jpeg($filename,true)){
+							$orig_img = imagecreatefromjpeg($filename);
+						} else {
+							vmWarn('Img2Thumb NewImgCreate $orig_img empty, type was not in switch for file '.$filename.' this happens due missing exif data or broken origin file');
+							return false;
+						}
+
+					} else {
+						$app = JFactory::getApplication();
+						$app->enqueueMessage('This server does NOT suppport auto generating Thumbnails by jpg');
+						return false;
+					}
+					break;
+				case "png":
+					if( function_exists("imagecreatefrompng") ) {
+						$orig_img = imagecreatefrompng($filename);
+					} else {
+						$app = JFactory::getApplication();
+						$app->enqueueMessage('This server does NOT suppport auto generating Thumbnails by png');
+						return false;
+					}
+					break;
+
+			}
+
+			if(empty($orig_img)){
+				vmWarn('Img2Thumb NewImgCreate $orig_img empty, type was not in switch for file '.$filename.' this happens due missing exif data or broken origin file');
+				return false;
+			} else {
+				$new_img =$this->NewImgResize($orig_img,$newxsize,$newysize,$filename);
+				if (!empty($fileout))
+				{
+					$this-> NewImgSave($new_img,$fileout,$type);
 				}
-				break;
-			case "png":
-				if( function_exists("imagecreatefrompng") ) {
-					$orig_img = imagecreatefrompng($filename);
-				} else {
-					$app = JFactory::getApplication();
-					$app->enqueueMessage('This server does NOT suppport auto generating Thumbnails by png');
-					exit;
+				else
+				{
+					$this->NewImgShow($new_img,$type);
 				}
-				break;
 
+				ImageDestroy($new_img);
+				ImageDestroy($orig_img);
+			}
 		}
+	}
 
-		$new_img =$this->NewImgResize($orig_img,$newxsize,$newysize,$filename);
+	/**
+	 * check for jpeg file header and footer - also try to fix it
+	 * @author willertan1980 at yahoo dot com http://www.php.net/manual/de/function.imagecreatefromjpeg.php
+	 * @param $f
+	 * @param bool $fix
+	 * @return bool
+	 */
+	function check_jpeg($f, $fix=false ){
 
-		if (!empty($fileout))
-		{
-			 $this-> NewImgSave($new_img,$fileout,$type);
+		if ( false !== (@$fd = fopen($f, 'r+b' )) ){
+			if ( fread($fd,2)==chr(255).chr(216) ){
+				fseek ( $fd, -2, SEEK_END );
+				if ( fread($fd,2)==chr(255).chr(217) ){
+					fclose($fd);
+					vmdebug('valid jpg '.$f);
+					return true;
+				}else{
+					if ( $fix && fwrite($fd,chr(255).chr(217)) ){vmdebug('corrected jpg '.$f);return true;}
+					fclose($fd);
+					vmInfo('broken jpg, cannot create thumb '.$f);
+					return false;
+				}
+			}else{fclose($fd); return false;}
+		}else{
+			vmWarn('check_jpeg could not open file '.$f);
+			return false;
 		}
-		else
-		{
-			 $this->NewImgShow($new_img,$type);
-		}
-
-		ImageDestroy($new_img);
-		ImageDestroy($orig_img);
 	}
 
 	/**
@@ -191,22 +265,29 @@ class Img2Thumb	{
 		// [2] = type
 		// [3] = img tag "width=xx height=xx" values
 
+
 		$orig_size = getimagesize($filename);
 
+		$newxsize = (int)$newxsize;
+		$newysize = (int)$newysize;
+		if(empty($newxsize) and empty($newysize)){
+			vmWarn('NewImgResize failed x,y = 0','NewImgResize failed x,y = 0');
+			return false;
+		}
 		$maxX = $newxsize;
 		$maxY = $newysize;
 
 		if ($orig_size[0]<$orig_size[1])
 		{
-			$newxsize = $newysize * ($orig_size[0]/$orig_size[1]);
-			$adjustX = ($maxX - $newxsize)/2;
+			$newxsize = (int)$newysize * ($orig_size[0]/$orig_size[1]);
+			$adjustX = (int)($maxX - $newxsize)/2;
 			$adjustY = 0;
 		}
 		else
 		{
-			$newysize = $newxsize / ($orig_size[0]/$orig_size[1]);
+			$newysize = (int) $newxsize / ($orig_size[0]/$orig_size[1]);
 			$adjustX = 0;
-			$adjustY = ($maxY - $newysize)/2;
+			$adjustY = (int)($maxY - $newysize)/2;
 		}
 
 		/* Original code removed to allow for maxSize thumbnails
@@ -304,7 +385,8 @@ class Img2Thumb	{
 			case "jpg":
 				if (strtolower(substr($fileout,strlen($fileout)-4,4))!=".jpg")
 					$fileout .= ".jpg";
-				return imagejpeg($new_img, $fileout, 100);
+				$quality = 89;
+				return imagejpeg($new_img, $fileout, $quality);
 				break;
 			case "png":
 				if (strtolower(substr($fileout,strlen($fileout)-4,4))!=".png")
@@ -342,8 +424,10 @@ class Img2Thumb	{
 					return imagegif($new_img);
 					break;
 				}
+				//either there is missing a break or the else $this->NewImgShow is unecessary
 				else
 					$this->NewImgShow( $new_img, "jpg" );
+
 			case "jpg":
 				header ("Content-type: image/jpeg");
 				return imagejpeg($new_img);

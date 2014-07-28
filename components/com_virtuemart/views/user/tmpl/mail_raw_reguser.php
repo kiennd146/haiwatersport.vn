@@ -1,5 +1,8 @@
 <?php
 
+defined('_JEXEC') or die('');
+
+
 /**
  * Renders the email for the user send in the registration process
  * @package	VirtueMart
@@ -17,7 +20,7 @@
  */
 $li = "\n";
 
-echo JText::sprintf('COM_VIRTUEMART_WELCOME_USER', $this->user->name ) . $li. $li;
+echo JText::sprintf('COM_VIRTUEMART_WELCOME_USER', $this->user->name) . $li . $li;
 
 if (!empty($this->activationLink)) {
     $activationLink = '<a class="default" href="' . JURI::root() . $this->activationLink . '>' . JText::_('COM_VIRTUEMART_LINK_ACTIVATE_ACCOUNT') . '</a>';
@@ -25,28 +28,21 @@ if (!empty($this->activationLink)) {
 echo $activationLink . $li;
 echo JText::_('COM_VIRTUEMART_SHOPPER_REGISTRATION_DATA') . $li;
 
-echo JText::_('COM_VIRTUEMART_YOUR_LOGINAME') .' : '    . $this->user->username . $li;
-echo JText::_('COM_VIRTUEMART_YOUR_DISPLAYED_NAME') .' : '    . $this->user->name . $li;
-echo JText::_('COM_VIRTUEMART_YOUR_PASSWORD') .' : '    . $this->user->password_clear . $li;
-echo JText::_('COM_VIRTUEMART_YOUR_ADDRESS')  .' : '   . $li;
+echo JText::_('COM_VIRTUEMART_YOUR_LOGINAME') . ' : ' . $this->user->username . $li;
+echo JText::_('COM_VIRTUEMART_YOUR_DISPLAYED_NAME') . ' : ' . $this->user->name . $li;
+echo JText::_('COM_VIRTUEMART_YOUR_PASSWORD') . ' : ' . $this->user->password_clear . $li;
+echo JText::_('COM_VIRTUEMART_YOUR_ADDRESS') . ' : ' . $li;
 
 echo $li;
 echo $activationLink . $li;
 
 foreach ($this->userFields['fields'] as $userField) {
-    if (!empty($userField['value']) && $userField['type'] != 'delimiter'&& $userField['type'] != 'BT') {
-	echo $userField['title'] . ': ' .  $this->escape($userField['value']) . $li;
-	?>
-					    <?php if ($userField['name'] != 'title' and $userField['name'] != 'first_name' and $userField['name'] != 'middle_name' and $userField['name'] != 'zip') { ?>
-	    				    <br class="clear" />
-						<?php
-					    }
-					}
-				    }
-				    ?>
-
+    if (!empty($userField['value']) && $userField['type'] != 'delimiter' && $userField['type'] != 'BT') {
+	echo $userField['title'] . ': ' . $this->escape($userField['value']) . $li;
+	if ($userField['name'] != 'title' and $userField['name'] != 'first_name' and $userField['name'] != 'middle_name' and $userField['name'] != 'zip') {
+	    echo $li;
+	}
+    }
+}
 echo $li;
 
-
-
-?>

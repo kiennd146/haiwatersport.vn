@@ -2,7 +2,7 @@
 if( !defined( '_JEXEC' ) ) die( 'Direct Access to '.basename(__FILE__).' is not allowed.' );
 /**
 *
-* @version $Id: permissions.php 4790 2011-11-22 18:05:34Z alatak $
+* @version $Id: permissions.php 6490 2012-10-02 13:15:10Z Milbo $
 * @package VirtueMart
 * @subpackage classes
 * @author Sören
@@ -35,21 +35,24 @@ class Permissions extends JObject{
 
 	var $_db;
 
-	var $_perms;
+	private $_perms = 'shopper';
 
 	var $_is_registered_customer;
+
+	private $_vendorId = false;
 
 	static $_instance;
 
 	public function __construct() {
 
 		$this->_db = JFactory::getDBO();
- 		$this->getUserGroups();
- 		$this->doAuthentication();
+ 		$this->_perms = $this->doAuthentication();
+
+		$user = JFactory::getUser();
 
 	}
 
-	function getInstance() {
+	static public function getInstance() {
 		if(!is_object(self::$_instance)){
 			self::$_instance = new Permissions();
 		}else {
@@ -58,18 +61,6 @@ class Permissions extends JObject{
  		return self::$_instance;
     }
 
-	public function getUserGroups() {
-		if (empty($this->_user_groups)) {
-			$this->_db = JFactory::getDBO();
-			$q = ('SELECT `virtuemart_permgroup_id`,`group_name`,`group_level`
-					FROM `#__virtuemart_permgroups`
-					ORDER BY `group_level` ');
-			$this->_db->setQuery($q);
-			$this->_user_groups = $this->_db->loadObjectList('group_name');
-		}
-//		echo 'Die Usergroups: <pre>'.print_r($this->_user_groups).'</pre>';
-		return $this->_user_groups;
-	}
 
 	/**
 	 * Get permissions for a user ID
@@ -85,10 +76,13 @@ class Permissions extends JObject{
 		}
 
 		// only re-run authentication if we have a different user
+		//vmdebug('getPermissions',$this->_virtuemart_user_id,$userId);
 		if ($userId != $this->_virtuemart_user_id) {
-			$this->doAuthentication($userId);
+			$perms = $this->doAuthentication($userId);
+		} else {
+			$perms = $this->_perms;
 		}
-		return $this->_perms;
+		return $perms;
 	}
 
 	/**
@@ -140,46 +134,63 @@ class Permissions extends JObject{
 	* @return array Authentication information
 	*/
 	function doAuthentication ($user_id=null) {
+
 		$this->_db = JFactory::getDBO();
 		$session = JFactory::getSession();
 		$user = JFactory::getUser($user_id);
 
-		// Check token
-		//JRequest::checkToken() or jexit( 'Invalid Token doAuthentication' );
-
-		if (VmConfig::get('vm_price_access_level') != '') {
-			// Is the user allowed to see the prices?
-			$this->_show_prices  = $user->authorize( 'virtuemart', 'prices' );
-		}
-		else {
-			$this->_show_prices = 1;
-		}
 
 		if(!empty($user->id)){
 			$this->_virtuemart_user_id   = $user->id;
-			$q = 'SELECT `perms` FROM #__virtuemart_vmusers
-					WHERE virtuemart_user_id="'.(int)$this->_virtuemart_user_id.'"';
-			$this->_db->setQuery($q);
-			$this->_perms = $this->_db->loadResult();
 
 			//We must prevent that Administrators or Managers are 'just' shoppers
 			//TODO rewrite it working correctly with jooomla ACL
-			//if ($this->_perms == "shopper") {
-				if (stristr($user->usertype,"Administrator")) {
-					$this->_perms  = "admin";
+			if(JVM_VERSION === 2 ){
+				if($user->authorise('core.admin')){
+					$perm  = 'admin';
 				}
-				elseif (stristr($user->usertype,"Manager")) {
-					$this->_perms  = "storeadmin";
+			} else {
+				if(strpos($user->usertype,'Administrator')!== false){
+					$perm  = 'admin';
 				}
-			//}
+			}
+
+			if(empty($perm)){
+
+				if(JVM_VERSION === 2 ){
+					if($user->groups){
+						if($user->authorise('core.admin')){
+							$perm  = 'admin';
+						} else if($user->authorise('core.manage')){
+							$perm  = 'storeadmin';
+						} else {
+							$perm  = 'shopper';
+						}
+					} else {
+						$perm  = 'shopper';
+					}
+
+				} else {
+					if(strpos($user->usertype,'Administrator')!== false){
+						$perm  = 'admin';
+					} else if(strpos($user->usertype,'Manager')!== false){
+						$perm  = 'storeadmin';
+					} else {
+						$perm  = 'shopper';
+					}
+				}
+
+			}
+
 			$this->_is_registered_customer = true;
 		} else {
 
 			$this->_virtuemart_user_id = 0;
-			$this->_perms  = "shopper";
+			$perm  = 'shopper';
 			$this->_is_registered_customer = false;
 		}
 
+		return $perm;
 	}
 
 	/**
@@ -191,16 +202,35 @@ class Permissions extends JObject{
 	 * 			returns true when the user is admin or storeadmin
 	 */
 	public function check($perms) {
+
+		$user = JFactory::getUser();
+
+		if(strpos($perms,',')!==FALSE){
+			$perms = explode(',',$perms);
+		} else {
+			$perms = array($perms);
+		}
+
+		foreach($perms as $perm){
+			if($perm=='admin'){
+				if($user->authorise('core.admin')){
+					return true;
+				}
+			}
+			if($perm=='storeadmin'){
+				if($user->authorise('core.manage')){
+					return true;
+				}
+			}
+		}
+		return false;
 		/* Set the authorization for use */
 
 		// Parse all permissions in argument, comma separated
 		// It is assumed auth_user only has one group per user.
-		if ($perms == "none") {
-			return true;
-		}
-		else {
-			$p1 = explode(",", $this->_perms);
+/*			$p1 = explode(",", $this->_perms);
 			$p2 = explode(",", $perms);
+// 			vmdebug('check '.$perms,$p1,$p2);
 			while (list($key1, $value1) = each($p1)) {
 				while (list($key2, $value2) = each($p2)) {
 					if ($value1 == $value2) {
@@ -208,28 +238,51 @@ class Permissions extends JObject{
 					}
 				}
 			}
+		return false;*/
+	}
+
+	/**
+	 * Checks if user is admin or has vendorId=1,
+	 * if superadmin, but not a vendor it gives back vendorId=1 (single vendor, but multiuser administrated)
+	 *
+	 * @author Mattheo Vicini
+	 * @author Max Milbers
+	 */
+
+	public function isSuperVendor(){
+
+		$user = JFactory::getUser();
+		if(!$this->_vendorId){
+
+			if(!empty( $user->id)){
+				$q='SELECT `virtuemart_vendor_id` FROM `#__virtuemart_vmusers` `au`
+				WHERE `au`.`virtuemart_user_id`="' .$user->id.'" AND `au`.`user_is_vendor` = "1" ';
+
+				$db= JFactory::getDbo();
+				$db->setQuery($q);
+				$virtuemart_vendor_id = $db->loadResult();
+				if ($virtuemart_vendor_id) {
+					$this->_vendorId = $virtuemart_vendor_id;
+				} else {
+					$this->_vendorId = 0;
+				}
+			} else {
+				return false;
+			}
+
+		}
+
+		if($this->_vendorId!=0){
+			return $this->_vendorId;
+		} else {
+			if($user->authorise('core.admin', 'com_virtuemart') or $user->authorise('core.manage', 'com_virtuemart') ){
+				$this->_vendorId = 1;
+				return $this->_vendorId;
+			}
 		}
 		return false;
 	}
 
-	/**
-	 * Checks if the user has higher permissions than $perm
-	 * does not work properly, do not use or correct it
-	 * @param string $perm
-	 * @return boolean
-	 * @example $perm->hasHigherPerms( 'storeadmin' );
-	 * 			returns true when user is admin
-	 */
-	function atLeastPerms( $perm ) {
-
-		if( $this->_perms && $this->_user_groups[$perm] >= $this->_user_groups[$this->_perms] ) {
-			return true;
-		}
-		else {
-			return false;
-		}
-
-	}
 
 	/**
 	 * lists the permission levels in a select box
@@ -412,19 +465,6 @@ class Permissions extends JObject{
 
 		ksort($list);
 		return $list;
-	}
-
-	/**
-	* Check if the price should be shown including tax
-	*
-	* @author RolandD
-	* @todo Figure out where to get the setting from
-	* @access public
-	* @param
-	* @return bool true if price with tax is shown otherwise false
-	*/
-	public function showPriceIncludingTax() {
-		return true;
 	}
 }
 

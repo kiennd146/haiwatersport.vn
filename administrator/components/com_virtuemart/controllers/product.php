@@ -5,7 +5,7 @@
  *
  * @package	VirtueMart
  * @subpackage
- * @author RolandD
+ * @author Max Milbers
  * @link http://www.virtuemart.net
  * @copyright Copyright (c) 2004 - 2010 VirtueMart Team. All rights reserved.
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
@@ -13,14 +13,11 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: product.php 4799 2011-11-23 20:20:39Z electrocity $
+ * @version $Id: product.php 6521 2012-10-09 14:49:30Z alatak $
  */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-
-// Load the controller framework
-jimport('joomla.application.component.controller');
 
 if(!class_exists('VmController'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmcontroller.php');
 
@@ -41,68 +38,15 @@ class VirtuemartControllerProduct extends VmController {
 	 */
 	function __construct() {
 		parent::__construct('virtuemart_product_id');
-	}
-
-	/**
-	 * Shows the product list screen
-	 */
-	public function Product() {
-		/* Create the view object */
-		$view = $this->getView('product', 'html');
-
-		/* Default model */
-		$view->setModel( $this->getModel( 'product', 'VirtueMartModel' ), true );
-		/* Media files functions */
-		$view->setModel( $this->getModel( 'media', 'VirtueMartModel' ));
-		/* Product reviews functions */
-		$view->setModel( $this->getModel( 'ratings', 'VirtueMartModel' ));
-		/* Product category functions */
-		$view->setModel( $this->getModel( 'category', 'VirtueMartModel' ));
-		/* Vendor functions */
-		$view->setModel( $this->getModel( 'vendor', 'VirtueMartModel' ));
-
-		/* Set the layout */
-		$view->setLayout('default');
-
-		/* Now display the view. */
-		$view->display();
+		$this->addViewPath(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_virtuemart' . DS . 'views');
 	}
 
 
 	/**
 	 * Shows the product add/edit screen
 	 */
-	public function edit() {
-		/* Create the view object */
-		$view = $this->getView('product', 'html');
-
-		/* Default model */
-		$view->setModel( $this->getModel( 'product', 'VirtueMartModel' ), true );
-		/* Media files functions */
-		$view->setModel( $this->getModel( 'media', 'VirtueMartModel' ));
-		/* Product category functions */
-		$view->setModel( $this->getModel( 'category', 'VirtueMartModel' ));
-		/* Product category functions Cleanshooter*/
-		$view->setModel( $this->getModel( 'shoppergroup', 'VirtueMartModel' ));
-		/* Product user functions Cleanshooter*/
-		$view->setModel( $this->getModel( 'user', 'VirtueMartModel' ));
-		/* Vendor functions */
-		$view->setModel( $this->getModel( 'vendor', 'VirtueMartModel' ));
-		/* Manufacturer functions */
-		$view->setModel( $this->getModel( 'manufacturer', 'VirtueMartModel' ));
-		/* Currency functions */
-		$view->setModel( $this->getModel( 'currency', 'VirtueMartModel' ));
-		/* Waitinglist functions */
-		$view->setModel( $this->getModel( 'waitinglist', 'VirtueMartModel' ));
-		/* custom functions */
-		$view->setModel( $this->getModel( 'custom', 'VirtueMartModel' ));
-		/* custom functions */
-		$view->setModel( $this->getModel( 'customfields', 'VirtueMartModel' ));
-		/* Set the layout */
-		$view->setLayout('product_edit');
-
-		/* Now display the view. */
-		$view->display();
+	public function edit($layout='edit') {
+		parent::edit('product_edit');
 	}
 
 	/**
@@ -110,7 +54,7 @@ class VirtuemartControllerProduct extends VmController {
 	 *
 	 * @author Max Milbers
 	 */
-	function save(){
+	function save($data = 0){
 
 		$data = JRequest::get('post');
 
@@ -118,6 +62,20 @@ class VirtuemartControllerProduct extends VmController {
 		if(Permissions::getInstance()->check('admin')){
 			$data['product_desc'] = JRequest::getVar('product_desc','','post','STRING',2);
 			$data['product_s_desc'] = JRequest::getVar('product_s_desc','','post','STRING',2);
+			$data['customtitle'] = JRequest::getVar('customtitle','','post','STRING',2);
+		} else  {
+			$data['product_desc'] = JRequest::getVar('product_desc','','post','STRING',2);
+			$data['product_desc'] = JComponentHelper::filterText($data['product_desc']);
+
+			//Why we have this?
+			$multix = Vmconfig::get('multix','none');
+			if( $multix != 'none' ){
+				//in fact this shoudl be used, when the mode is administrated and the sysetm is so that
+				//every product must be approved by an admin.
+				unset($data['published']);
+				//unset($data['childs']);
+			}
+
 		}
 
 		parent::save($data);
@@ -128,7 +86,7 @@ class VirtuemartControllerProduct extends VmController {
 		JRequest::setVar($data['token'], '1', 'post');
 
 		JRequest::checkToken() or jexit( 'Invalid Token save' );
-		$model = $this->getModel($this->_cname);
+		$model = VmModel::getModel($this->_cname);
 		$id = $model->store($data);
 
 		$errors = $model->getErrors();
@@ -147,12 +105,13 @@ class VirtuemartControllerProduct extends VmController {
 			$json['ok'] = 1 ;
 		} else {
 			$json['ok'] = 0 ;
-			
+
 		}
 		echo json_encode($json);
 		jExit();
-	
+
 	}
+
 	/**
 	 * This task creates a child by a given product id
 	 *
@@ -164,7 +123,7 @@ class VirtuemartControllerProduct extends VmController {
 		/* Load the view object */
 		$view = $this->getView('product', 'html');
 
-		$model = $this->getModel('product');
+		$model = VmModel::getModel('product');
 
 		//$cids = JRequest::getVar('cid');
 		$cids = JRequest::getVar($this->_cidName, JRequest::getVar('virtuemart_product_id',array(),'', 'ARRAY'), '', 'ARRAY');
@@ -186,9 +145,136 @@ class VirtuemartControllerProduct extends VmController {
 	}
 
 	/**
+	* This task creates a child by a given product id
+	*
+	* @author Max Milbers
+	*/
+	public function createVariant(){
+
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
+
+		$app = Jfactory::getApplication();
+
+		/* Load the view object */
+		$view = $this->getView('product', 'html');
+
+		$model = VmModel::getModel('product');
+
+		//$cids = JRequest::getVar('cid');
+		//$cid = JRequest::getInt('virtuemart_product_id',0);
+		$cid = JRequest::getVar('virtuemart_product_id',array(),'', 'array');
+		if(is_array($cid) && count($cid) > 0){
+			$cid = (int)$cid[0];
+		} else {
+			$cid = (int)$cid;
+		}
+
+		if(empty($cid)){
+			$msg = JText::_('COM_VIRTUEMART_PRODUCT_NO_CHILD_CREATED_SUCCESSFULLY');
+// 			$redirect = 'index.php?option=com_virtuemart&view=product&task=edit&virtuemart_product_id='.$cid;
+		} else {
+			if ($id=$model->createChild($cid)){
+				$msg = JText::_('COM_VIRTUEMART_PRODUCT_CHILD_CREATED_SUCCESSFULLY');
+				$redirect = 'index.php?option=com_virtuemart&view=product&task=edit&virtuemart_product_id='.$cid;
+			} else {
+				$msg = JText::_('COM_VIRTUEMART_PRODUCT_NO_CHILD_CREATED_SUCCESSFULLY');
+				$msgtype = 'error';
+				$redirect = 'index.php?option=com_virtuemart&view=product';
+			}
+// 			vmdebug('$redirect '.$redirect);
+			$app->redirect($redirect, $msg, $msgtype);
+		}
+
+	}
+
+	public function massxref_sgrps(){
+
+		$this->massxref('massxref');
+	}
+
+	public function massxref_sgrps_exe(){
+
+		$virtuemart_shoppergroup_ids = JRequest::getVar('virtuemart_shoppergroup_id',array(),'', 'ARRAY');
+		JArrayHelper::toInteger($virtuemart_shoppergroup_ids);
+
+		$session = JFactory::getSession();
+		$cids = unserialize($session->get('vm_product_ids', array(), 'vm'));
+
+		$productModel = VmModel::getModel('product');
+		foreach($cids as $cid){
+			$data = array('virtuemart_product_id' => $cid, 'virtuemart_shoppergroup_id' => $virtuemart_shoppergroup_ids);
+			$data = $productModel->updateXrefAndChildTables ($data, 'product_shoppergroups');
+		}
+
+		$this->massxref('massxref_sgrps');
+	}
+
+	public function massxref_cats(){
+		$this->massxref('massxref');
+	}
+
+	public function massxref_cats_exe(){
+
+		$virtuemart_cat_ids = JRequest::getVar('cid',array(),'', 'ARRAY');
+		JArrayHelper::toInteger($virtuemart_cat_ids);
+
+		$session = JFactory::getSession();
+		$cids = unserialize($session->get('vm_product_ids', array(), 'vm'));
+
+		$productModel = VmModel::getModel('product');
+		foreach($cids as $cid){
+			$data = array('virtuemart_product_id' => $cid, 'virtuemart_category_id' => $virtuemart_cat_ids);
+			$data = $productModel->updateXrefAndChildTables ($data, 'product_categories',TRUE);
+		}
+
+		$this->massxref('massxref_cats');
+	}
+
+	/**
+	 *
+	 */
+	public function massxref($layoutName){
+
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
+
+		$cids = JRequest::getVar('virtuemart_product_id',array(),'', 'ARRAY');
+		JArrayHelper::toInteger($cids);
+		if(empty($cids)){
+			$session = JFactory::getSession();
+			$cids = unserialize($session->get('vm_product_ids', '', 'vm'));
+		} else {
+			$session = JFactory::getSession();
+			$session->set('vm_product_ids', serialize($cids),'vm');
+		}
+
+		if(!empty($cids)){
+			$q = 'SELECT `product_name` FROM `#__virtuemart_products_' . VMLANG . '` ';
+			$q .= ' WHERE `virtuemart_product_id` IN (' . implode(',', $cids) . ')';
+
+			$db = JFactory::getDbo();
+			$db->setQuery($q);
+
+			$productNames = $db->loadResultArray();
+
+			vmInfo('COM_VIRTUEMART_PRODUCT_XREF_NAMES',implode(', ',$productNames));
+		}
+
+		$this->addViewPath(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_virtuemart' . DS . 'views');
+		$document = JFactory::getDocument();
+		$viewType = $document->getType();
+		$view = $this->getView($this->_cname, $viewType);
+
+		$view->setLayout($layoutName);
+
+		$view->display();
+	}
+
+	/**
 	 * Clone a product
 	 *
-	 * @author RolandD, Max Milbers
+	 * @author Max Milbers
 	 */
 	public function CloneProduct() {
 		$mainframe = Jfactory::getApplication();
@@ -196,7 +282,7 @@ class VirtuemartControllerProduct extends VmController {
 		/* Load the view object */
 		$view = $this->getView('product', 'html');
 
-		$model = $this->getModel('product');
+		$model = VmModel::getModel('product');
 		$msgtype = '';
 		//$cids = JRequest::getInt('virtuemart_product_id',0);
 		$cids = JRequest::getVar($this->_cidName, JRequest::getVar('virtuemart_product_id',array(),'', 'ARRAY'), '', 'ARRAY');
@@ -204,40 +290,36 @@ class VirtuemartControllerProduct extends VmController {
 		JArrayHelper::toInteger($cids);
 
 		foreach($cids as $cid){
-			if ($model->createClone($cid)) $msg = JText::_('COM_VIRTUEMART_PRODUCT_CLONED_SUCCESSFULLY');
-			else {
+			if ($model->createClone($cid)) {
+				$msg = JText::_('COM_VIRTUEMART_PRODUCT_CLONED_SUCCESSFULLY');
+			} else {
 				$msg = JText::_('COM_VIRTUEMART_PRODUCT_NOT_CLONED_SUCCESSFULLY');
 				$msgtype = 'error';
 			}
 		}
 
-		$mainframe->redirect('index.php?option=com_virtuemart&view=product&task=product&product_parent_id='.JRequest::getInt('product_parent_id'), $msg, $msgtype);
+		$mainframe->redirect('index.php?option=com_virtuemart&view=product', $msg, $msgtype);
 	}
 
 
 	/**
 	 * Get a list of related products, categories
 	 * or customfields
-	 * @author RolandD
-	 * Kohl Patrick
+	 * @author Max Milbers
+	 * @author Kohl Patrick
 	 */
 	public function getData() {
 
 		/* Create the view object. */
 		$view = $this->getView('product', 'json');
 
-		/* Standard model */
-		if ('customfield' == JRequest::getWord('type', false) ) {
-			$view->setModel( $this->getModel( 'customfields', 'VirtueMartModel' ));
-		} 
-		$view->setModel( $this->getModel( 'product', 'VirtueMartModel' ));
 		/* Now display the view. */
-		$view->display(null);
+		$view->display(NULL);
 	}
 
 	/**
 	 * Add a product rating
-	 * @author RolandD
+	 * @author Max Milbers
 	 */
 	public function addRating() {
 		$mainframe = Jfactory::getApplication();
@@ -250,6 +332,52 @@ class VirtuemartControllerProduct extends VmController {
 		// 		if (!is_array($cids)) $cids = array($cids);
 
 		$mainframe->redirect('index.php?option=com_virtuemart&view=ratings&task=add&virtuemart_product_id='.$cids[0]);
+	}
+
+
+	public function ajax_notifyUsers(){
+
+		//vmdebug('updatestatus');
+		$virtuemart_product_id = JRequest::getVar('virtuemart_product_id',array(),'', 'ARRAY');
+		if(is_array($virtuemart_product_id) and count($virtuemart_product_id) > 0){
+			$virtuemart_product_id = (int)$virtuemart_product_id[0];
+		} else {
+			$virtuemart_product_id = (int)$virtuemart_product_id;
+		}
+
+		$subject = JRequest::getVar('subject', '');
+		$mailbody = JRequest::getVar('mailbody',  '');
+		$max_number = (int)JRequest::getVar('max_number', '');
+		
+		$waitinglist = VmModel::getModel('Waitinglist');
+		$waitinglist->notifyList($virtuemart_product_id,$subject,$mailbody,$max_number);
+		exit;
+	}
+	
+	public function ajax_waitinglist() {
+
+		$virtuemart_product_id = JRequest::getVar('virtuemart_product_id',array(),'', 'ARRAY');
+		if(is_array($virtuemart_product_id) && count($virtuemart_product_id) > 0){
+			$virtuemart_product_id = (int)$virtuemart_product_id[0];
+		} else {
+			$virtuemart_product_id = (int)$virtuemart_product_id;
+		}
+
+		$waitinglistmodel = VmModel::getModel('waitinglist');
+		$waitinglist = $waitinglistmodel->getWaitingusers($virtuemart_product_id);
+
+		if(empty($waitinglist)) $waitinglist = array();
+		
+		echo json_encode($waitinglist);
+		exit;
+
+		/*
+		$result = array();
+		foreach($waitinglist as $wait) array_push($result,array("virtuemart_user_id"=>$wait->virtuemart_user_id,"notify_email"=>$wait->notify_email,'name'=>$wait->name,'username'=>$wait->username));
+		
+		echo json_encode($result);
+		exit;
+		*/
 	}
 
 

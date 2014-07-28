@@ -17,22 +17,6 @@ if (!class_exists('VmMediaHandler')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'
 
 class VmImage extends VmMediaHandler {
 
-	function addMediaActionByType(){
-
-		parent::addMediaActionByType();
-		if( function_exists('imagecreatefromjpeg')){
-			$this->addMediaAction('create_thumb','COM_VIRTUEMART_FORM_MEDIA_CREATE_THUMBNAIL');
-		}
-	}
-
-	function addMediaAttributesByType(){
-
-		parent::addMediaAttributesByType();
-		if(!$this->setRole){
-			//This attribute indicates, that the FileHandler should show the file as image, other files will only show a thumbnail
-			$this->addMediaAttributes('file_is_product_image','COM_VIRTUEMART_FORM_MEDIA_PRODUCT_IMAGE');
-		}
-	}
 
 	function processAction($data){
 
@@ -67,28 +51,44 @@ class VmImage extends VmMediaHandler {
 
 	function displayMediaFull($imageArgs='',$lightbox=true,$effect ="class='modal'",$description = true ){
 
-		// Remote image URL
-		if( substr( $this->file_url, 0, 4) == "http" ) {
-			$file_url = $this->file_url;
-			$file_alt = $this->file_title;
-		} else {
-			$rel_path = str_replace('/',DS,$this->file_url_folder);
-			$fullSizeFilenamePath = JPATH_ROOT.DS.$rel_path.$this->file_name.'.'.$this->file_extension;
-			if (!file_exists($fullSizeFilenamePath)) {
-				$file_url = $this->theme_url.'assets/images/vmgeneral/'.VmConfig::get('no_image_found');
-				$file_alt = JText::_('COM_VIRTUEMART_NO_IMAGE_FOUND').' '.$this->file_description;
-			} else {
+		if(!$this->file_is_forSale){
+			// Remote image URL
+			if( substr( $this->file_url, 0, 4) == "http" ) {
 				$file_url = $this->file_url;
-				$file_alt = $this->file_meta;
+				$file_alt = $this->file_title;
+			} else {
+				$rel_path = str_replace('/',DS,$this->file_url_folder);
+				$fullSizeFilenamePath = JPATH_ROOT.DS.$rel_path.$this->file_name.'.'.$this->file_extension;
+				if (!file_exists($fullSizeFilenamePath)) {
+					$file_url = $this->theme_url.'assets/images/vmgeneral/'.VmConfig::get('no_image_found');
+					$file_alt = JText::_('COM_VIRTUEMART_NO_IMAGE_FOUND').' '.$this->file_description;
+				} else {
+					$file_url = $this->file_url;
+					$file_alt = $this->file_meta;
+				}
 			}
+			$postText = false;
+			if($description) $postText = $this->file_description;
+			return $this->displayIt($file_url, $file_alt, $imageArgs,$lightbox,$effect,$postText);
+		} else {
+			//Media which should be sold, show them only as thumb (works as preview)
+			return $this->displayMediaThumb('id="vm_display_image"',false);
 		}
-		$postText = '';
-		if($description) $postText = $this->file_description;
-		return $this->displayIt($file_url, $file_alt, $imageArgs,$lightbox,'',$postText);
+
 
 	}
 
 
+	public function createThumbFileUrl(){
+
+		$file_name = $this->createThumbName();
+		if(empty($this->file_name_thumb)) {
+			vmdebug('createThumbFileUrl empty file_name_thumb ',$this);
+			return false;
+		}
+		$file_url_thumb = $this->file_url_folder.'resized/'.$this->file_name_thumb.'.'.$this->file_extension;
+		return $file_url_thumb;
+	}
 	/**
 	 * a small function that ensures that we always build the thumbnail name with the same method
 	 */
@@ -110,12 +110,25 @@ class VmImage extends VmMediaHandler {
 	 * @param boolean $save Execute update function
 	 * @return name of the thumbnail
 	 */
-	public function createThumb() {
+	public function createThumb($width=0,$height=0) {
 
-		if(!VmConfig::get('img_resize_enable')) return;
+		if(empty($this->file_url_folder)){
+			vmError('Couldnt create thumb, no directory given. Activate vmdebug to understand which database entry is creating this error');
+			vmdebug('createThumb, no directory given',$this);
+			return FALSE;
+		}
+
+		if(empty($this->file_name)){
+			vmError('Couldnt create thumb, no name given. Activate vmdebug to understand which database entry is creating this error');
+			vmdebug('createThumb, no name given',$this);
+			return false;
+		}
+		$synchronise = JRequest::getString('synchronise',false);
+
+		if(!VmConfig::get('img_resize_enable') || $synchronise) return;
 		//now lets create the thumbnail, saving is done in this function
-		$width = VmConfig::get('img_width', 90);
-		$height = VmConfig::get('img_height', 90);
+		if(empty($width)) $width = VmConfig::get('img_width', 90);
+		if(empty($height)) $height = VmConfig::get('img_height', 90);
 
 		// Don't allow sizes beyond 2000 pixels //I dont think that this is good, should be config
 //		$width = min($width, 2000);
@@ -126,10 +139,16 @@ class VmImage extends VmMediaHandler {
 		$bggreen = 255;
 		$bgblue = 255;
 
-		$rel_path = str_replace('/',DS,$this->file_url_folder);
-		$fullSizeFilenamePath = JPATH_ROOT.DS.$rel_path.$this->file_name.'.'.$this->file_extension;
+		$root = '';
+		$this->file_name_thumb = $this->createThumbName($width,$height);
 
-		$this->file_name_thumb = $this->createThumbName();
+		if($this->file_is_forSale==0){
+			$rel_path = str_replace('/',DS,$this->file_url_folder);
+			$fullSizeFilenamePath = JPATH_ROOT.DS.$rel_path.$this->file_name.'.'.$this->file_extension;
+		} else {
+			$fullSizeFilenamePath = $this->file_url_folder.$this->file_name.'.'.$this->file_extension;
+		}
+
 		$file_path_thumb = str_replace('/',DS,$this->file_url_folder_thumb);
 		$resizedFilenamePath = JPATH_ROOT.DS.$file_path_thumb.$this->file_name_thumb.'.'.$this->file_extension;
 
@@ -137,7 +156,7 @@ class VmImage extends VmMediaHandler {
 
 		if (file_exists($fullSizeFilenamePath)) {
 			if (!class_exists('Img2Thumb')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'img2thumb.php');
-			$createdImage = new Img2Thumb($fullSizeFilenamePath, $width, $height, $resizedFilenamePath, $maxsize, $bgred, $bggreen, $bgblue);
+			$createdImage = new Img2Thumb($fullSizeFilenamePath, (int)$width, (int)$height, $resizedFilenamePath, $maxsize, $bgred, $bggreen, $bgblue);
 			if($createdImage){
 				return $this->file_url_folder_thumb.$this->file_name_thumb.'.'.$this->file_extension;
 			} else {
@@ -170,30 +189,13 @@ class VmImage extends VmMediaHandler {
 	 * @param string $image Name of the image file to display
 	 * @param string $text Text to use for the image alt text and to display under the image.
 	 */
-	public function displayImageButton($link, $imageclass, $text) {
-		$button = '<a title="' . $text . '" href="' . $link . '">';
-		$button .= '<span class="vmicon48 '.$imageclass.'"></span>';
+	static public function displayImageButton($link, $imageclass, $text, $mainclass = 'vmicon48', $extra="") {
+		$button = '<a title="' . $text . '" href="' . $link . '" '.$extra.'>';
+		$button .= '<span class="'.$mainclass.' '.$imageclass.'"></span>';
 		$button .= '<br />' . $text.'</a>';
 		echo $button;
 
 	}
 
 }
-
-/**
-*
-* @version $Id: image.php 4485 2011-10-20 12:36:55Z Milbo $
-* @package VirtueMart
-* @subpackage classes
-* @copyright Copyright (C) 2004-2007 soeren - All rights reserved.
-* @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
-* VirtueMart is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See /administrator/components/com_virtuemart/COPYRIGHT.php for copyright notices and details.
-*
-* http://virtuemart.org
-*/
-
 

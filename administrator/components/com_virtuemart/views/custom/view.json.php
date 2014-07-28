@@ -32,7 +32,7 @@ class VirtuemartViewCustom extends JView {
 
 	/* json object */
 	private $json = null;
-	
+
 	function display($tpl = null) {
 			$db = JFactory::getDBO();
 		if ( $virtuemart_media_id = JRequest::getInt('virtuemart_media_id') ) {
@@ -40,7 +40,7 @@ class VirtuemartViewCustom extends JView {
 			$query='SELECT `file_url`,`file_title` FROM `#__virtuemart_medias` where `virtuemart_media_id`='.$virtuemart_media_id;
 			$db->setQuery( $query );
 			$json = $db->loadObject();
-			if (isset($json->file_url)) { 
+			if (isset($json->file_url)) {
 				$json->file_url = JURI::root().$json->file_url;
 				$json->msg =  'OK';
 				echo json_encode($json);
@@ -48,9 +48,9 @@ class VirtuemartViewCustom extends JView {
 				$json->msg =  '<b>'.JText::_('COM_VIRTUEMART_NO_IMAGE_SET').'</b>';
 				echo json_encode($json);
 			}
-		} 
+		}
 		elseif ( $custom_jplugin_id = JRequest::getInt('custom_jplugin_id') ) {
-			if (VmConfig::isJ15()) {
+			if (JVM_VERSION===1) {
 				$table = '#__plugins';
 				$ext_id = 'id';
 			} else {
@@ -60,12 +60,16 @@ class VirtuemartViewCustom extends JView {
 			$q = 'SELECT `params`,`element` FROM `' . $table . '` WHERE `' . $ext_id . '` = "'.$custom_jplugin_id.'"';
 			$db ->setQuery($q);
 			$this->plugin = $db ->loadObject();
-			$this->loadHelper('parameterparser');
-                $parameters = new vmParameters($this->plugin->params,  $this->plugin->element , 'plugin' ,'vmcustom');
-			$lang = JFactory::getLanguage();
+			if (!class_exists('vmParameters'))
+				require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'parameterparser.php');
+			$parameters = new vmParameters($this->plugin->params,  $this->plugin->element , 'plugin' ,'vmcustom');
+
+			if (!class_exists('vmPlugin'))
+				require(JPATH_VM_ADMINISTRATOR . DS . 'plugins' . DS . 'vmplugin.php');
 			$filename = 'plg_vmcustom_' .  $this->plugin->element;
-			$lang->load($filename, JPATH_ADMINISTRATOR);
-	        echo $parameters->render(); 
+			vmPlugin::loadJLang($filename,'vmcustom',$this->plugin->element);
+
+			echo $parameters->render();
 			echo '<input type="hidden" value="'.$this->plugin->element.'" name="custom_value">';
 			jExit();
 		}

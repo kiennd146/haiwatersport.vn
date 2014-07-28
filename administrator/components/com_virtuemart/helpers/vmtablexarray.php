@@ -30,7 +30,8 @@ class VmTableXarray extends VmTable {
 
 	protected $_autoOrdering = false;
 	protected $_orderable = false;
-
+    protected $_skey = '';
+    protected $_skeyForm = '';
 	protected $_pvalue = '';
 
 //    function setOrderable($key='ordering', $auto=true){
@@ -45,7 +46,7 @@ class VmTableXarray extends VmTable {
 		$this->$key			= array();
 		$this->_skeyForm	= empty($keyForm)? $key:$keyForm;
 
-        }
+    }
 
 	function setOrderableFormname($orderAbleFormName){
 		$this->_okeyForm = $orderAbleFormName;
@@ -56,10 +57,10 @@ class VmTableXarray extends VmTable {
 	* swap the ordering of a record in the Xref tables
 	* @param  $direction , 1/-1 The increment to reorder by
 	*/
-	function move($direction) {
+	function move($direction, $where='', $orderingkey=0) {
 
     	if(empty($this->_skey) ) {
-    		$this->setError( 'No secondary keys defined in VmTableXarray '.$this->_tbl );
+    		vmError( 'No secondary keys defined in VmTableXarray '.$this->_tbl );
     		return false;
     	}
 		$skeyId = JRequest::getInt($this->_skey, 0);
@@ -68,7 +69,7 @@ class VmTableXarray extends VmTable {
 		$cid	= JRequest::getVar( $this->_pkey , array(), 'post', 'array' );
 		$order	= JRequest::getVar( 'order', array(), 'post', 'array' );
 
-		$query = 'SELECT `id` WHERE $this->_pkey = '.(int)$cid[0].' AND `virtuemart_category_id` = '.(int)$skeyId ;
+		$query = 'SELECT `id` FROM `' . $this->_tbl . '` WHERE $this->_pkey = '.(int)$cid[0].' AND `virtuemart_category_id` = '.(int)$skeyId ;
 		$this->_db->setQuery( $query );
 		$id = $this->_db->loadResult();
 		$keys = array_keys($order);
@@ -88,20 +89,21 @@ class VmTableXarray extends VmTable {
 			if (!$this->_db->query())
 			{
 				$err = $this->_db->getErrorMsg();
-				JError::raiseError( 500, $err );
+				JError::raiseError( 500, get_class( $this ).':: move '. $err );
 			}
 		}
 	}
     /**
      * Records in this table are arrays. Therefore we need to overload the load() function.
-     *
+     * TODO, this function is giving back the array, not the table, it is not working like the other table, so we should change that
+     * for the 2.2. at least.
 	 * @author Max Milbers
      * @param int $id
      */
-    function load($id=0){
+    function load($oid=null,$overWriteLoadName=0,$andWhere=0,$tableJoins= array(),$joinKey = 0){
 
     	if(empty($this->_skey) ) {
-    		$this->setError( 'No secondary keys defined in VmTableXarray '.$this->_tbl );
+    		vmError( 'No secondary keys defined in VmTableXarray '.$this->_tbl );
     		return false;
     	}
 
@@ -113,14 +115,14 @@ class VmTableXarray extends VmTable {
 			$orderby = '';
 		}
 
-		$q = 'SELECT `'.$this->_skey.'` FROM `'.$this->_tbl.'` WHERE `'.$this->_pkey.'` = "'.(int)$id.'" '.$orderby;
+		$q = 'SELECT `'.$this->_skey.'` FROM `'.$this->_tbl.'` WHERE `'.$this->_pkey.'` = "'.(int)$oid.'" '.$orderby;
 		$this->_db->setQuery($q);
 
 		$result = $this->_db->loadResultArray();
-
+// 		vmdebug('my q ',$q,$result);
 		$error = $this->_db->getErrorMsg();
 		if(!empty($error)){
-			$this->setError( $error );
+			vmError(get_class( $this ).':: load'.$error  );
 			return false;
 		} else {
 			if(empty($result)) return array();
@@ -135,9 +137,9 @@ class VmTableXarray extends VmTable {
      * This binds the data to this kind of table. You can set the used name of the form with $this->skeyForm;
      *
      * @author Max Milbers
-     * @param unknown_type $data
+     * @param array $data
      */
-	function bind($data){
+	public function bind($data, $ignore = array()){
 
 		if(!empty($data[$this->_pkeyForm])){
 			$this->_pvalue = $data[$this->_pkeyForm];
@@ -145,6 +147,13 @@ class VmTableXarray extends VmTable {
 
 		if(!empty($data[$this->_skeyForm])){
 			$this->_svalue = $data[$this->_skeyForm];
+		}
+
+		if($this->_orderable){
+			$orderingKey = $this->_orderingKey;
+			if(!empty($data[$orderingKey])){
+				$this->$orderingKey = $data[$this->_orderingKey];
+			}
 		}
 
 		return true;
@@ -156,11 +165,11 @@ class VmTableXarray extends VmTable {
      * @author Max Milbers, George Kostopoulos
      * @see libraries/joomla/database/JTable#store($updateNulls)
      */
-    public function store() {
+    public function store($updateNulls = false) {
 
     	$returnCode = true;
-	$this->setLoggableFieldsForStore();
-	$db = JFactory::getDBO();
+		$this->setLoggableFieldsForStore();
+		$db = JFactory::getDBO();
 
         $pkey = $this->_pkey;
         $skey = $this->_skey;
@@ -180,14 +189,14 @@ class VmTableXarray extends VmTable {
         }
 
         // We make another database object list with the values that we want to insert into the database
-        $newArray = null;
-	if(!empty($this->_svalue)){
-            if(!is_array($this->_svalue)) $this->_svalue = array($this->_svalue);
-            foreach($this->_svalue as $value) $newArray[] = array($pkey=>$this->_pvalue, $skey=>$value);
-	}
+        $newArray = array();
+		if(!empty($this->_svalue)){
+	            if(!is_array($this->_svalue)) $this->_svalue = array($this->_svalue);
+	            foreach($this->_svalue as $value) $newArray[] = array($pkey=>$this->_pvalue, $skey=>$value);
+		}
 
         // Inserts and Updates
-        if(!empty($newArray)){
+        if(count($newArray)>0){
             $myOrdering = 1;
 
             foreach ($newArray as $newValue) {
@@ -219,9 +228,10 @@ class VmTableXarray extends VmTable {
             // There are zero new rows, so the user asked for all the rows to be deleted
             $q  = 'DELETE FROM `'.$this->_tbl.'` WHERE `' . $pkey.'` = "'. $this->_pvalue .'" ';
             $this->_db->setQuery($q);
-            if(!$this->_db->Query()){
+
+            if(!$this->_db->query()){
                 $returnCode = false;
-                $this->setError(get_class( $this ).':: store'.$this->_db->getErrorMsg());
+                vmError(get_class( $this ).':: store '.$this->_db->getErrorMsg());
             }
         }
 
@@ -238,7 +248,7 @@ class VmTableXarray extends VmTable {
                     $this->_db->setQuery($q);
                     if(!$this->_db->Query()){
                         $returnCode = false;
-                        $this->setError(get_class( $this ).':: store'.$this->_db->getErrorMsg());
+                        vmError(get_class( $this ).':: store'.$this->_db->getErrorMsg());
                     }
                 }
              }

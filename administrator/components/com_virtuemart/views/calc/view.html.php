@@ -13,14 +13,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.html.php 5013 2011-12-10 16:20:21Z electrocity $
+* @version $Id: view.html.php 6475 2012-09-21 11:54:21Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * Description
@@ -29,18 +29,17 @@ jimport( 'joomla.application.component.view');
  * @author
  */
 
-class VirtuemartViewCalc extends JView {
+class VirtuemartViewCalc extends VmView {
 
 	function display($tpl = null) {
 
-		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
 
-		$model = $this->getModel('calc');
-		$this->loadHelper('permissions');
-		$this->assignRef('perms', Permissions::getInstance());
+		$model = VmModel::getModel('calc');
+		if(!class_exists('Permissions')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'permissions.php');
+		$perms = Permissions::getInstance();
+		$this->assignRef('perms', $perms);
 
 		//@todo should be depended by loggedVendor
 		$vendorId=1;
@@ -48,15 +47,14 @@ class VirtuemartViewCalc extends JView {
 
 		$db = JFactory::getDBO();
 
-		$viewName=ShopFunctions::SetViewTitle();
-		$this->assignRef('viewName',$viewName);
+		$this->SetViewTitle();
+
 
 		$layoutName = JRequest::getWord('layout', 'default');
 		if ($layoutName == 'edit') {
 
-// 			$calcId = JRequest::getInt('cid[]');
-// 			$model->setId($calcId);
 			$calc = $model->getCalc();
+			
 			$this->assignRef('calc',	$calc);
 
 			$isNew = ($calc->virtuemart_calc_id < 1);
@@ -76,17 +74,12 @@ class VirtuemartViewCalc extends JView {
 					$calc->calc_currency = $currency;
 				}
 
-				$usermodel = $this->getModel('user', 'VirtuemartModel');
-				$usermodel->setCurrent();
-				$userDetails = $usermodel->getUser();
-				if(empty($userDetails->virtuemart_vendor_id)){
-					JError::raiseError(403,'Forbidden for non vendors');
-				}
-				if(empty($calc->virtuemart_vendor_id))$calc->virtuemart_vendor_id = $userDetails->virtuemart_vendor_id;
 			}
+			$entryPointsList = self::renderEntryPointsList($calc->calc_kind);
+			$this->assignRef('entryPointsList',$entryPointsList);
 
-			$this->assignRef('entryPointsList',self::renderEntryPointsList($calc->calc_kind));
-			$this->assignRef('mathOpList',self::renderMathOpList($calc->calc_value_mathop));
+			$mathOpList = self::renderMathOpList($calc->calc_value_mathop);
+			$this->assignRef('mathOpList',$mathOpList);
 
 
 			/* Get the category tree */
@@ -100,7 +93,7 @@ class VirtuemartViewCalc extends JView {
 			$this->assignRef('categoryTree', $categoryTree);
 
 
-			$currencyModel = $this->getModel('currency');
+			$currencyModel = VmModel::getModel('currency');
 			$_currencies = $currencyModel->getCurrencies();
 			$this->assignRef('currencies', $_currencies);
 
@@ -114,27 +107,32 @@ class VirtuemartViewCalc extends JView {
 			$statesList = ShopFunctions::renderStateList($calc->virtuemart_state_ids,'', True);
 			$this->assignRef('statesList', $statesList);
 
+			$manufacturerList= ShopFunctions::renderManufacturerList($calc->virtuemart_manufacturers,true);
+			$this->assignRef('manufacturerList', $manufacturerList);
+
 			if(Vmconfig::get('multix','none')!=='none'){
 				$vendorList= ShopFunctions::renderVendorList($calc->virtuemart_vendor_id,false);
 				$this->assignRef('vendorList', $vendorList);
 			}
 
-			ShopFunctions::addStandardEditViewCommands();
+			$this->addStandardEditViewCommands();
 
-        }
-        else {
-			JToolBarHelper::custom('toggle.calc_shopper_published.0', 'unpublish', 'no', JText::_('COM_VIRTUEMART_CALC_SHOPPER_PUBLISH_TOGGLE_OFF'), true);
-			JToolBarHelper::custom('toggle.calc_shopper_published.1', 'publish', 'yes', JText::_('COM_VIRTUEMART_CALC_SHOPPER_PUBLISH_TOGGLE_ON'), true);
-			JToolBarHelper::custom('toggle.calc_vendor_published.0', 'unpublish', 'no', JText::_('COM_VIRTUEMART_CALC_VENDOR_PUBLISH_TOGGLE_OFF'), true);
-			JToolBarHelper::custom('toggle.calc_vendor_published.1', 'publish', 'yes', JText::_('COM_VIRTUEMART_CALC_VENDOR_PUBLISH_TOGGLE_ON'), true);
+        } else {
+			if((Vmconfig::get('multix','none')!='none') && $this->perms->check( 'admin' )){
+				JToolBarHelper::custom('toggle.shared.1', 'publish', 'yes', JText::_('COM_VIRTUEMART_SHARED_TOGGLE_ON'), true);
+				JToolBarHelper::custom('toggle.shared.0', 'unpublish', 'no', JText::_('COM_VIRTUEMART_SHARED_TOGGLE_OFF'), true);
+			}
+
+			$this->addStandardDefaultViewCommands();
+			$this->addStandardDefaultViewLists($model);
 
 			$search = JRequest::getWord('search', false);
 			$calcs = $model->getCalcs(false, false, $search);
+
 			$this->assignRef('calcs',	$calcs);
 
-			ShopFunctions::addStandardDefaultViewCommands();
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
-			$this->assignRef('lists', $lists);
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
 
 		}
 
@@ -158,12 +156,13 @@ class VirtuemartViewCalc extends JView {
 		//MathOp array
 		$entryPoints = array(
 		'0' => array('calc_kind' => 'Marge', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_PMARGIN')),
-		'1' => array('calc_kind' => 'Tax', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_TAX')),
-		'2' => array('calc_kind' => 'DBTax', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_DBTAX')),
-		'3' => array('calc_kind' => 'DATax', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_DATAX')),
-		'4' => array('calc_kind' => 'TaxBill', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_TAXBILL')),
+		'1' => array('calc_kind' => 'DBTax', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_DBTAX')),
+		'2' => array('calc_kind' => 'Tax', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_TAX')),
+		'3' => array('calc_kind' => 'VatTax', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_VATTAX')),
+		'4' => array('calc_kind' => 'DATax', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_DATAX')),
 		'5' => array('calc_kind' => 'DBTaxBill', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_DBTAXBILL')),
-		'6' => array('calc_kind' => 'DATaxBill', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_DATAXBILL')),
+		'6' => array('calc_kind' => 'TaxBill', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_TAXBILL')),
+		'7' => array('calc_kind' => 'DATaxBill', 'calc_kind_name' => JText::_('COM_VIRTUEMART_CALC_EPOINT_DATAXBILL')),
 		);
 
 		$listHTML = JHTML::_('Select.genericlist', $entryPoints, 'calc_kind', '', 'calc_kind', 'calc_kind_name', $selected );

@@ -13,21 +13,15 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4075 2011-09-11 19:56:38Z Milbo $
+* @version $Id: default.php 6058 2012-06-06 08:19:35Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-AdminUIHelper::startAdminArea();
-?>
+AdminUIHelper::startAdminArea($this);
 
-
-
-<?php // Loading Templates in Tabs
-AdminUIHelper::buildTabs ( array (	'tools' 	=> 	'COM_VIRTUEMART_UPDATE_TOOLS_TAB',
+AdminUIHelper::buildTabs ( $this, array (	'tools' 	=> 	'COM_VIRTUEMART_UPDATE_TOOLS_TAB',
 									'migrator' 	=> 	'COM_VIRTUEMART_MIGRATION_TAB'
 									 ) );
-?>
 
-
-<?php AdminUIHelper::endAdminArea(); ?>
+AdminUIHelper::endAdminArea();

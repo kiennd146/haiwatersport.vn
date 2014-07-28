@@ -13,14 +13,11 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: country.php 4902 2011-12-01 20:37:42Z Milbo $
+* @version $Id: country.php 6396 2012-09-05 17:35:36Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-
-// Load the model framework
-jimport( 'joomla.application.component.model');
 
 if(!class_exists('VmModel')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmmodel.php');
 
@@ -42,6 +39,8 @@ class VirtueMartModelCountry extends VmModel {
 		parent::__construct();
 		$this->setMainTable('countries');
 		array_unshift($this->_validOrderingFieldName,'country_name');
+		$this->_selectedOrdering = 'country_name';
+		$this->_selectedOrderingDir = 'ASC';
 
 	}
 
@@ -69,8 +68,9 @@ class VirtueMartModelCountry extends VmModel {
 
 	$query = 'SELECT *';
 	$query .= ' FROM `#__virtuemart_countries`';
-	$query .= ' WHERE `' . $countryCodeFieldname . '` = ' . (int)$code;
-	$db->setQuery($query);
+	$query .= ' WHERE `' . $countryCodeFieldname . '` = "' . $code . '"';
+
+	    $db->setQuery($query);
 
 	return $db->loadObject();
     }
@@ -101,12 +101,7 @@ class VirtueMartModelCountry extends VmModel {
 		$whereString = '';
 		if (count($where) > 0) $whereString = ' WHERE '.implode(' AND ', $where) ;
 
-		if($this->_noLimit){
-			$ordering = $this->_getOrdering('country_name','ASC');
-		} else {
-			$ordering = $this->_getOrdering();
-		}
-
+		$ordering = $this->_getOrdering();
 
 		return $this->_data = $this->exeSortSearchListQuery(0,'*',' FROM `#__virtuemart_countries`',$whereString,'',$ordering);
 

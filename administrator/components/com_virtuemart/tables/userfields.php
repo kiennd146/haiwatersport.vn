@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: userfields.php 4666 2011-11-10 22:06:40Z Milbo $
+* @version $Id: userfields.php 6475 2012-09-21 11:54:21Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -32,52 +32,7 @@ class TableUserfields extends VmTable {
 
 // 	/** @var var Primary Key*/
 	var $virtuemart_userfield_id		= 0;
-// 	/** @var string Internal fielname*/
-// 	var $name			= null;
-// 	/** @var string Visible title*/
-// 	var $title			= null;
-// 	/** @var string Description*/
-// 	var $description	= null;
-// 	/** @var string Input type*/
-// 	var $type			= null;
-// 	/** @var int Max size of string inputs*/
-// 	var $maxlength		= 0;
-// 	/** @var int Fieldsize*/
-// 	var $size			= 0;
-// 	/** @var boolean True if required*/
-// 	var $required		= 0;
-// 	/** @var int Field ordering*/
-// 	var $ordering		= 0;
-// 	/** @var int Nr of columns for textarea*/
-// 	var $cols			= 0;
-// 	/** @var int Nr of rows for textarea*/
-// 	var $rows			= 0;
-// 	/** @var string */
-// 	var $value			= null;
-// 	/** @var int */
-// 	var $default		= 0;
-// 	/** @var boolean True if publised*/
-// 	var $published		= 1;
-// 	/** @var boolean True to display in registration form*/
-// 	var $registration	= 0;
-// 	/** @var boolean True to display in shipment form*/
-// 	var $shipment		= 0;
-// 	/** @var boolean True to display in account maintenance*/
-// 	var $account		= 1;
-// 	/** @var boolean True if readonly*/
-// 	var $readonly		= 0;
-// 	/** @var boolean */
-// 	var $calculated		= 0;
-// 	/** @var boolean True if part of the VirtueMart installation; False for User specified*/
-// 	var $sys			= 0;
-// 	/** @var int The Vendor ID, if vendor specific*/
-// 	var $virtuemart_vendor_id		= 0;
-// 	/** @var mediumtex Additional type-specific parameters */
-// 	var $params			= null;
-//              /** @var boolean */
-//	var $locked_on	= 0;
-//	/** @var time */
-//	var $locked_by	= 0;
+
 	/**
 	 * @param $db Class constructor; connect to the database
 	 */
@@ -86,6 +41,7 @@ class TableUserfields extends VmTable {
 
 		parent::__construct('#__virtuemart_userfields', 'virtuemart_userfield_id', $db);
 		parent::loadFields();
+		$this->setPrimaryKey('virtuemart_userfield_id');
 		$this->setUniqueName('name');
 		$this->setObligatoryKeys('title');
 
@@ -101,36 +57,20 @@ class TableUserfields extends VmTable {
 	 */
 	function check($nrOfValues)
 	{
-//		if (!$this->name) {
-//			$this->setError(JText::_('COM_VIRTUEMART_USERFIELD_MUST_HAVE_NAME'));
-//			return false;
-//		}
-//		if (!$this->title) {
-//			$this->setError(JText::_('COM_VIRTUEMART_USERFIELD_MUST_HAVE_TITLE'));
-//			return false;
-//		}
+
 		if (preg_match('/[^a-z0-9\._\-]/i', $this->name) > 0) {
-			$this->setError(JText::_('COM_VIRTUEMART_NAME_OF_USERFIELD_CONTAINS_INVALID_CHARACTERS'));
+			vmError(JText::_('COM_VIRTUEMART_NAME_OF_USERFIELD_CONTAINS_INVALID_CHARACTERS'));
 			return false;
 		}
-		$reqValues = array('select', 'multiselect', 'radio', 'multicheckbox');
-		if (in_array($this->type, $reqValues) && $nrOfValues == 0) {
-			$this->setError(JText::_('COM_VIRTUEMART_VALUES_ARE_REQUIRED_FOR_THIS_TYPE'));
-			return false;
-		}
-/**		if ($this->virtuemart_userfield_id == 0) {
-			$_sql = 'SELECT COUNT(*) AS c '
-					. 'FROM `#__virtuemart_userfields`'
-					. "WHERE name = '" . $this->_db->getEscaped($this->name) . "' ";
-
-			$this->_db->setQuery($_sql);
-			$_c = $this->_db->loadResultArray();
-
-			if ($_c[0] > 0) {
-				$this->setError(JText::_('COM_VIRTUEMART_USERFIELD_ERR_ALREADY', $this->name));
+		if($this->name !='virtuemart_country_id' and $this->name !='virtuemart_state_id'){
+			$reqValues = array('select', 'multiselect', 'radio', 'multicheckbox');
+			if (in_array($this->type, $reqValues) and $nrOfValues == 0 ) {
+				vmError(JText::_('COM_VIRTUEMART_VALUES_ARE_REQUIRED_FOR_THIS_TYPE'));
 				return false;
 			}
-		}*/
+		}
+
+
 		return parent::check();
 	}
 
@@ -152,25 +92,17 @@ class TableUserfields extends VmTable {
 			case 'multicheckbox':
 				$_fieldType = 'MEDIUMTEXT';
 				break;
-			case 'letterman_subscription':
-			case 'yanc_subscription':
-			case 'anjel_subscription':
-			case 'ccnewsletter_subscription':
-				$this->params = 'newsletter='.substr($this->type,0,strpos($this->type, '_') )."\n";
-				$this->type = 'checkbox';
 			case 'checkbox':
 				$_fieldType = 'TINYINT';
 				break;
-			case 'euvatid':
-				$this->params = 'virtuemart_shoppergroup_id='.$_data['virtuemart_shoppergroup_id']."\n";
-				$_fieldType = 'VARCHAR(255)';
-				break;
+
 			case 'age_verification':
 				$this->params = 'minimum_age='.(int)$_data['minimum_age']."\n";
 			default:
 				$_fieldType = 'VARCHAR(255)';
 				break;
 		}
+
 		return $_fieldType;
 	}
 
@@ -179,17 +111,64 @@ class TableUserfields extends VmTable {
 	 *
 	 * @return mixed When a new record was succesfully inserted, return the ID, otherwise the status
 	 */
-	function store()
+	public function store($updateNulls = false)
 	{
 		$isNew = ($this->virtuemart_userfield_id == 0);
-		if (!parent::store()) { // Write data to the DB
-			$this->setError($this->getError());
+		if (!parent::store($updateNulls)) { // Write data to the DB
+			vmError($this->getError());
 			return false;
 		} else {
 			return $this->virtuemart_userfield_id;
 		}
 	}
+	
+	function checkAndDelete($table,$where = 0){
+		$ok = 1;
+		$k = $this->_tbl_key;
 
+		if($where!==0){
+			$whereKey = $where;
+		} else {
+			$whereKey = $this->_pkey;
+		}
+		
+		$query = 'SELECT `'.$this->_tbl_key.'` FROM `'.$table.'` WHERE '.$whereKey.' = "' .$this->$k . '"';
+		
+		// stAn - it should be better to add this directly to the controller of the shopper fields
+		// only additionally, controllers are not considered as safe.
+		if (isset($this->name))
+		 {
+		    
+			$umodel = VmModel::getModel('userfields'); 
+			$arr = $umodel->getCoreFields(); 
+			
+			if (in_array($this->name, $arr))
+			 {
+			  vmError('Cannot delete core field!'); 
+			  return false; 
+			 }
+		 }
+
+		$this->_db->setQuery( $query );
+		$list = $this->_db->loadResultArray();
+
+		if($list){
+
+			foreach($list as $row){
+				$ok = $row;
+				$query = 'DELETE FROM `'.$table.'` WHERE '.$this->_tbl_key.' = "'.$row.'"';
+				$this->_db->setQuery( $query );
+
+				if (!$this->_db->query()){
+					$this->setError($this->_db->getErrorMsg());
+					vmError('checkAndDelete '.$this->_db->getErrorMsg());
+					$ok = 0;
+				}
+			}
+
+		}
+		return $ok;
+	}
 }
 
 //No CLosing Tag

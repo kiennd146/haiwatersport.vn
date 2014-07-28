@@ -19,7 +19,7 @@
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * HTML View class for the VirtueMart Component
@@ -27,45 +27,43 @@ jimport( 'joomla.application.component.view');
  * @package		VirtueMart
  * @author
  */
-class VirtuemartViewOrders extends JView {
+class VirtuemartViewOrders extends VmView {
 
 	function display($tpl = null) {
 
-		$mainframe = JFactory::getApplication();
-		$option = JRequest::getWord('option');
-		$lists = array();
 
-		/* Load helpers */
-		$this->loadHelper('adminui');
-		$this->loadHelper('currencydisplay');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
+		//Load helpers
+		if (!class_exists('CurrencyDisplay'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'currencydisplay.php');
 
-//		require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'vendor.php'); Obsolete now??
-		//if(!class_exists('vmOrderPlugin')) require(JPATH_VM_PLUGINS.DS.'vmorderplugin.php');
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
+
 		if(!class_exists('vmPSPlugin')) require(JPATH_VM_PLUGINS.DS.'vmpsplugin.php');
-
-		if(!class_exists('VirtueMartModelOrderstatus')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'orderstatus.php');
-		$orderStatusModel=new VirtueMartModelOrderstatus();
+		$orderStatusModel=VmModel::getModel('orderstatus');
 		$orderStates = $orderStatusModel->getOrderStatusList();
 
-		$viewName=ShopFunctions::SetViewTitle( 'ORDER');
-		$this->assignRef('viewName',$viewName);
+		$this->SetViewTitle( 'ORDER');
+
+		$orderModel = VmModel::getModel();
 
 		$curTask = JRequest::getWord('task');
 		if ($curTask == 'edit') {
+			VmConfig::loadJLang('com_virtuemart_shoppers',TRUE);
+			VmConfig::loadJLang('com_virtuemart_orders', true);
 
 			// Load addl models
-			$orderModel = $this->getModel('orders');
-			$userFieldsModel = $this->getModel('userfields');
-			$productModel = $this->getModel('product');
+			$userFieldsModel = VmModel::getModel('userfields');
+			$productModel = VmModel::getModel('product');
 
 			// Get the data
 			$virtuemart_order_id = JRequest::getInt('virtuemart_order_id');
 			$order = $orderModel->getOrder($virtuemart_order_id);
+
 			$_orderID = $order['details']['BT']->virtuemart_order_id;
 			$orderbt = $order['details']['BT'];
 			$orderst = (array_key_exists('ST', $order['details'])) ? $order['details']['ST'] : $orderbt;
+			$orderbt ->invoiceNumber = $orderModel->getInvoiceNumber($orderbt->virtuemart_order_id);
 
 			$currency = CurrencyDisplay::getInstance('',$order['details']['BT']->virtuemart_vendor_id);
 
@@ -80,6 +78,7 @@ class VirtuemartViewOrders extends JView {
 			$userfields = $userFieldsModel->getUserFieldsFilled(
 					 $_userFields
 					,$orderbt
+					,'BT_'
 			);
 
 			$_userFields = $userFieldsModel->getUserFields(
@@ -91,6 +90,7 @@ class VirtuemartViewOrders extends JView {
 			$shipmentfields = $userFieldsModel->getUserFieldsFilled(
 					 $_userFields
 					,$orderst
+					,'ST_'
 			);
 
 			// Create an array to allow orderlinestatuses to be translated
@@ -109,10 +109,15 @@ class VirtuemartViewOrders extends JView {
 
 			}
 
-                       // $_shipmentInfo = ShopFunctions::getShipmentRateDetails($orderbt->virtuemart_shipmentmethod_id);
+			if(!isset($_orderStatusList[$orderbt->order_status])){
+				if(empty($orderbt->order_status)){
+					$orderbt->order_status = 'unknown';
+				}
+				$_orderStatusList[$orderbt->order_status] = JText::_('COM_VIRTUEMART_UNKNOWN_ORDER_STATUS');
+			}
 
 			/* Assign the data */
-			$this->assignRef('order', $order);
+			$this->assignRef('orderdetails', $order);
 			$this->assignRef('orderID', $_orderID);
 			$this->assignRef('userfields', $userfields);
 			$this->assignRef('shipmentfields', $shipmentfields);
@@ -131,17 +136,17 @@ class VirtuemartViewOrders extends JView {
 			$this->assignRef('currentOrderStat', $_currentOrderStat);
 
 			/* Toolbar */
-			JToolBarHelper::custom( 'prev', 'back','','COM_VIRTUEMART_ITEM_PREVIOUS',false);
-			JToolBarHelper::custom( 'next', 'forward','','COM_VIRTUEMART_ITEM_NEXT',false);
+			JToolBarHelper::custom( 'prevItem', 'back','','COM_VIRTUEMART_ITEM_PREVIOUS',false);
+			JToolBarHelper::custom( 'nextItem', 'forward','','COM_VIRTUEMART_ITEM_NEXT',false);
 			JToolBarHelper::divider();
 			JToolBarHelper::custom( 'cancel', 'back','back','back',false,false);
 		}
 		else if ($curTask == 'editOrderItem') {
-			$this->loadHelper('calculationHelper');
+			if(!class_exists('calculationHelper')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'calculationh.php');
 
 			$this->assignRef('orderstatuses', $orderStates);
 
-			$model = $this->getModel();
+			$model = VmModel::getModel();
 			$orderId = JRequest::getString('orderId', '');
 			$orderLineItem = JRequest::getVar('orderLineId', '');
 			$this->assignRef('virtuemart_order_id', $orderId);
@@ -153,8 +158,12 @@ class VirtuemartViewOrders extends JView {
 		else {
 			$this->setLayout('orders');
 
-			/* Get the data */
-			$orderslist = $this->get('OrdersList');
+			$model = VmModel::getModel();
+			$this->addStandardDefaultViewLists($model,'created_on');
+			$orderStatusModel =VmModel::getModel('orderstatus');
+			$orderstates = JRequest::getWord('order_status_code','');
+			$this->lists['state_list'] = $orderStatusModel->renderOSList($orderstates,'order_status_code',FALSE,' onchange="this.form.submit();" ');
+			$orderslist = $model->getOrdersList();
 
 			$this->assignRef('orderstatuses', $orderStates);
 
@@ -162,53 +171,53 @@ class VirtuemartViewOrders extends JView {
 
 			/* Apply currency This must be done per order since it's vendor specific */
 			$_currencies = array(); // Save the currency data during this loop for performance reasons
+
 			if ($orderslist) {
+
 			    foreach ($orderslist as $virtuemart_order_id => $order) {
 
+				    if(!empty($order->order_currency)){
+					    $currency = $order->order_currency;
+				    } else if($order->virtuemart_vendor_id){
+					    if(!class_exists('VirtueMartModelVendor')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'vendor.php');
+					    $currObj = VirtueMartModelVendor::getVendorCurrency($order->virtuemart_vendor_id);
+				        $currency = $currObj->virtuemart_currency_id;
+				   }
 				    //This is really interesting for multi-X, but I avoid to support it now already, lets stay it in the code
-				    if (!array_key_exists('v'.$order->virtuemart_vendor_id, $_currencies)) {
-					    $_currencies['v'.$order->virtuemart_vendor_id] = CurrencyDisplay::getInstance('',$order->virtuemart_vendor_id);
-				    }
-				    $order->order_total = $_currencies['v'.$order->virtuemart_vendor_id]->priceDisplay($order->order_total,'',false);
+				    if (!array_key_exists('curr'.$currency, $_currencies)) {
 
+					    $_currencies['curr'.$currency] = CurrencyDisplay::getInstance($currency,$order->virtuemart_vendor_id);
+				    }
+
+				    $order->order_total = $_currencies['curr'.$currency]->priceDisplay($order->order_total);
+				    $order->invoiceNumber = $model->getInvoiceNumber($order->virtuemart_order_id);
 			    }
+
 			}
+
 			/*
 			 * UpdateStatus removed from the toolbar; don't understand how this was intented to work but
 			 * the order ID's aren't properly passed. Might be readded later; the controller needs to handle
 			 * the arguments.
 			 */
 
-			 /* Toolbar */
+			/* Toolbar */
+			//JToolBarHelper::customX( 'CreateOrderHead', 'new','new','New',false);
 			JToolBarHelper::save('updatestatus', JText::_('COM_VIRTUEMART_UPDATE_STATUS'));
+
 			JToolBarHelper::deleteListX();
 
 			/* Assign the data */
 			$this->assignRef('orderslist', $orderslist);
 
-		/* Assign general statuses */
-			$model = $this->getModel();
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
-            $this->assignRef('lists', $lists);
-		}
-		parent::display($tpl);
-	}
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
 
-	function renderMailLayout () {
-		$tpl = isset($this->layoutName) ? 'mail_html_' . $this->layoutName : 'mail_html_updorder';
-		$this->setLayout($tpl);
-		$vendorModel = $this->getModel('vendor');
-		$virtuemart_vendor_id = $vendorModel->getVendorId('order', $this->order['virtuemart_order_id']);
-		if(!class_exists('VirtueMartModelOrders')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'orders.php');
-		$orderModel=new VirtueMartModelOrders();
-		$this->orderdata = $orderModel->getOrder($this->order['virtuemart_order_id']);
-		$vendorModel->setId($virtuemart_vendor_id);
-		$this->vendor = $vendorModel->getVendor();
-		$this->vendor->email = $vendorModel->getVendorEmail($this->vendor->virtuemart_vendor_id);
-		$this->vendorEmail = $this->vendor->email ;
-		$this->subject = ($tpl == 'mail_html_download') ? JText::_('COM_VIRTUEMART_DOWNLOADS_SEND_SUBJ') : JText::sprintf('COM_VIRTUEMART_ORDER_STATUS_CHANGE_SEND_SUBJ',$this->orderdata['details']['BT']->order_number);
-		$this->doVendor = true;
-		parent::display();
+		}
+
+		shopFunctions::checkSafePath();
+
+		parent::display($tpl);
 	}
 
 }

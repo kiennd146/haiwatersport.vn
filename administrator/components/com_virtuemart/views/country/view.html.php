@@ -13,14 +13,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.html.php 4700 2011-11-14 05:50:36Z electrocity $
+* @version $Id: view.html.php 6307 2012-08-07 07:39:45Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * HTML View class for maintaining the list of countries
@@ -29,42 +29,49 @@ jimport( 'joomla.application.component.view');
  * @subpackage Country
  * @author RickG
  */
-class VirtuemartViewCountry extends JView {
+class VirtuemartViewCountry extends VmView {
 
     function display($tpl = null) {
 
 		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
+		if (!class_exists( 'VmConfig' )) require(JPATH_COMPONENT_ADMINISTRATOR.DS.'helpers'.DS.'config.php');
+		VmConfig::loadConfig();
+		VmConfig::loadJLang('com_virtuemart_countries');
+
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
 
 
-		$model = $this->getModel();
-		if(!class_exists('VirtueMartModelWorldzones'))require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'worldzones.php');
-		$zoneModel = new VirtueMartModelWorldzones();
-//		$zoneModel = $this->getModel('Worldzones');
+		$model = VmModel::getModel('country');
+		$zoneModel = VmModel::getModel('worldzones');
 
-		$viewName=ShopFunctions::SetViewTitle();
-		$this->assignRef('viewName',$viewName);
+		$this->SetViewTitle();
+
 
 		$layoutName = JRequest::getWord('layout', 'default');
 		if ($layoutName == 'edit') {
 			$country = $model->getData();
 
 		    $this->assignRef('country',	$country);
-		    $this->assignRef('worldZones',	$zoneModel->getWorldZonesSelectList());
+			$wzsList = $zoneModel->getWorldZonesSelectList();
+		    $this->assignRef('worldZones', $wzsList	);
 
-			ShopFunctions::addStandardEditViewCommands();
+			$this->addStandardEditViewCommands();
 
 		}
 		else {
+
+			$this->addStandardDefaultViewCommands(true,false);
+
+			//First the view lists, it sets the state of the model
+			$this->addStandardDefaultViewLists($model,0,'ASC');
+
 			$filter_country = JRequest::getWord('filter_country', false);
 			$countries = $model->getCountries(false, false, $filter_country);
 			$this->assignRef('countries',	$countries);
 
-			ShopFunctions::addStandardDefaultViewCommands(true,false);
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
-			$this->assignRef('lists', $lists);
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
 
 		}
 

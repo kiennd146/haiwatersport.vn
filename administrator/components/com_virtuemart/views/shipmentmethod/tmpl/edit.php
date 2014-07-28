@@ -13,12 +13,12 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: edit.php 4845 2011-11-28 13:48:13Z Milbo $
+ * @version $Id: edit.php 6053 2012-06-05 12:36:21Z Milbo $
  */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 ?>
 <form action="index.php" method="post" name="adminForm" id="adminForm">
 
@@ -27,18 +27,13 @@ $tabarray = array();
 $tabarray['edit'] = 'COM_VIRTUEMART_ADMIN_SHIPMENT_FORM';
 $tabarray['config'] = 'COM_VIRTUEMART_ADMIN_SHIPMENT_CONFIGURATION';
 
-AdminUIHelper::buildTabs ( $tabarray , $this->shipment->virtuemart_shipmentmethod_id );
+AdminUIHelper::buildTabs ( $this, $tabarray , $this->shipment->virtuemart_shipmentmethod_id );
 // Loading Templates in Tabs END ?>
 
     <!-- Hidden Fields -->
-
-<input type="hidden" name="option" value="com_virtuemart" />
+	<?php echo $this->addStandardHiddenToForm(); ?>
 <input type="hidden" name="virtuemart_shipmentmethod_id" value="<?php echo $this->shipment->virtuemart_shipmentmethod_id; ?>" />
-<input type="hidden" name="task" value="" />
-<input type="hidden" name="boxchecked" value="0" />
 <input type="hidden" name="xxcontroller" value="shipmentmethod" />
-<input type="hidden" name="view" value="shipmentmethod" />
 
-<?php echo JHTML::_('form.token'); ?>
 </form>
     <?php AdminUIHelper::endAdminArea(); ?>

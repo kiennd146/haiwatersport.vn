@@ -1,4 +1,6 @@
 <?php
+defined('_JEXEC') or die('');
+
 /**
  * Renders the email for the user send in the registration process
  * @package	VirtueMart
@@ -37,7 +39,7 @@ $li = '<br />';
 
     <body style="background: #F2F2F2;word-wrap: break-word;">
 	<div style="background-color: #e6e6e6;" width="100%">
-	    <table style="margin: auto;" cellpadding="0" cellspacing="0" width="600" >
+	    <table style="margin: auto;" cellpadding="0" cellspacing="0"  >
 		<tr>
 		    <td>
 			<table width="100%" border="0" cellpadding="0" cellspacing="0" class="html-email">
@@ -57,7 +59,8 @@ $li = '<br />';
 			    </tr>
 			</table>
 
-			<table class="html-email" cellspacing="0" cellpadding="0" border="0" width="100%">  <tr  >
+			<table class="html-email" cellspacing="0" cellpadding="0" border="0" width="100%">
+			    <tr>
 				<th width="100%">
 				    <?php echo JText::_('COM_VIRTUEMART_SHOPPER_REGISTRATION_DATA') ?>
 				</th>
@@ -69,18 +72,12 @@ $li = '<br />';
 				    echo JText::_('COM_VIRTUEMART_YOUR_LOGINAME')   . $this->user->username . $li;
 				    echo JText::_('COM_VIRTUEMART_YOUR_DISPLAYED_NAME')   . $this->user->name . $li;
 				    echo JText::_('COM_VIRTUEMART_YOUR_PASSWORD')  . $this->user->password_clear . $li. $li;
-
 				    echo JText::_('COM_VIRTUEMART_YOUR_ADDRESS')  . $li;
 
 				    foreach ($this->userFields['fields'] as $userField) {
 					if (!empty($userField['value']) && $userField['type'] != 'delimiter' && $userField['type'] != 'BT' && $userField['type'] != 'hidden') {
 					    echo $userField['title'] . ': ' . $userField['value'] . $li;
-					    ?>
-					    <span class="values vm2<?php echo '-' . $userField['name'] ?>" ><?php echo $this->escape($userField['value']) ?></span>
-					    <?php if ($userField['name'] != 'title' and $userField['name'] != 'first_name' and $userField['name'] != 'middle_name' and $userField['name'] != 'zip') { ?>
-	    				    <br class="clear" />
-						<?php
-					    }
+
 					}
 				    }
 				    ?>

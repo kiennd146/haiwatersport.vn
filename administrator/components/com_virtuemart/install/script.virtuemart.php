@@ -10,13 +10,18 @@
 defined('_JEXEC') or die('Restricted access');
 
 //Maybe it is possible to set this within the xml file note by Max Milbers
-@ini_set( 'memory_limit', '32M' );
-@ini_set( 'max_execution_time', '120' );
+$memory_limit = (int) substr(ini_get('memory_limit'),0,-1);
+if($memory_limit<128)  @ini_set( 'memory_limit', '128M' );
 
-jimport( 'joomla.application.component.model');
+$maxtime = (int) ini_get('max_execution_time');
+if(!empty($maxtime) and $maxtime < 140){
+	@ini_set( 'max_execution_time', '140' );
+}
 
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
 defined('JPATH_VM_ADMINISTRATOR') or define('JPATH_VM_ADMINISTRATOR', JPATH_ROOT.DS.'administrator'.DS.'components'.DS.'com_virtuemart');
+
+if(!class_exists('JModel')) require JPATH_VM_LIBRARIES.DS.'joomla'.DS.'application'.DS.'component'.DS.'model.php';
 
 // hack to prevent defining these twice in 1.6 installation
 if (!defined('_VM_SCRIPT_INCLUDED')) {
@@ -34,7 +39,7 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 		 * Sets the paths and loads VMFramework config
 		 */
 		public function loadVm() {
-			$this->path = JInstaller::getInstance()->getPath('extension_administrator');
+// 			$this->path = JInstaller::getInstance()->getPath('extension_administrator');
 
 			if(empty($this->path)){
 				$this->path = JPATH_VM_ADMINISTRATOR;
@@ -48,14 +53,14 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 		public function checkIfUpdate(){
 
 			$update = false;
-			$db = JFactory::getDBO();
+			if(empty($this->_db)) $this->_db = JFactory::getDBO();
 			$q = 'SHOW TABLES LIKE "%virtuemart_adminmenuentries%"'; //=>jos_virtuemart_shipment_plg_weight_countries
-			$db->setQuery($q);
-			if($db->loadResult()){
+			$this->_db->setQuery($q);
+			if($this->_db->loadResult()){
 
 				$q = "SELECT count(id) AS idCount FROM `#__virtuemart_adminmenuentries`";
-				$db->setQuery($q);
-				$result = $db->loadResult();
+				$this->_db->setQuery($q);
+				$result = $this->_db->loadResult();
 
 				if (empty($result)) {
 					$update = false;
@@ -78,10 +83,25 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 		 * @param object JInstallerComponent parent
 		 * @return boolean True if VM exists, null otherwise
 		 */
-		/*		public function preflight ($type, $parent=null) {
+		public function preflight ($type, $parent=null) {
 
+			//We want disable the redirect in the installation process
 
-		}*/
+			if(version_compare(JVERSION,'1.6.0','ge')) {
+
+				$q = 'DELETE FROM `#__menu` WHERE `menutype` = "main" AND
+						(`link`="index.php?option=com_virtuemart" OR `alias`="virtuemart" )';
+				$this->_db = JFactory::getDbo();
+				$this->_db -> setQuery($q);
+				$this->_db -> query();
+				$error = $this->_db->getErrorMsg();
+				if(!empty($error)){
+					$app = JFactory::getApplication();
+					$app ->enqueueMessage('Error deleting old vm admin menu (BE) '.$error);
+				}
+			}
+
+		}
 
 
 		/**
@@ -98,11 +118,8 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 			if($this->checkIfUpdate()){
 				return $this->update($loadVm);
 			}
-
-			if(version_compare(JVERSION,'1.6.0','ge')) {
-				$fields = array('data'=>'`data` varchar(30480) NULL AFTER `time`');
-				$this->alterTable('#__session',$fields);
-			}
+			$_REQUEST['install'] = 1;
+			$this -> joomlaSessionDBToMediumText();
 
 			// install essential and required data
 			// should this be covered in install.sql (or 1.6's JInstaller::parseSchemaUpdates)?
@@ -116,8 +133,8 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 			$model->execSQLFile($this->path.DS.'install'.DS.'install_essential_data.sql',$lang);
 			$model->execSQLFile($this->path.DS.'install'.DS.'install_required_data.sql',$lang);
 
-			$id = $model->determineStoreOwner();
-			$model->setStoreOwner($id);
+			//$id = $model->determineStoreOwner();
+			$model->setStoreOwner();
 
 			//copy sampel media
 			$src = $this->path .DS. 'assets' .DS. 'images' .DS. 'vmsampleimages';
@@ -126,26 +143,28 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories');
 			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart');
 			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'shipment');
+			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'payment');
 			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'category');
 			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'category'.DS.'resized');
 			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'manufacturer');
 			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'manufacturer'.DS.'resized');
 			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'product');
 			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'product'.DS.'resized');
+			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'forSale');
+			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'forSale'.DS.'invoices');
+			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'forSale'.DS.'resized');
+			$this->createIndexFolder(JPATH_ROOT .DS. 'images'.DS.'stories'.DS.'virtuemart'.DS.'typeless');
 
-			// 			}
 
 			$dst = JPATH_ROOT .DS. 'images' .DS. 'stories' .DS. 'virtuemart';
 
 			$this->recurse_copy($src,$dst);
 
-			$params = JComponentHelper::getParams('com_languages');
-			$lang = $params->get('site', 'en-GB');//use default joomla
-			$lang = strtolower(strtr($lang,'-','_'));
 			if(!class_exists('GenericTableUpdater')) require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'tableupdater.php');
 			$updater = new GenericTableUpdater();
 			$updater->createLanguageTables();
 
+			$this->checkAddDefaultShoppergroups();
 
 			$this->displayFinished(false);
 
@@ -190,7 +209,11 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 				return $this->install($loadVm);
 			}
 
-			$this->_db = JFactory::getDBO();
+			//Delete Cache
+			$cache = JFactory::getCache();
+			$cache->clean();
+
+			if(empty($this->_db)) $this->_db = JFactory::getDBO();
 
 			if(empty($this->path)) $this->path = JPATH_VM_ADMINISTRATOR;
 
@@ -201,132 +224,170 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 			if(!class_exists('VirtueMartModelUpdatesMigration')) require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'updatesmigration.php');
 			$model = new VirtueMartModelUpdatesMigration(); //JModel::getInstance('updatesmigration', 'VirtueMartModel');
 			$model->execSQLFile($this->path.DS.'install'.DS.'install.sql',$lang);
-			// 			$this->displayFinished(true);
-			//return false;
 
-			if(version_compare(JVERSION,'1.6.0','ge')) {
-				$fields = array('data'=>'`data` varchar(30480) NULL AFTER `time`');
-				$this->alterTable('#__session',$fields);
-			}
-
-			$q = 'SHOW INDEX FROM `#__virtuemart_categories` WHERE Key_name = "idx_slug"; ';
-			$this->_db->setQuery($q);
-			if($this->_db->loadResult()){
-				$query = 'ALTER TABLE  `#__virtuemart_categories` DROP INDEX  `idx_slug`';
-				$this->_db->setQuery($query);
-				if(!$this->_db->query()){
-					VmError('Script.virtuemart update: Deleting of #__virtuemart_categories idx_ slug failed '.$this->_db->getErrorMsg());
-				} else {
-					vmdebug('Script.virtuemart update: I deleted the column '.$this->_db->getQuery());
-				}
-			}
+			$this -> joomlaSessionDBToMediumText();
 
 
-			//Shipping methods
-			$query = 'SHOW TABLES LIKE "%virtuemart_shippingcarriers%"';
-			$this->_db->setQuery($query);
-			if($this->_db->loadResult()){
+			$this->alterTable('#__virtuemart_product_prices',
+				array(
+				'product_price_vdate' => '`product_price_publish_up` DATETIME NULL DEFAULT NULL AFTER `product_currency`',
+				'product_price_edate' => '`product_price_publish_down` DATETIME NULL DEFAULT NULL AFTER `product_price_publish_up`'
+			));
 
-				$query = 'SHOW TABLES LIKE "%virtuemart_shipmentmethods%"';
-				$this->_db->setQuery($query);
-				$res = $this->_db->loadResult();
-				if(empty($res)){
-					$query = 'ALTER TABLE `#__virtuemart_shippingcarriers` RENAME TO `#__virtuemart_shipmentmethods`';
-					$this->_db->setQuery($query);
-					$this->_db->query();
+			$this->alterTable('#__virtuemart_medias',
+				 array(
+					'file_url' => '`file_url` varchar(900) NOT NULL DEFAULT ""',
+					'file_params' => '`file_params` varchar(17500)',
+					'file_url_thumb' => '`file_url_thumb` varchar(900) NOT NULL DEFAULT ""',
+   				)
+ 			);
 
-					$query = 'ALTER TABLE `#__virtuemart_shipmentmethods`  DROP INDEX `virtuemart_shippingcarrier_id` ';
-					$this->_db->setQuery($query);
-					$this->_db->query();
-				}
-			}
-
-			$fields = array('virtuemart_shippingcarrier_id'=>'`virtuemart_shipmentmethod_id` mediumint(1) UNSIGNED NOT NULL AUTO_INCREMENT',
-																	'shipping_carrier_jplugin_id'=>'`shipment_jplugin_id` int(11) NOT NULL',
-																	'shipping_carrier_name'=>"`shipment_name` char(200) NOT NULL DEFAULT ''",
-																	'shipping_carrier_desc'=>"`shipment_desc` text NOT NULL COMMENT 'Description'",
-																	'shipping_carrier_element'=>"`shipment_element` varchar(50) NOT NULL DEFAULT ''",
-																	'shipping_carrier_params'=>' `shipment_params` text NOT NULL',
-																	'shipping_carrier_value'=>"`shipment_value` decimal(10,2) NOT NULL DEFAULT '0.00'",
-																	'shipping_carrier_package_fee'=>"`shipment_package_fee` decimal(10,2) NOT NULL DEFAULT '0.00'",
-																	'shipping_carrier_vat_id'=>"`shipment_vat_id` int(11) NOT NULL DEFAULT '0'"
-			);
-			$this->alterTable('#__virtuemart_shipmentmethods',$fields);
-
-			$query = 'SHOW TABLES LIKE "%virtuemart_shippingcarrier_shoppergroups%"';
-			$this->_db->setQuery($query);
-			if($this->_db->loadResult()){
-
-				$query = 'SHOW TABLES LIKE "%virtuemart_shipmentmethod_shoppergroups%"';
-				$this->_db->setQuery($query);
-				$res = $this->_db->loadResult();
-				if(empty($res)){
-					$query = 'ALTER TABLE `#__virtuemart_shippingcarrier_shoppergroups` RENAME TO `#__virtuemart_shipmentmethod_shoppergroups`';
-					$this->_db->setQuery($query);
-					$this->_db->query();
-				}
-			}
-
-			$fields = array('virtuemart_shippingcarrier_id'=>"`virtuemart_shipmentmethod_id` SERIAL ");
-			$this->alterTable('#__virtuemart_shipmentmethod_shoppergroups',$fields);
-
-			//vmuser:
-			$fields = array('virtuemart_shippingcarrier_id'=>'`virtuemart_shipmentmethod_id` int NOT NULL DEFAULT "0"');
-			$this->alterTable('#__virtuemart_vmusers',$fields);
-
-			// orders :
-			$fields = array('payment_method_id'=>'`virtuemart_paymentmethod_id` INT(11 ) NOT NULL ',
-					'ship_method_id'=>'`virtuemart_shipmentmethod_id` INT(11 ) NOT NULL ',
-					'order_shipping'=>'`order_shipment` decimal(10,2) DEFAULT NULL ',
-					'order_shipping_tax'=>'`order_shipment_tax` decimal(10,2) DEFAULT NULL ',
-			);
-			$this->alterTable('#__virtuemart_orders',$fields);
-
-
-			$fields = array('config'=>'`vendor_params` VARCHAR( 255 )  NOT NULL DEFAULT ""');
-			$this->alterTable('#__virtuemart_vendors',$fields);
-
-			$this->updateWeightUnit();
-			$this->updateDimensionUnit();
-
-			$tablenames = array('shipment'=>'weight_countries','payment'=>'standard','payment'=>'paypal');
-			$this->renamePsPluginTables($tablenames);
-
-			//delete old config file
-			// 			$this->renewConfigManually = !JFile::delete($this->path.DS.'virtuemart.cfg');
-			// 			if(!$this->renewConfigManually){
-
-			// 				$model = JModel::getInstance('config', 'VirtueMartModel');
-			// 				if (!class_exists('VirtueMartModelConfig')
-			// 				)require($this->path . DS . 'models' . DS . 'config.php');
-			// 				$model -> deleteConfig();
-
-			// probably should just go to updatesMigration rather than the install success screen
-			// 			include($this->path.DS.'install'.DS.'install.virtuemart.html.php');
-			//		$parent->getParent()->setRedirectURL('index.php?option=com_virtuemart&view=updatesMigration');
-
-			// 			$tablesToRename = array(  '#__virtuemart_shippingcarrier_shoppergroups' => '#__virtuemart_shipmentmethod_shoppergroups'
-			// 									);
+			$this->deleteReCreatePrimaryKey('#__virtuemart_userinfos','virtuemart_userinfo_id');
 
 			if(!class_exists('GenericTableUpdater')) require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'tableupdater.php');
 			$updater = new GenericTableUpdater();
 
-			$updater->portOldLanguageToNewTables((array)$lang);
-
 			$updater->updateMyVmTables();
+			$result = $updater->createLanguageTables();
 
-			$this->changeShoppergroupDataSetAnonShopperToOne();
+			$this->checkAddDefaultShoppergroups();
 
-			$this->migrateCustomPluginTableIntoCustoms();
+			$this->adjustDefaultOrderStates();
 
-			$this->updateJParamsToVmParams($tablenames);
+			$this->fixOrdersVendorId();
 
-			$this->updateAdminMenuEntry();
+			$this->updateAdminMenuEntries();
+
+			$this->fixConfigValues();
+
+			//copy sampel media
+			$src = $this->path .DS. 'assets' .DS. 'images' .DS. 'vmsampleimages';
+			if(JFolder::exists($src)){
+				$dst = JPATH_ROOT .DS. 'images' .DS. 'stories' .DS. 'virtuemart';
+				$this->recurse_copy($src,$dst);
+			}
+
 
 			if($loadVm) $this->displayFinished(true);
 
 			return true;
 		}
+
+		private function fixConfigValues(){
+			if (!class_exists( 'VmConfig' )) require(JPATH_COMPONENT_ADMINISTRATOR.DS.'helpers'.DS.'config.php');
+			VmConfig::loadConfig();
+
+			$data = array();
+			$list_limit = VmConfig::get('list_limit',0);
+			if(!empty($list_limit)){
+				$data['llimit_init_BE'] = $list_limit;
+				$data['llimit_init_FE'] = $list_limit;
+			}
+			$pagseq = VmConfig::get('pagination_sequence',0);
+			if(!empty($pagseq)){
+				$data['pagseq'] = $pagseq;
+				$data['pagseq_1'] = $pagseq;
+				$data['pagseq_2'] = $pagseq;
+				$data['pagseq_3'] = $pagseq;
+				$data['pagseq_4'] = $pagseq;
+				$data['pagseq_5'] = $pagseq;
+			}
+
+			$configModel = VmModel::getModel('config');
+			$configModel->store($data);
+		}
+
+		private function fixOrdersVendorId(){
+
+			$multix = Vmconfig::get('multix','none');
+
+			if( $multix == 'none'){
+
+				if(empty($this->_db)){
+					$this->_db = JFactory::getDBO();
+				}
+
+				$q = 'SELECT `virtuemart_user_id` FROM #__virtuemart_orders WHERE virtuemart_vendor_id = "0" ';
+				$this->_db->setQuery($q);
+				$res = $this->_db->loadResult();
+
+				if($res){
+					//vmdebug('fixOrdersVendorId ',$res);
+					$q = 'UPDATE #__virtuemart_orders SET `virtuemart_vendor_id`=1 WHERE virtuemart_vendor_id = "0" ';
+					$this->_db->setQuery($q);
+					$res = $this->_db->query();
+					$err = $this->_db->getErrorMsg();
+					if(!empty($err)){
+						vmError('fixOrdersVendorId update orders '.$err);
+					}
+					$q = 'UPDATE #__virtuemart_order_items SET `virtuemart_vendor_id`=1 WHERE virtuemart_vendor_id = "0" ';
+					$this->_db->setQuery($q);
+					$res = $this->_db->query();
+					$err = $this->_db->getErrorMsg();
+					if(!empty($err)){
+						vmError('fixOrdersVendorId update order_item '.$err);
+					}
+				}
+
+			}
+
+
+
+		}
+
+		private function adjustDefaultOrderStates(){
+
+			if(empty($this->_db)){
+				$this->_db = JFactory::getDBO();
+			}
+
+			$order_stock_handles = array('P'=>'R', 'C'=>'R', 'X'=>'A', 'R'=>'A', 'S'=>'O');
+
+			foreach($order_stock_handles as $k=>$v){
+
+				$q = 'SELECT `order_stock_handle` FROM `#__virtuemart_orderstates`';
+				$this->_db->setQuery($q);
+				$res = $this->_db->query();
+				$err = $this->_db->getErrorMsg();
+				if(empty($res) and empty($err) ){
+					$q = 'UPDATE `#__virtuemart_orderstates` SET `order_stock_handle`="'.$v.'" WHERE  `order_status_code`="'.$k.'" ;';
+					$this->_db->setQuery($q);
+
+					if(!$this->_db->query()){
+						$app = JFactory::getApplication();
+						$app->enqueueMessage('Error: Install alterTable '.$this->_db->getErrorMsg() );
+						$ok = false;
+					}
+				}
+			}
+
+		}
+
+		private function updateAdminMenuEntries() {
+
+			if(empty($this->_db)){
+				$this->_db = JFactory::getDBO();
+			}
+			$query = 'SELECT * FROM `#__virtuemart_adminmenuentries` WHERE `view` = "log" ';
+			$this->_db->setQuery($query);
+			$result = $this->_db->loadResult();
+			if(empty($result) || !$result ){
+				// get the module id of the migration
+				$query = 'SELECT module_id FROM `#__virtuemart_adminmenuentries` WHERE `view` = "updatesmigration" ';
+				$this->_db->setQuery($query);
+				$module_id = $this->_db->loadResult();
+				if( $module_id){
+					$q = "INSERT INTO `#__virtuemart_adminmenuentries` (`id`, `module_id`, `parent_id`, `name`, `link`, `depends`, `icon_class`, `ordering`, `published`, `tooltip`, `view`, `task`) VALUES
+								(null, ".$module_id.", 0, 'COM_VIRTUEMART_LOG', '', '', 'vmicon vmicon-16-info', 2, 1, '', 'log', '')";
+					$this->_db->setQuery($q);
+					$this->_db->query();
+					$app = JFactory::getApplication();
+					$app->enqueueMessage('Added Log Menu entry ' );
+				}
+			}
+		}
+
+
 
 		/**
 		 * @author Max Milbers
@@ -335,6 +396,8 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 		 * @param unknown_type $command
 		 */
 		private function alterTable($tablename,$fields,$command='CHANGE'){
+
+			$ok = true;
 
 			if(empty($this->_db)){
 				$this->_db = JFactory::getDBO();
@@ -349,10 +412,15 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 					$query = 'ALTER TABLE `'.$tablename.'` '.$command.' COLUMN `'.$fieldname.'` '.$alterCommand;
 
 					$this->_db->setQuery($query);
-					$this->_db->query();
+					if(!$this->_db->query()){
+						$app = JFactory::getApplication();
+						$app->enqueueMessage('Error: Install alterTable '.$this->_db->getErrorMsg() );
+						$ok = false;
+					}
 				}
 			}
 
+			return $ok;
 		}
 
 		/**
@@ -376,47 +444,142 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 				$this->_db->setQuery($query);
 				if(!$this->_db->query()){
 					$app = JFactory::getApplication();
-					$app->enqueueMessage('Install checkAddFieldToTable '.$this->_db->getErrorMsg() );
+					$app->enqueueMessage('Error: Install checkAddFieldToTable '.$this->_db->getErrorMsg() );
 					return false;
 				} else {
+					vmdebug('checkAddFieldToTable added '.$field);
 					return true;
 				}
 			}
 			return false;
 		}
 
-		/**
-		 *
-		 * @author Valérie Isaksen
-		 * @return boolean This gives true back, WHEN it altered the table, you may use this information to decide for extra post actions
-		 */
-		private function updateWeightUnit(  ) {
-			if(!class_exists('Migrator')) require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'migrator.php');
-			$weightUnitMigrateValues = Migrator::getWeightUnitMigrateValues();
-			return $this->updateUnit(  'product_weight_uom', $weightUnitMigrateValues) ;
+		private function addToRequired($table,$fieldname,$fieldvalue,$insert){
+			if(empty($this->_db)){
+				$this->_db = JFactory::getDBO();
+			}
+
+			$query = 'SELECT * FROM `'.$table.'` WHERE '.$fieldname.' = "'.$fieldvalue.'" ';
+			$this->db->setQuery($query);
+			$result = $this->db->loadResult();
+			if(empty($result) || !$result ){
+				$this->db->setQuery($insert);
+				if(!$this->db->query()){
+					$app = JFactory::getApplication();
+					$app->enqueueMessage('Install addToRequired '.$this->db->getErrorMsg() );
+				}
+			}
 		}
 
+		private function deleteReCreatePrimaryKey($tablename,$fieldname){
+
+			//Does not work, the keys must be regenerated
+// 			$query = 'ALTER TABLE `#__virtuemart_userinfos`  CHANGE COLUMN `virtuemart_userinfo_id` `virtuemart_userinfo_id` INT(1) NOT NULL AUTO_INCREMENT FIRST';
+// 			$this->_db->setQuery($query);
+// 			if(!$this->_db->query()){
+
+// 			} else {
+// 				$query = 'ALTER TABLE `#__virtuemart_userinfos` AUTO_INCREMENT = 1';
+// 				$this->_db->setQuery($query);
+// 			}
+
+
+			$query = 'SHOW FULL COLUMNS  FROM `'.$tablename.'` ';
+			$this->_db->setQuery($query);
+			$fullColumns = $this->_db->loadObjectList();
+
+			$force = false;
+			if($force or $fullColumns[0]->Field==$fieldname and strpos($fullColumns[0]->Type,'char')!==false){
+				vmdebug('Old key found, recreate');
+
+				// Yes, I know, it looks senselesss to create a field without autoincrement, to add a key and then the autoincrement and then they key again.
+				// But seems the only method to drop and recreate primary, which has already data in it
+				//First drop it
+				$fields = array($fieldname => '');
+				if($this->alterTable($tablename,$fields,'DROP')){
+
+					//Now make the field, nothing must be entered
+					$added = $this->checkAddFieldToTable($tablename,$fieldname,"INT(1) UNSIGNED NOT NULL FIRST");
+
+					if($added){
+						//Yes it should be primary, ohh it gets sorted, great
+						$q = 'ALTER TABLE `'.$tablename.'` ADD KEY (`'.$fieldname.'`)';
+						$this->_db->setQuery($q);
+						if(!$this->_db->query()){
+							$app = JFactory::getApplication();
+							$app->enqueueMessage('Error: deleteReCreatePrimaryKey add KEY '.$this->_db->getErrorMsg() );
+						}
+
+						//ahh, now we can make it auto_increment
+						$fields = array($fieldname => '`'.$fieldname.'` INT(1) UNSIGNED NOT NULL AUTO_INCREMENT FIRST');
+						$this->alterTable($tablename,$fields);
+
+						//Great, now it actually takes the attribute being a primary
+						$q = 'ALTER TABLE `'.$tablename.'` ADD PRIMARY KEY (`'.$fieldname.'`)';
+						$this->_db->setQuery($q);
+						if(!$this->_db->query()){
+							$app = JFactory::getApplication();
+							$app->enqueueMessage('Error: deleteReCreatePrimaryKey final add Primary '.$this->_db->getErrorMsg() );
+						} else {
+							$q = 'ALTER TABLE `'.$tablename.'`  DROP INDEX `'.$fieldname.'`';
+							$this->_db->setQuery($q);
+							if(!$this->_db->query()){
+								$app->enqueueMessage('Error: deleteReCreatePrimaryKey final add Primary '.$this->_db->getErrorMsg() );
+							}
+						}
+ 					}
+				}
+
+ 			}
+
+		}
+
+
 		/**
-		 *
-		 * @author Valérie Isaksen
-		 * @return boolean This gives true back, WHEN it altered the table, you may use this information to decide for extra post actions
-		 */
-		private function updateDimensionUnit(   ) {
-			if(!class_exists('Migrator')) require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'migrator.php');
-			$dimensionUnitMigrateValues = Migrator::getDimensionUnitMigrateValues();
-			return $this->updateUnit(  'product_lwh_uom', $dimensionUnitMigrateValues) ;
+		* Checks if both types of default shoppergroups are set
+		* @author Max Milbers
+		*/
+
+		private function checkAddDefaultShoppergroups(){
+
+			$q = 'SELECT `virtuemart_shoppergroup_id` FROM `#__virtuemart_shoppergroups` WHERE `default` = "1" ';
+
+			$this->_db = JFactory::getDbo();
+			$this->_db->setQuery($q);
+			$res = $this->_db ->loadResult();
+
+			if(empty($res)){
+				$q = "INSERT INTO `#__virtuemart_shoppergroups` (`virtuemart_shoppergroup_id`, `virtuemart_vendor_id`, `shopper_group_name`, `shopper_group_desc`, `default`, `shared`) VALUES
+								(NULL, 1, '-default-', 'This is the default shopper group.', 1, 1);";
+				$this->_db->setQuery($q);
+				$this->_db->query();
+			}
+
+			$q = 'SELECT `virtuemart_shoppergroup_id` FROM `#__virtuemart_shoppergroups` WHERE `default` = "2" ';
+
+			$this->_db->setQuery($q);
+			$res = $this->_db ->loadResult();
+
+			if(empty($res)){
+				$q = "INSERT INTO `#__virtuemart_shoppergroups` (`virtuemart_shoppergroup_id`, `virtuemart_vendor_id`, `shopper_group_name`, `shopper_group_desc`, `default`, `shared`) VALUES
+								(NULL, 1, '-anonymous-', 'Shopper group for anonymous shoppers', 2, 1);";
+				$this->_db->setQuery($q);
+				$this->_db->query();
+			}
+
 		}
 
 		private function changeShoppergroupDataSetAnonShopperToOne(){
 
+			if(empty($this->_db))  $this->_db = JFactory::getDBO();
 			$q = 'SELECT * FROM `#__virtuemart_shoppergroups` WHERE virtuemart_shoppergroup_id = "1" ';
 			$this->_db->setQuery($q);
 			$sgroup = $this->_db->loadAssoc();
 
 			if($sgroup['default']!=2){
 				if(!class_exists('TableShoppergroups')) require(JPATH_VM_ADMINISTRATOR.DS.'tables'.DS.'shoppergroups.php');
-				$db = JFactory::getDBO();
-				$table = new TableShoppergroups($db);
+
+				$table = new TableShoppergroups($this->_db);
 				$stdgroup = null;
 				$stdgroup = array('virtuemart_shoppergroup_id' => 1,
 									'virtuemart_vendor_id'	=> 1,
@@ -429,177 +592,20 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 				$table -> bindChecknStore($stdgroup);
 
 				$sgroup['virtuemart_shoppergroup_id'] = 0;
-				$table = new TableShoppergroups($db);
+				$table = new TableShoppergroups($this->_db);
 				$table -> bindChecknStore($sgroup);
 				vmdebug('changeShoppergroupDataSetAnonShopperToOne $table',$table);
 			}
 		}
 
-		/**
-		 *
-		 * @author Valérie Isaksen
-		 * @param unknown_type $field
-		 * @param array $UnitMigrateValues
-		 * @return boolean This gives true back, WHEN it altered the table, you may use this information to decide for extra post actions
-		 */
-		private function updateUnit(  $field, $UnitMigrateValues) {
 
-			$ok=true;
-			foreach ($UnitMigrateValues as $old => $new) {
-				$query = 'UPDATE  `#__virtuemart_products` SET `'.$field.'` = "' . $new . '" WHERE  `'.$field.'` = "' . $old.'" ';
-				$this->_db->setQuery($query);
-				if (!$this->_db->query()) {
+		private function joomlaSessionDBToMediumText(){
 
-					vmError('Install updateUnit '. $field.' '. $this->_db->getErrorMsg());
-					$ok=false;
-				}
+			if(version_compare(JVERSION,'1.6.0','ge')) {
+				$fields = array('data'=>'`data` mediumtext NULL AFTER `time`');
+				$this->alterTable('#__session',$fields);
 			}
-			if (!$ok) return false;
-			$query = 'SHOW COLUMNS FROM `#__virtuemart_products` ';
-			$this->_db->setQuery($query);
-			$columns = $this->_db->loadResultArray(0);
-			if(!in_array($field,$columns)){
-				$query = "ALTER TABLE  `#__virtuemart_products` CHANGE  `".$field."`  `".$field."` VARCHAR( 3 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT  'Kg'";
-				$this->_db->setQuery($query);
-				if(!$this->_db->query()){
-					vmError('Install updateUnit '.$field.' '.$this->_db->getErrorMsg() );
-					return false;
-				} else {
-					return true;
-				}
-			}
-			return false;
 		}
-
-		private function updateAdminMenuEntry() {
-
-			if(empty($this->db)){
-				$this->db = JFactory::getDBO();
-			}
-
-			$query = 'UPDATE `#__virtuemart_adminmenuentries` SET `name`="COM_VIRTUEMART_SHIPMENTMETHOD_S", `view`="shipmentmethod" WHERE `id`="16" LIMIT 1';
-			$this->db->setQuery($query);
-			$this->db->query($query);
-
-			$q = 'SELECT `id` FROM `#__virtuemart_adminmenuentries` WHERE `view` = "creditcard" ';
-			$this->db->setQuery($q);
-			$res = $this->db->loadResult();
-			if($res){
-				$query = 'DELETE FROM `#__virtuemart_adminmenuentries` WHERE `view`="creditcard" LIMIT 1;';
-				$this->db->setQuery($query);
-				$this->db->query($query);
-			}
-
-
-		}
-
-		private function renamePsPluginTables($tablenames){
-
-			foreach($tablenames as $key => $name){
-				$query = 'SHOW TABLES LIKE "%_virtuemart_order_shipper_'.$name.'%"'; //=>jos_virtuemart_shipment_plg_weight_countries
-				$this->_db->setQuery($query);
-				if($this->_db->loadResult()){
-					$query = 'ALTER TABLE `#__virtuemart_order_shipper_'.$name.'` RENAME TO `#__virtuemart_'.$key.'_plg_'.$name.'`';
-					$this->_db->setQuery($query);
-					$this->_db->query();
-				}
-			}
-
-		}
-
-
-		private function migrateCustomPluginTableIntoCustoms(){
-
-			$error = false;
-			if(!class_exists('JParameter')) require(JPATH_VM_LIBRARIES.DS.'joomla'.DS.'html'.DS.'parameter.php' );
-
-			$query = 'SHOW TABLES LIKE "%virtuemart_customplugins%"';
-			$this->_db->setQuery($query);
-			if($this->_db->loadResult()){
-				$q = 'SELECT * FROM `#__virtuemart_customplugins` ';
-				$this->_db->setQuery($q);
-
-				$items = $this->_db->loadAssocList();
-				if(!empty($items) and count($items)>0){
-					$db = JFactory::getDBO();
-					foreach($items as $item){
-
-						//getTable
-						if(!class_exists('TableCustoms'))require(JPATH_VM_ADMINISTRATOR.DS.'tables'.DS.'customs.php');
-						$table = new TableCustoms($db);
-						$params = new JParameter($item['custom_params']);
-						// 				vmdebug('migrateCustomPluginTableIntoCustoms',$params);
-						$str = '';
-						foreach($params->getParams() as $pName => $pValue){
-							vmdebug('migrateCustomPluginTableIntoCustoms '.$pName.' '.$pValue );
-							$str .= $pName.'='.json_encode($pValue).'|';
-						}
-						$item['custom_params'] = $str;
-
-						$table->bindChecknStoreNoLang($item,true);
-						$errors = $table->getErrors();
-						if(!empty($errors)){
-							foreach($errors as $error){
-								vmError($error);
-							}
-							$error = true;
-						}
-					}
-
-					if(!$error){
-						$q = 'DROP TABLE `#__virtuemart_customplugins` ';
-						$this->_db->setQuery($q);
-						$this->_db->query();
-					}
-				}
-			}
-
-
-		}
-
-		/**
-		 *
-		 * Enter description here ...
-		 * @param unknown_type $tablenames
-		 */
-		private function updateJParamsToVmParams(){
-
-			if(!class_exists('JParameter')) require(JPATH_VM_LIBRARIES.DS.'joomla'.DS.'html'.DS.'parameter.php' );
-
-			$tablenames = array('payment','shipment');
-
-			foreach($tablenames as $name){
-				$query = 'SHOW TABLES LIKE "%virtuemart_'.$name.'methods"';
-				$this->_db->setQuery($query);
-				if($this->_db->loadResult()){
-					$q = 'SELECT `virtuemart_'.$name.'method_id`,`'.$name.'_params` FROM `#__virtuemart_'.$name.'methods` ';
-
-					$this->_db->setQuery($q);
-					$items = $this->_db->loadAssocList();
-
-					foreach($items as $item){
-						if(strpos("\n",$item[$name.'_params'])!==false and strpos("|",$item[$name.'_params'])===false){
-							vmInfo('Old params format recognised in table '.$name);
-							$params = new JParameter($item[$name.'_params']);
-							$str = '';
-							foreach($params->getParams() as $pName => $pValue){
-								vmdebug('migrateCustomPluginTableIntoCustoms '.$pName.' '.$pValue );
-								$str .= $pName.'='.json_encode($pValue).'|';
-							}
-							$q = 'UPDATE `#__virtuemart_'.$name.',methods` SET `'.$name.'_params`='.$str.' WHERE `virtuemart_'.$name.'method_id`="'.$item['virtuemart_'.$name.'method_id'].'" ';
-							$this->_db->setQuery($q);
-							if(!$this->_db->query()){
-								vmError('updateJParamsToVmParams '.$this->_db->getErrorMsg());
-							}
-
-						}
-					}
-				}
-
-			}
-
-		}
-
 
 		/**
 		 * Uninstall script
@@ -610,7 +616,10 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 		 */
 		public function uninstall ($parent=null) {
 
-			$this->loadVm();
+			if(empty($this->path)){
+				$this->path = JPATH_VM_ADMINISTRATOR;
+			}
+			//$this->loadVm();
 			include($this->path.DS.'install'.DS.'uninstall.virtuemart.html.php');
 
 			return true;
@@ -623,22 +632,24 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 		 * @param object JInstallerComponent parent
 		 */
 		public function postflight ($type, $parent=null) {
+
+			//We want disable the redirect in the installation process
+
 			if ($type != 'uninstall') {
 
 				$this->loadVm();
 				// 				VmConfig::loadConfig(true);
+				//if(!class_exists('VirtueMartModelConfig')) require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'config.php');
+				$res  = VirtueMartModelConfig::checkConfigTableExists();
 
-				$db = JFactory::getDBO();
-				$q = 'SHOW TABLES LIKE "%virtuemart_configs%"'; //=>jos_virtuemart_shipment_plg_weight_countries
-				$db->setQuery($q);
-				$res = $db->loadResult();
-				if(!empty($res)){
+				//if($res){
 					JRequest::setVar(JUtility::getToken(), '1', 'post');
 					$config = JModel::getInstance('config', 'VirtueMartModel');
 					$config->setDangerousToolsOff();
-				}
+				//}
 
 			}
+			$_REQUEST['install'] = 0;
 
 			//Test if vm1.1 is installed and rename file to avoid conflicts
 			if(JFile::exists(JPATH_VM_ADMINISTRATOR.DS.'toolbar.php')){
@@ -695,111 +706,16 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 
 		}
 
+		/**
+		 * The param update IS used in the layout, do not remove
+		 * @param $update
+		 */
 		public function displayFinished($update){
 
-			$lang = JFactory::getLanguage();
-			//Load first english files
-			$lang->load('com_virtuemart.sys',JPATH_ADMINISTRATOR,'en_GB',true);
-			$lang->load('com_virtuemart',JPATH_ADMINISTRATOR,'en_GB',true);
+			include(JPATH_VM_ADMINISTRATOR.'/views/updatesmigration/tmpl/insfinished.php');
 
-			//load specific language
-			$lang->load('com_virtuemart.sys',JPATH_ADMINISTRATOR,null,true);
-			$lang->load('com_virtuemart',JPATH_ADMINISTRATOR,null,true);
-			?>
-<link
-	rel="stylesheet"
-	href="components/com_virtuemart/assets/css/install.css"
-	type="text/css" />
-<link
-	rel="stylesheet"
-	href="components/com_virtuemart/assets/css/toolbar_images.css"
-	type="text/css" />
-
-<div align="center">
-	<table
-		width="100%"
-		border="0">
-		<tr>
-			<td
-				valign="top"
-				align="center"><a
-				href="http://virtuemart.net"
-				target="_blank"> <img
-					border="0"
-					align="center"
-					src="components/com_virtuemart/assets/images/vm_menulogo.png"
-					alt="Cart" /> </a> <br /> <br />
-				<h2>
-
-
-				<?php echo JText::_('COM_VIRTUEMART_INSTALLATION_WELCOME') ?></h2>
-			</td>
-			<td>
-				<h2>
-
-
-				<?php
-				if($update){
-					echo JText::_('COM_VIRTUEMART_UPGRADE_SUCCESSFUL');
-					/*					if($this->renewConfigManually){
-						echo '<br />'.JText::_('When you got an error deleting the virtuemart.cfg file <br />
-					Delete this file manually (administrator/components/com_virtuemart/virtuemart.cfg) and please use
-					"renew config from file" in Tools => Updates/Migration');
-					}*/
-					echo '<br />'.JText::_('COM_VIRTUEMART_EXTENSION_UPGRADE_REMIND');
-
-				} else {
-					echo JText::_('COM_VIRTUEMART_INSTALLATION_SUCCESSFUL');
-				}
-				?>
-				</h2> <br />
-
-				<div id="cpanel">
-
-
-				<?php
-				if(!$update){
-					?>
-					<div class="icon">
-						<a
-							href="<?php echo JROUTE::_('index.php?option=com_virtuemart&view=updatesmigration&task=installSampleData&token='.JUtility::getToken()) ?>">
-							<span class="vmicon48 vm_install_48"></span> <br />
-
-
-
-
-
-						<?php echo JText::_('COM_VIRTUEMART_INSTALL_SAMPLE_DATA'); ?>
-							</a>
-					</div>
-
-
-
-
-
-		<?php } ?>
-
-				<div class="icon">
-				<a href="<?php echo JROUTE::_('index.php?option=com_virtuemart&task=disableDangerousTools&token='.JUtility::getToken() ) ?>">
-					<span class="vmicon48 vm_frontpage_48"></span>
-					<br /><?php echo JText::_('COM_VIRTUEMART_INSTALL_GO_SHOP') ?>
-				</a>
-				</div>
-
-
-
-
-			</td>
-		</tr>
-	</table>
-</div>
-
-
-
-
-
-<?php
 		}
+
 
 	}
 
@@ -822,7 +738,7 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 			$vmInstall->postflight($method);
 		}
 
-		/*		if ((VmConfig::isJ15())) {
+		/*		if ((JVM_VERSION===1)) {
 			$method = ($upgrade) ? 'update' : 'install';
 		$vmInstall->$method();
 		$vmInstall->postflight($method);
@@ -848,7 +764,7 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
 			$vmInstall->postflight('uninstall');
 		}
 
-		/*		if (VmConfig::isJ15()) {
+		/*		if (JVM_VERSION===1) {
 			$vmInstall->uninstall();
 		$vmInstall->postflight('uninstall');
 		}*/

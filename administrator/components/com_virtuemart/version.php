@@ -2,7 +2,7 @@
 if( !defined( '_JEXEC' ) ) die( 'Direct Access to '.basename(__FILE__).' is not allowed.' );
 /**
 *
-* @version $Id: version.php 4933 2011-12-05 12:00:13Z Milbo $
+* @version $Id: version.php 6059 2012-06-06 10:35:14Z alatak $
 * @package VirtueMart
 * @subpackage core
 * @copyright Copyright (C) 2005-2011 VirtueMart Team - All rights reserved.
@@ -31,28 +31,28 @@ class vmVersion {
 	/** @var string Product */
 	static $PRODUCT = 'VirtueMart';
 	/** @var int Release Number */
-	static $RELEASE = '2.0.0';
+	static $RELEASE = '2.6.6';
 	/** @var string Development Status */
-	static $DEV_STATUS = 'Final';
+	static $DEV_STATUS = 'MINOR';
 	/** @var string Codename */
-	static $CODENAME = 'TakeOff';
+	static $CODENAME = 'loadFox';
 	/** @var string Date */
-	static $RELDATE = 'December 19, 2011';
+	static $RELDATE = 'May 29 2014';
 	/** @var string Time */
-	static $RELTIME = '21:30';
+	static $RELTIME = '1604';
 	/** @var string Timezone */
 	static $RELTZ = 'GMT';
 	/** @var string Revision */
-	static $REVISION = 'Revision: 5155';
+	static $REVISION = 'Revision: 8010';
 	/** @var string Copyright Text */
-	static $COPYRIGHT = 'Copyright (C) 2005-2011 VirtueMart Development Team  - All rights reserved.';
+	static $COPYRIGHT = 'Copyright (C) 2005-2012 VirtueMart Development Team  - All rights reserved.';
 	/** @var string URL */
 	static $URL = '<a href="http://virtuemart.net">VirtueMart</a> is a Free Component for Joomla! released under the GNU/GPL2 License.';
 }
 
 $shortversion = vmVersion::$PRODUCT . " " . vmVersion::$RELEASE . " " . vmVersion::$DEV_STATUS. " ";
 
-$myVersion = $shortversion . " [".vmVersion::$CODENAME ."] <br />" . vmVersion::$RELDATE . " "
+$myVersion = $shortversion .' '.vmVersion::$REVISION. " [".vmVersion::$CODENAME ."] <br />" . vmVersion::$RELDATE . " "
 	. vmVersion::$RELTIME . " " . vmVersion::$RELTZ;
 
 }

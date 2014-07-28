@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: products.php 4779 2011-11-21 20:53:21Z Milbo $
+* @version $Id: products.php 6306 2012-08-06 14:19:51Z Milbo $
 */
 
 if(!class_exists('VmTable'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmtable.php');
@@ -38,26 +38,28 @@ class TableProducts extends VmTable {
 	/** @var string File name */
 	var $product_parent_id		= 0;
 	/** @var string File title */
-	var $product_sku= '';
+	var $product_sku= null;
+	var $product_gtin = null;
+	var $product_mpn = null;
     /** @var string Name of the product */
 	var $product_name	= '';
 	var $slug			= '';
     /** @var string File description */
-	var $product_s_desc		= '';
+	var $product_s_desc		= null;
     /** @var string File extension */
-	var $product_desc			= '';
+	var $product_desc			= null;
 	/** @var int File is an image or other */
-	var $product_weight			= 0;
+	var $product_weight			= null;
 	/** @var int File image height */
-	var $product_weight_uom		= '';
+	var $product_weight_uom		= null;
 	/** @var int File image width */
-	var $product_length		= 0;
+	var $product_length		= null;
 	/** @var int File thumbnail image height */
-	var $product_width = 0;
+	var $product_width = null;
 	/** @var int File thumbnail image width */
-	var $product_height	= 0;
+	var $product_height	= null;
 	/** @var int File thumbnail image width */
-	var $product_lwh_uom	= '';
+	var $product_lwh_uom	= null;
 	/** @var int File thumbnail image width */
 	var $product_url	= '';
 	/** @var int File thumbnail image width */
@@ -72,7 +74,8 @@ class TableProducts extends VmTable {
 	/** @var int File thumbnail image width */
 	var $product_special	= null;
 
-
+	/** @var int product internal ordering, it is for the ordering for child products under a parent null */
+	var $pordering = null;
 	/** @var int File thumbnail image width */
 	var $product_sales	= 0;
 
@@ -84,6 +87,8 @@ class TableProducts extends VmTable {
 	var $product_params	= null;
 	/** @var string Internal note for product */
 	var $intnotes = '';
+	/** @var string custom title */
+	var $customtitle	= '';
 	/** @var string Meta description */
 	var $metadesc	= '';
 	/** @var string Meta keys */
@@ -101,7 +106,7 @@ class TableProducts extends VmTable {
 
 	/**
 	 * @author Max Milbers
-	 * @param $db A database connector object
+	 * @param JDataBase $db
 	 */
 	function __construct($db) {
 		parent::__construct('#__virtuemart_products', 'virtuemart_product_id', $db);
@@ -110,18 +115,21 @@ class TableProducts extends VmTable {
 // 		$this->setPrimaryKey('virtuemart_product_id');
 		$this->setObligatoryKeys('product_name');
 		$this->setLoggable();
-		$this->setTranslatable(array('product_name','product_s_desc','product_desc','metadesc','metakey'));
+		$this->setTranslatable(array('product_name','product_s_desc','product_desc','metadesc','metakey','customtitle'));
 		$this->setSlug('product_name');
 		$this->setTableShortCut('p');
 
 		//We could put into the params also the product_availability and the low_stock_notification
 		$varsToPushParam = array(
-				    				'min_order_level'=>array(0.0,'float'),
-				    				'max_order_level'=>array(0.0,'float')
+				    				'min_order_level'=>array(null,'float'),
+				    				'max_order_level'=>array(null,'float'),
+				    				'step_order_level'=>array(null,'float'),
+									//'product_packaging'=>array(null,'float'),
+									'product_box'=>array(null,'float')
 									);
 
 		$this->setParameterable('product_params',$varsToPushParam);
-
+		$this->_updateNulls = true;
 	}
 
 }

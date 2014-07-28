@@ -19,9 +19,6 @@
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-// Load the model framework
-jimport( 'joomla.application.component.model');
-
 if(!class_exists('VmModel'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmmodel.php');
 
 /**
@@ -53,22 +50,30 @@ class VirtueMartModelCustom extends VmModel {
      */
     function getCustom(){
 
-    	//if(empty($this->_db)) $this->_db = JFactory::getDBO();
-		JTable::addIncludePath(JPATH_VM_ADMINISTRATOR.DS.'tables');
-   		$this->_data =& $this->getTable('customs');
-   		$this->_data->load($this->_id);
-//    		vmdebug('getCustom $data',$this->_data);
-   		if(!empty($this->_data->custom_jplugin_id)){
-   			JPluginHelper::importPlugin('vmcustom');
-   			$dispatcher = JDispatcher::getInstance();
-//    			$varsToPushParam = $dispatcher->trigger('plgVmDeclarePluginParams',array('custom',$this->_data->custom_element,$this->_data->custom_jplugin_id));
-   			$retValue = $dispatcher->trigger('plgVmDeclarePluginParamsCustom',array('custom',$this->_data->custom_element,$this->_data->custom_jplugin_id,&$this->_data));
+    	if(empty($this->_data)){
 
-   		}
+//     		JTable::addIncludePath(JPATH_VM_ADMINISTRATOR.DS.'tables');
+    		$this->_data = $this->getTable('customs');
+    		$this->_data->load($this->_id);
 
-		if(!class_exists('VirtueMartModelCustomfields'))require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'customfields.php');
-		$customfields = new VirtueMartModelCustomfields();
-		$this->_data->field_types = $customfields->getField_types() ;
+		    $customfields = VmModel::getModel('Customfields');
+		    $this->_data->field_types = $customfields->getField_types() ;
+
+    		//    		vmdebug('getCustom $data',$this->_data);
+    		if(!empty($this->_data->custom_jplugin_id)){
+    			JPluginHelper::importPlugin('vmcustom');
+    			$dispatcher = JDispatcher::getInstance();
+    			//    			$varsToPushParam = $dispatcher->trigger('plgVmDeclarePluginParams',array('custom',$this->_data->custom_element,$this->_data->custom_jplugin_id));
+    			$retValue = $dispatcher->trigger('plgVmDeclarePluginParamsCustom',array('custom',$this->_data->custom_element,$this->_data->custom_jplugin_id,&$this->_data));
+
+    		} else {
+			    //Todo this is not working, because the custom is using custom_params, while the customfield is using custom_param !
+			    //VirtueMartModelCustomfields::bindParameterableByFieldType($this->_data);
+		    }
+
+
+    	}
+
   		return $this->_data;
 
     }
@@ -77,12 +82,11 @@ class VirtueMartModelCustom extends VmModel {
     /**
 	 * Retireve a list of customs from the database. This is meant only for backend use
 	 *
-	 * @author Kohl Patrick
+	 * @author Kohl Patrick, Max Milbers
 	 * @return object List of custom objects
 	 */
     function getCustoms($custom_parent_id,$search = false){
 
-    	vmdebug('for model');
 		$query='* FROM `#__virtuemart_customs` WHERE field_type <> "R" AND field_type <> "Z" AND field_type <> "G" ';
 		if($custom_parent_id){
 			$query .= 'AND `custom_parent_id` ='.(int)$custom_parent_id;
@@ -92,10 +96,10 @@ class VirtueMartModelCustom extends VmModel {
 			$search = '"%' . $this->_db->getEscaped( $search, true ) . '%"' ;
 			$query .= 'AND `custom_title` LIKE '.$search;
 		}
-		$datas->items = $this->exeSortSearchListQuery(0, $query, '');
+		$datas = new stdClass();
+		$datas->items = $this->exeSortSearchListQuery(0, $query, '','',$this->_getOrdering());
 
-		if(!class_exists('VirtueMartModelCustomfields'))require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'customfields.php');
-		$customfields = new VirtueMartModelCustomfields();
+		$customfields = VmModel::getModel('Customfields');
 
 		if (!class_exists('VmHTML')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'html.php');
 		$datas->field_types = $customfields->getField_types() ;
@@ -106,7 +110,7 @@ class VirtueMartModelCustom extends VmModel {
 				$data->custom_parent_title =  '-' ;
 			}
 			if(!empty($datas->field_types[$data->field_type ])){
-				$data->field_type_display = JText::_( $datas->field_types[$data->field_type ] );
+				$data->field_type_display = vmText::_( $datas->field_types[$data->field_type ] );
 			} else {
 				$data->field_type_display = 'not valid, delete this line';
 				vmError('The field with id '.$data->virtuemart_custom_id.' and title '.$data->custom_title.' is not longer valid, please delete it from the list');
@@ -133,70 +137,11 @@ class VirtueMartModelCustom extends VmModel {
 		$row->custom_title = $row->custom_title.' Copy';
 
 		if (!$clone = $row->store()) {
-			JError::raiseError(500, $row->getError() );
+			JError::raiseError(500, 'createClone '. $row->getError() );
 		}
 		return $clone;
 	}
 
-	/* Save and delete from database
-	* all product custom_fields and xref
-	@ var   $table	: the xref table(eg. product,category ...)
-	@array $data	: array of customfields
-	@int     $id		: The concerned id (eg. product_id)
-	*/
-	public function saveModelCustomfields($table,$datas, $id) {
-
-		vmdebug('put in plugin, use internal plugin table instead');
-		JRequest::checkToken() or jexit( 'Invalid Token, in store customfields');
-		//Sanitize id
-		$id = (int)$id;
-
-		//Table whitelist
-		$tableWhiteList = array('product','category','manufacturer');
-		if(!in_array($table,$tableWhiteList)) return false;
-
-		// delete existings from modelXref and table customfields
-		$this->_db->setQuery( 'DELETE PC.* FROM `#__virtuemart_'.$table.'_customfields` as `PC` , `#__virtuemart_customs` as C WHERE `PC`.`virtuemart_custom_id` = `C`.`virtuemart_custom_id` AND  `PC`.virtuemart_'.$table.'_id ='.$id );
-		if(!$this->_db->query()){
-			$this->setError('Error in saveModelCustomfields '); //.$this->_db->getQuery()); Dont give hackers too much info
-		}
-		 if (isset ( $datas['custom_param'] )) $params = true ;
-		 else $params = false ;
-		if (array_key_exists('field', $datas)) {
-			vmdebug('datas save',$datas);
-			$customfieldIds = array();
-			foreach($datas['field'] as $key => $fields){
-				$fields['virtuemart_'.$table.'_id'] =$id;
-				$tableCustomfields = $this->getTable($table.'_customfields');
-				if ( $params  ) {
-					if (array_key_exists( $key,$datas['custom_param'])) {
-
-						$fields['custom_param'] = json_encode($datas['custom_param'][$key]);
-						// $varsToPushParam = null;
-						// $ParamKeys = array_keys($datas['custom_param'][$key]);
-						// foreach ( $ParamKeys as $key =>$param )$varsToPushParam[ $param ] = array("",'string');
-						// $tableCustomfields->setParameterable('custom_param',$varsToPushParam);
-						// $fields =  (array)$datas['custom_param'][$key]+$fields;
-
-					}
-
-				} else $fields['custom_param'] = '';
-				$tableCustomfields->bindChecknStore($fields);
-				$errors = $tableCustomfields->getErrors();
-				foreach($errors as $error){
-					$this->setError($error);
-				}
-			}
-		}
-		JPluginHelper::importPlugin('vmcustom');
-		$dispatcher = JDispatcher::getInstance();
-		if (is_array($datas['plugin_param'])) {
-		    foreach ($datas['plugin_param'] as $key => $plugin_param ) {
-			$dispatcher->trigger('plgVmOnStoreProduct', array($datas, $plugin_param ));
-		    }
-		}
-
-	}
 
 	/* Save and delete from database
 	 *  all Child product custom_fields relation
@@ -217,14 +162,14 @@ class VirtueMartModelCustom extends VmModel {
 			$fields['virtuemart_'.$table.'_id']=$child_id;
 			$this->_db->setQuery( 'DELETE PC FROM `#__virtuemart_'.$table.'_customfields` as `PC`, `#__virtuemart_customs` as `C` WHERE `PC`.`virtuemart_custom_id` = `C`.`virtuemart_custom_id` AND field_type="C" and virtuemart_'.$table.'_id ='.$child_id );
 			if(!$this->_db->query()){
-				$this->setError('Error in deleting child relation '); //.$this->_db->getQuery()); Dont give hackers too much info
+				vmError('Error in deleting child relation '); //.$this->_db->getQuery()); Dont give hackers too much info
 			}
 
 			$tableCustomfields = $this->getTable($table.'_customfields');
 			$tableCustomfields->bindChecknStore($fields);
     		$errors = $tableCustomfields->getErrors();
 			foreach($errors as $error){
-				$this->setError($error);
+				vmError($error);
 			}
 		}
 
@@ -248,7 +193,7 @@ class VirtueMartModelCustom extends VmModel {
 		}
 
 		// missing string FIX, Bad way ?
-		if (VmConfig::isJ15()) {
+		if (JVM_VERSION===1) {
 			$tb = '#__plugins';
 			$ext_id = 'id';
 		} else {
@@ -262,11 +207,11 @@ class VirtueMartModelCustom extends VmModel {
 		$table = $this->getTable('customs');
 
 		if(isset($data['custom_jplugin_id'])){
-
+			vmdebug('$data store custom',$data);
 			JPluginHelper::importPlugin('vmcustom');
 			$dispatcher = JDispatcher::getInstance();
-			$retValue = $dispatcher->trigger('plgVmSetOnTablePluginParamsCustom',array($data['custom_value'],$data['custom_jplugin_id'],&$table));
-
+// 			$retValue = $dispatcher->trigger('plgVmSetOnTablePluginParamsCustom',array($data['custom_value'],$data['custom_jplugin_id'],&$table));
+			$retValue = $dispatcher->trigger('plgVmSetOnTablePluginParamsCustom',array($data['custom_element'],$data['custom_jplugin_id'],&$table));
 		}
 
 		$table->bindChecknStore($data);
@@ -279,11 +224,40 @@ class VirtueMartModelCustom extends VmModel {
 
 		JPluginHelper::importPlugin('vmcustom');
 		$dispatcher = JDispatcher::getInstance();
-		$error = $dispatcher->trigger('plgVmOnStoreInstallPluginTable', array('custom' , $data));
+		$error = $dispatcher->trigger('plgVmOnStoreInstallPluginTable', array('custom' , $data, $data['custom_element']));
 
 		return $table->virtuemart_custom_id ;
 	}
 
+
+	/**
+	 * Delete all record ids selected
+	 *
+	 * @author Max Milbers
+	 * @return boolean True is the delete was successful, false otherwise.
+	 */
+	public function remove($ids) {
+
+		$table = $this->getTable($this->_maintablename);
+
+		$customfields = $this->getTable ('product_customfields');
+
+		foreach($ids as $id) {
+			if (!$table->delete((int)$id)) {
+				vmError(get_class( $this ).'::remove '.$id.' '.$table->getError());
+				return false;
+			} else {
+				//Delete this customfield also in all product_customfield tables
+				if (!$customfields->delete ($id, 'virtuemart_custom_id')) {
+					vmError ('Custom delete Productcustomfield delete ' . $customfields->getError ());
+					$ok = FALSE;
+				}
+
+			}
+		}
+
+		return true;
+	}
 
 }
 // pure php no closing tag

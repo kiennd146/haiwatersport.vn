@@ -1,25 +1,25 @@
 <?php
 /**
-*
-* Contains shop functions for the front-end
-*
-* @package	VirtueMart
-* @subpackage Helpers
-*
-* @author RolandD
-* @author Max Milbers
-* @link http://www.virtuemart.net
-* @copyright Copyright (c) 2004 - 2010 VirtueMart Team. All rights reserved.
-* @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
-* VirtueMart is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* @version $Id: shopfunctionsf.php 5126 2011-12-19 03:15:37Z electrocity $
-*/
+ *
+ * Contains shop functions for the front-end
+ *
+ * @package    VirtueMart
+ * @subpackage Helpers
+ *
+ * @author RolandD
+ * @author Max Milbers
+ * @link http://www.virtuemart.net
+ * @copyright Copyright (c) 2004 - 2010 VirtueMart Team. All rights reserved.
+ * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
+ * VirtueMart is free software. This version may have been modified pursuant
+ * to the GNU General Public License, and as distributed it includes or
+ * is derivative of works licensed under the GNU General Public License or
+ * other free or open source software licenses.
+ * @version $Id: shopfunctionsf.php 6502 2012-10-04 13:19:26Z Milbo $
+ */
 
 // Check to ensure this file is included in Joomla!
-defined('_JEXEC') or die('Restricted access');
+defined( '_JEXEC' ) or die('Restricted access');
 
 
 class shopFunctionsF {
@@ -28,30 +28,30 @@ class shopFunctionsF {
 	 *
 	 */
 
-	public function getLoginForm($cart=false,$order=false){
+	static public function getLoginForm ($cart = FALSE, $order = FALSE, $url = 0) {
 
-
-		if(!class_exists('VirtuemartViewUser')) require(JPATH_VM_SITE . DS . 'views' . DS . 'user' .DS. 'view.html.php');
+		if(!class_exists( 'VirtuemartViewUser' )) require(JPATH_VM_SITE.DS.'views'.DS.'user'.DS.'view.html.php');
 		$view = new VirtuemartViewUser();
-		$view -> setLayout('login');
+		$view->setLayout( 'login' );
 
-		$show=true;
-		if($cart){
-			$show = VmConfig::get('oncheckout_show_register', 1);
-			$user = $cart->userDetails->JUser;
-		} else {
-			$user = JFactory::getUser();
+		$body = '';
+		$show = TRUE;
+
+		if($cart) {
+			$show = VmConfig::get( 'oncheckout_show_register', 1 );
 		}
-		$view->assignRef('JUser',$user);
+		if($show == 1) {
 
-		$view->assignRef('show',$show);
+			$view->assignRef( 'show', $show );
 
-		$view->assignRef('order',$order);
-
-		ob_start();
-		$view->display();
-		$body = ob_get_contents();
-		ob_end_clean();
+			$view->assignRef( 'order', $order );
+			$view->assignRef( 'from_cart', $cart );
+			$view->assignRef( 'url', $url );
+			ob_start();
+			$view->display();
+			$body = ob_get_contents();
+			ob_end_clean();
+		}
 
 		return $body;
 	}
@@ -59,42 +59,76 @@ class shopFunctionsF {
 	/**
 	 * @author Max Milbers
 	 */
-	public function getLastVisitedCategoryId(){
+	static public function getLastVisitedCategoryId ($default = 0) {
 
 		$session = JFactory::getSession();
-		return $session->get('vmlastvisitedcategoryid', 0, 'vm');
+		return $session->get( 'vmlastvisitedcategoryid', $default, 'vm' );
 
 	}
 
 	/**
 	 * @author Max Milbers
 	 */
-	public function setLastVisitedCategoryId($categoryId){
-		$session = JFactory::getSession();
-		return $session->set('vmlastvisitedcategoryid', (int) $categoryId, 'vm');
+	static public function setLastVisitedCategoryId ($categoryId) {
 
+		$session = JFactory::getSession();
+		return $session->set( 'vmlastvisitedcategoryid', (int)$categoryId, 'vm' );
+
+	}
+
+	/**
+	 * @author Max Milbers
+	 */
+	static public function getLastVisitedManuId () {
+
+		$session = JFactory::getSession();
+		return $session->get( 'vmlastvisitedmanuid', 0, 'vm' );
+
+	}
+
+	/**
+	 * @author Max Milbers
+	 */
+	static public function setLastVisitedManuId ($manuId) {
+
+		$session = JFactory::getSession();
+		return $session->set( 'vmlastvisitedmanuid', (int)$manuId, 'vm' );
+
+	}
+
+	static public function getAddToCartButton ($orderable) {
+
+		if($orderable) {
+			$html = '<input type="submit" name="addtocart" class="addtocart-button" value="'.JText::_( 'COM_VIRTUEMART_CART_ADD_TO' ).'" title="'.JText::_( 'COM_VIRTUEMART_CART_ADD_TO' ).'" />';
+		} else {
+			$html = '<input name="addtocart" class="addtocart-button-disabled" value="'.JText::_( 'COM_VIRTUEMART_ADDTOCART_CHOOSE_VARIANT' ).'" title="'.JText::_( 'COM_VIRTUEMART_ADDTOCART_CHOOSE_VARIANT' ).'" />';
+		}
+		return $html;
 	}
 
 	/**
 	 *
 	 * @author Max Milbers
 	 */
-	public function addProductToRecent($productId){
+	static public function addProductToRecent ($productId) {
+
 		$session = JFactory::getSession();
-		$products_ids = $session->get('vmlastvisitedproductids', array(), 'vm');
-		$key = array_search($productId,$products_ids);
-		if($key!==FALSE){
+		$products_ids = $session->get( 'vmlastvisitedproductids', array(), 'vm' );
+		$key = array_search( $productId, $products_ids );
+		if($key !== FALSE) {
 			unset($products_ids[$key]);
 		}
-		array_unshift($products_ids,$productId);
-		$products_ids = array_unique($products_ids);
+		array_unshift( $products_ids, $productId );
+		$products_ids = array_unique( $products_ids );
 
-		$maxSize = VmConfig::get('max_recent_products',3);
-		if(count($products_ids)>$maxSize){
-			array_splice($products_ids,$maxSize);
+		$recent_products_rows = VmConfig::get('recent_products_rows', 1);
+		$products_per_row = VmConfig::get('homepage_products_per_row',3);
+		$maxSize = $products_per_row * $recent_products_rows;
+		if(count( $products_ids )>$maxSize) {
+			array_splice( $products_ids, $maxSize );
 		}
 
-		return $session->set('vmlastvisitedproductids', $products_ids, 'vm');
+		return $session->set( 'vmlastvisitedproductids', $products_ids, 'vm' );
 	}
 
 	/**
@@ -102,187 +136,61 @@ class shopFunctionsF {
 	 *
 	 * @author Max Milbers
 	 */
-	public function getRecentProductIds(){
+	public function getRecentProductIds () {
+
 		$session = JFactory::getSession();
-		return $session->get('vmlastvisitedproductids', array(), 'vm');
+		return $session->get( 'vmlastvisitedproductids', array(), 'vm' );
 	}
 
 
-
 	/**
-	* function to create a hyperlink
-	*
-	* @author RolandD
-	* @param string $link
-	* @param string $text
-	* @param string $target
-	* @param string $title
-	* @param array $attributes
-	* @return string
-	*/
-	public function hyperLink( $link, $text, $target='', $title='', $attributes='' ) {
+	 * function to create a hyperlink
+	 *
+	 * @author RolandD
+	 * @param string $link
+	 * @param string $text
+	 * @param string $target
+	 * @param string $title
+	 * @param array $attributes
+	 * @return string
+	 */
+	public function hyperLink ($link, $text, $target = '', $title = '', $attributes = '') {
+
 		$options = array();
-		if( $target ) {
+		if($target) {
 			$options['target'] = $target;
 		}
-		if( $title ) {
+		if($title) {
 			$options['title'] = $title;
 		}
-		if( $attributes ) {
-			$options = array_merge($options, $attributes);
+		if($attributes) {
+			$options = array_merge( $options, $attributes );
 		}
-		return JHTML::_('link', $link, $text, $options);
+		return JHTML::_( 'link', $link, $text, $options );
 	}
 
 	/**
-	 * Writes a PDF icon
-	 * @author RolandD, Christopher Roussel
-	 * @param string $link
-	 * @param boolean $use_icon
-	 * @deprecated
+	 * A function to create a XHTML compliant and JS-disabled-safe pop-up link
+	 *
+	 * @author RolandD
+	 * @param string $link The HREF attribute
+	 * @param string $text The link text
+	 * @param int $popupWidth
+	 * @param int $popupHeight
+	 * @param string $target The value of the target attribute
+	 * @param string $title
+	 * @param string $windowAttributes
+	 * @return string
 	 */
-	function PdfIcon( $link, $use_icon=true ) {
-/*		if (VmConfig::get('pdf_button_enable', 1) == '1' && !JRequest::getVar('pop')) {
+	public function vmPopupLink ($link, $text, $popupWidth = 640, $popupHeight = 480, $target = '_blank', $title = '', $windowAttributes = '') {
 
-			$folder = (VmConfig::isJ15()) ? '/images/M_images/' : '/media/system/images/';
-			//$link .= '&amp;pop=1';
-			if ( $use_icon ) {
-				$text = JHtml::_('image.site', 'pdf_button.png', $folder, null, null, JText::_('COM_VIRTUEMART_PDF'));
-			} else {
-				$text = JText::_('COM_VIRTUEMART_PDF') .'&nbsp;';
-			}
-			return self::vmPopupLink($link, $text, 640, 480, '_blank', JText::_('COM_VIRTUEMART_PDF'));
-		}*/
-	}
-
-	/**
-	 * Writes an Email icon
-	 * @author RolandD, Christopher Roussel
-	 * @param string $link
-	 * @param boolean $use_icon
-	 */
-	function EmailIcon( $virtuemart_product_id, $use_icon=true ) {
-		if (VmConfig::get('show_emailfriend', 1) == '1' && !JRequest::getVar('pop') && $virtuemart_product_id > 0  ) {
-
-			$folder = (VmConfig::isJ15()) ? '/images/M_images/' : '/media/system/images/';
-
-			//Todo this is old stuff and must be adjusted
-			$link = JRoute::_('index.php?option=com_virtuemart&view=productdetails&task=recommend&virtuemart_product_id='.$this->product->virtuemart_product_id.'&virtuemart_category_id='.$this->product->virtuemart_category_id.'&tmpl=component&pop=1');
-			if ( $use_icon ) {
-				$text = JHtml::_('image.site', 'emailButton.png', $folder, null, null, JText::_('COM_VIRTUEMART_EMAIL'));
-			} else {
-				$text = '&nbsp;'. JText::_('COM_VIRTUEMART_EMAIL');
-			}
-			return '<a class="modal" rel="{handler: \'iframe\', size: {x: 700, y: 550}}" href="'.$link.'">'.$text.'</a>';
-		}
-	}
-
-	/**
-	 * @author RolandD, Christopher Roussel
-	 */
-	function PrintIcon( $link='', $use_icon=true, $add_text='' ) {
-		global  $cur_template, $Itemid;
-		if (VmConfig::get('show_printicon', 1) == '1') {
-
-			$folder = (VmConfig::isJ15()) ? '/images/M_images/' : '/media/system/images/';
-			if( !$link ) {
-				//Todo this is old stuff and must be adjusted and looks dangerous
-/*				$query_string = str_replace( 'only_page=1', 'only_page=0', JRequest::getVar('QUERY_STRING'));
-				$link = (VmConfig::isJ15()) ? 'index2.php' : 'index.php';
-				$link .= '?tmpl=component&amp;'.$query_string.'&amp;pop=1';*/
-			}
-			// checks template image directory for image, if non found default are loaded
-			if ( $use_icon ) {
-				$filter = JFilterInput::getInstance();
-				$text = JHtml::_('image.site', 'printButton.png', $folder, null, null, JText::_('COM_VIRTUEMART_PRINT'));
-				$text .= $filter->clean($add_text);
-			} else {
-				$text = '|&nbsp;'. JText::_('COM_VIRTUEMART_PRINT'). '&nbsp;|';
-			}
-			$isPopup = JRequest::getVar( 'pop' );
-			if ( $isPopup ) {
-				// Print Preview button - used when viewing page
-				$html = '<span class="vmNoPrint">
-				<a href="javascript:void(0)" onclick="javascript:window.print(); return false;" title="'. JText::_('COM_VIRTUEMART_PRINT').'">
-				'. $text .'
-				</a></span>';
-				return $html;
-			} else {
-				// Print Button - used in pop-up window
-				return self::vmPopupLink($link, $text, 640, 480, '_blank', JText::_('COM_VIRTUEMART_PRINT'));
-			}
-		}
-
-	}
-
-	/**
-	* A function to create a XHTML compliant and JS-disabled-safe pop-up link
-	*
-	* @author RolandD
-	* @param string $link The HREF attribute
-	* @param string $text The link text
-	* @param int $popupWidth
-	* @param int $popupHeight
-	* @param string $target The value of the target attribute
-	* @param string $title
-	* @param string $windowAttributes
-	* @return string
-	*/
-	public function vmPopupLink( $link, $text, $popupWidth=640, $popupHeight=480, $target='_blank', $title='', $windowAttributes='' ) {
-		if( $windowAttributes ) {
+		if($windowAttributes) {
 			$windowAttributes = ','.$windowAttributes;
 		}
-		return self::hyperLink( $link, $text, '', $title, array("onclick" => "void window.open('$link', '$target', 'status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=$popupWidth,height=$popupHeight,directories=no,location=no".$windowAttributes."');return false;" ));
+		return self::hyperLink( $link, $text, '', $title, array("onclick" => "void window.open('$link', '$target', 'status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=$popupWidth,height=$popupHeight,directories=no,location=no".$windowAttributes."');return false;") );
 
 	}
 
-	/**
-	 * //Todo this is old stuff and must be adjusted
-	* Checks to see if an image exists in the current templates image directory
- 	* if it does it loads this image.  Otherwise the default image is loaded.
-	* Also can be used in conjunction with the menulist param to create the chosen image
-	* load the default or use no image
-	* @deprecated
-	*/
-	function ImageCheck( $file, $directory='/images/M_images/', $param=NULL, $param_directory='/images/M_images/', $alt=NULL, $name=NULL, $type=1, $align='middle', $title=NULL, $admin=NULL ) {
-		$mainframe = JFactory::getApplication();
-		$cur_template = $mainframe->getTemplate();
-
-		$name 	= ( $name 	? ' name="'. $name .'"' 	: '' );
-		$title 	= ( $title 	? ' title="'. $title .'"' 	: '' );
-		$alt 	= ( $alt 	? ' alt="'. $alt .'"' 		: ' alt=""' );
-		$align 	= ( $align 	? ' align="'. $align .'"' 	: '' );
-
-		// change directory path from frontend or backend
-		if ($admin) {
-			$path 	= '/administrator/templates/'. $cur_template .'/images/';
-		} else {
-			$path 	= '/templates/'. $cur_template .'/images/';
-		}
-
-		if ( $param ) {
-			$image = JURI::base(). $param_directory . $param;
-			if ( $type ) {
-				$image = '<img src="'. $image .'" '. $alt . $name . $align .' border="0" />';
-			}
-		} else if ( $param == -1 ) {
-			$image = '';
-		} else {
-			if ( file_exists( JPATH_SITE . $path . $file ) ) {
-				$image = JURI::base() . $path . $file;
-			} else {
-				// outputs only path to image
-				$image = JURI::base(). $directory . $file;
-			}
-
-			// outputs actual html <img> tag
-			if ( $type ) {
-				$image = '<img src="'. $image .'" '. $alt . $name . $title . $align .' border="0" />';
-			}
-		}
-
-		return $image;
-	}
 
 	/**
 	 * Prepares a view for rendering email, then renders and sends
@@ -292,152 +200,289 @@ class shopFunctionsF {
 	 * @param string $recipient shopper@whatever.com
 	 * @param array $vars variables to assign to the view
 	 */
-	public function renderMail ($viewName, $recipient, $vars=array(),$controllerName = null,$noVendorMail = false) {
-		if(!class_exists('VirtueMartControllerVirtuemart')) require(JPATH_VM_SITE.DS.'controllers'.DS.'virtuemart.php');
-		$format = (VmConfig::get('order_html_email',1)) ? 'html' : 'raw';
+	//TODO this is quirk, why it is using here $noVendorMail, but everywhere else it is using $doVendor => this make logic trouble
+	static public function renderMail ($viewName, $recipient, $vars = array(), $controllerName = NULL, $noVendorMail = FALSE,$useDefault=true) {
+
+		if(!class_exists( 'VirtueMartControllerVirtuemart' )) require(JPATH_VM_SITE.DS.'controllers'.DS.'virtuemart.php');
+// 		$format = (VmConfig::get('order_html_email',1)) ? 'html' : 'raw';
 
 		$controller = new VirtueMartControllerVirtuemart();
-		$controller->addModelPath(JPATH_VM_SITE.DS.'models');
-		$controller->addModelPath(JPATH_VM_ADMINISTRATOR.DS.'models');
+		//Todo, do we need that? refering to http://forum.virtuemart.net/index.php?topic=96318.msg317277#msg317277
+		$controller->addViewPath( JPATH_VM_SITE.DS.'views' );
 
-		$view = $controller->getView($viewName, $format);
-		if (!$controllerName) $controllerName = $viewName;
-		$modelName = 'VirtueMartController'.ucfirst ($controllerName) ;
-		if (!class_exists($modelName)) require(JPATH_VM_SITE.DS.'controllers'.DS.$controllerName.'.php');
-		$model = new $modelName;
-		if ($model) {
-			$view->setModel($model);
+		$view = $controller->getView( $viewName, 'html' );
+		if(!$controllerName) $controllerName = $viewName;
+		$controllerClassName = 'VirtueMartController'.ucfirst( $controllerName );
+		if(!class_exists( $controllerClassName )) require(JPATH_VM_SITE.DS.'controllers'.DS.$controllerName.'.php');
+
+		//Todo, do we need that? refering to http://forum.virtuemart.net/index.php?topic=96318.msg317277#msg317277
+		$view->addTemplatePath( JPATH_VM_SITE.'/views/'.$viewName.'/tmpl' );
+
+		$template = self::loadVmTemplateStyle();
+
+		if($template) {
+			$view->addTemplatePath( JPATH_ROOT.DS.'templates'.DS.$template.DS.'html'.DS.'com_virtuemart'.DS.$viewName );
 		}
-		$view->setModel($controller->getModel('user'));
-		$view->setModel($controller->getModel('vendor'));
-		$view->setModel($controller->getModel('userfields'));
 
-		foreach ($vars as $key => $val) {
+		foreach( $vars as $key => $val ) {
 			$view->$key = $val;
 		}
-		$user= self::sendVmMail($view, $recipient,$noVendorMail);
-		if (isset($view->doVendor) && !$noVendorMail) {
-			self::sendVmMail($view, $view->vendorEmail, true);
+
+		$user = FALSE;
+		if(isset($vars['orderDetails'])){
+
+			//If the JRequest is there, the update is done by the order list view BE and so the checkbox does override the defaults.
+			//$name = 'orders['.$order['details']['BT']->virtuemart_order_id.'][customer_notified]';
+			//$customer_notified = JRequest::getVar($name,-1);
+			if(!$useDefault and isset($vars['newOrderData']['customer_notified']) and $vars['newOrderData']['customer_notified']==1 ){
+				$user = self::sendVmMail( $view, $recipient, $noVendorMail );
+				vmdebug('renderMail by overwrite');
+			} else {
+				$orderstatusForShopperEmail = VmConfig::get('email_os_s',array('U','C','S','R','X'));
+				if(!is_array($orderstatusForShopperEmail)) $orderstatusForShopperEmail = array($orderstatusForShopperEmail);
+				if ( in_array((string) $vars['orderDetails']['details']['BT']->order_status,$orderstatusForShopperEmail) ){
+					$user = self::sendVmMail( $view, $recipient, $noVendorMail );
+					vmdebug('renderMail by default');
+				} else{
+					$user = -1;
+				}
+			}
+
+		} else {
+			$user = self::sendVmMail( $view, $recipient, $noVendorMail );
 		}
-		return $user ;
+
+		if(isset($view->doVendor) && !$noVendorMail) {
+			if(isset($vars['orderDetails'])){
+				$order = $vars['orderDetails'];
+				$orderstatusForVendorEmail = VmConfig::get('email_os_v',array('U','C','R','X'));
+				if(!is_array($orderstatusForVendorEmail)) $orderstatusForVendorEmail = array($orderstatusForVendorEmail);
+				if ( in_array((string)$order['details']['BT']->order_status,$orderstatusForVendorEmail)){
+					self::sendVmMail( $view, $view->vendorEmail, TRUE );
+				}else{
+					$user = -1;
+				}
+			} else {
+				self::sendVmMail( $view, $view->vendorEmail, TRUE );
+			}
+
+		}
+
+		return $user;
 
 	}
 
-	// VirtueMartViewUser: registerUser,
+	public static function loadVmTemplateStyle(){
+		$vmtemplate = VmConfig::get( 'vmtemplate', 0 );
+		if(!empty($vmtemplate) and is_numeric($vmtemplate)) {
+			$db = JFactory::getDbo();
+			$query = 'SELECT `template`,`params` FROM `#__template_styles` WHERE `id`="'.$vmtemplate.'" ';
+			$db->setQuery($query);
+			$res = $db->loadAssoc();
+			if($res){
+				$registry = new JRegistry;
+				$registry->loadString($res['params']);
+				$template = $res['template'];
+			} else {
+				$err = 'The selected vmtemplate is not existing';
+				vmError( 'renderMail get Template failed: '.$err );
+			}
+		} else {
+			if(JVM_VERSION == 2) {
+				$q = 'SELECT `template` FROM `#__template_styles` WHERE `client_id`="0" AND `home`="1"';
+			} else {
+				$q = 'SELECT `template` FROM `#__templates_menu` WHERE `client_id`="0" AND `menuid`="0"';
+			}
+			$db = JFactory::getDbo();
+			$db->setQuery( $q );
+			$template = $db->loadResult();
+			if(!$template){
+				$err = 'Could not load default template style';
+				vmError( 'renderMail get Template failed: '.$err );
+			}
+
+		}
+
+		return $template;
+	}
 
 	/**
 	 * With this function you can use a view to sent it by email.
-	 * Just use a task in a controller todo the rendering of the email.
+	 * Just use a task in a controller
 	 *
 	 * @param string $view for example user, cart
 	 * @param string $recipient shopper@whatever.com
 	 * @param bool $vendor true for notifying vendor of user action (e.g. registration)
 	 */
-	private function sendVmMail (&$view, $recipient, $vendor=false) {
+
+	private static function sendVmMail (&$view, $recipient, $noVendorMail = FALSE) {
+
+		VmConfig::ensureMemoryLimit(96);
+
+		VmConfig::loadJLang('com_virtuemart',true);
+
+		if(!empty($view->orderDetails['details']['BT']->order_language)) {
+			//$jlang->load( 'com_virtuemart', JPATH_SITE, $view->orderDetails['details']['BT']->order_language, true );
+			//$jlang->load( 'com_virtuemart_shoppers', JPATH_SITE, $view->orderDetails['details']['BT']->order_language, true );
+			//$jlang->load( 'com_virtuemart_orders', JPATH_SITE, $view->orderDetails['details']['BT']->order_language, true );
+			VmConfig::loadJLang('com_virtuemart',true,$view->orderDetails['details']['BT']->order_language);
+			VmConfig::loadJLang('com_virtuemart_shoppers',TRUE,$view->orderDetails['details']['BT']->order_language);
+			VmConfig::loadJLang('com_virtuemart_orders',TRUE,$view->orderDetails['details']['BT']->order_language);
+		} else {
+			VmConfig::loadJLang('com_virtuemart_shoppers',TRUE);
+			VmConfig::loadJLang('com_virtuemart_orders',TRUE);
+		}
 
 		ob_start();
-		$view->renderMailLayout($vendor, $recipient);
+		$view->renderMailLayout( $noVendorMail, $recipient );
 		$body = ob_get_contents();
 		ob_end_clean();
 
-		$subject = (isset($view->subject)) ? $view->subject : JText::_('COM_VIRTUEMART_DEFAULT_MESSAGE_SUBJECT');
+		$subject = (isset($view->subject)) ? $view->subject : JText::_( 'COM_VIRTUEMART_DEFAULT_MESSAGE_SUBJECT' );
 		$mailer = JFactory::getMailer();
-		$mailer->addRecipient($recipient);
-		$mailer->setSubject($subject);
-		$mailer->isHTML(VmConfig::get('order_mail_html',true));
-		$mailer->setBody($body);
+		$mailer->addRecipient( $recipient );
+		$mailer->setSubject(  html_entity_decode( $subject) );
+		$mailer->isHTML( VmConfig::get( 'order_mail_html', TRUE ) );
+		$mailer->setBody( $body );
 
-		if(!$vendor){
-			$replyto[0]=$view->vendorEmail;
-			$replyto[1]= $view->vendor->vendor_name;
-			$mailer->addReplyTo($replyto);
+		if(!$noVendorMail) {
+			$replyTo[0] = $view->vendorEmail;
+			$replyTo[1] = $view->vendor->vendor_name;
+			$mailer->addReplyTo( $replyTo );
+		} else {
+			$replyTo[0] = $view->orderDetails['details']['BT']->email;
+			$replyTo[1] = $view->orderDetails['details']['BT']->first_name.' '.$view->orderDetails['details']['BT']->last_name;
+			$mailer->addReplyTo( $replyTo );
 		}
-// 		if (isset($view->replyTo)) {
-// 			$mailer->addReplyTo($view->replyTo);
-// 		}
+		/*	if (isset($view->replyTo)) {
+				 $mailer->addReplyTo($view->replyTo);
+			 }*/
 
-		if (isset($view->mediaToSend)) {
-			foreach ((array)$view->mediaToSend as $media) {
-				//Todo test and such things.
-				$mailer->addAttachment($media);
+		if(isset($view->mediaToSend)) {
+			foreach( (array)$view->mediaToSend as $media ) {
+				$mailer->addAttachment( $media );
 			}
 		}
 
+		// set proper sender
+		$sender = array();
+		if(!empty($view->vendorEmail) and VmConfig::get( 'useVendorEmail', 0 )) {
+			$sender[0] = $view->vendorEmail;
+			$sender[1] = $view->vendor->vendor_name;
+		} else {
+			// use default joomla's mail sender
+			$app = JFactory::getApplication();
+			$sender[0] = $app->getCfg( 'mailfrom' );
+			$sender[1] = $app->getCfg( 'fromname' );
+			if(empty($sender[0])){
+				$config = JFactory::getConfig();
+				$sender = array( $config->getValue( 'config.mailfrom' ), $config->getValue( 'config.fromname' ) );
+			}
+		}
+		$mailer->setSender( $sender );
+
 		return $mailer->Send();
 	}
-
-
 
 
 	/**
 	 * This function sets the right template on the view
 	 * @author Max Milbers
 	 */
-	function setVmTemplate($view,$catTpl=0,$prodTpl=0,$catLayout=0,$prodLayout=0){
+	static function setVmTemplate ($view, $catTpl = 0, $prodTpl = 0, $catLayout = 0, $prodLayout = 0) {
 
 		//Lets get here the template set in the shopconfig, if there is nothing set, get the joomla standard
-		$template = VmConfig::get('vmtemplate','default');
+		$template = VmConfig::get( 'vmtemplate', 0 );
 		$db = JFactory::getDBO();
 		//Set specific category template
-		if(!empty($catTpl) && empty($prodTpl)){
-			if(is_Int($catTpl)){
+		if(!empty($catTpl) && empty($prodTpl)) {
+			if(is_Int( $catTpl )) {
 				$q = 'SELECT `category_template` FROM `#__virtuemart_categories` WHERE `virtuemart_category_id` = "'.(int)$catTpl.'" ';
-				$db->setQuery($q);
+				$db->setQuery( $q );
 				$temp = $db->loadResult();
-				if (!empty($temp)) $template = $temp;
+				if(!empty($temp)) $template = $temp;
 			} else {
 				$template = $catTpl;
 			}
 		}
 
 		//Set specific product template
-		if(!empty($prodTpl)){
-			if(is_Int($prodTpl)){
+		if(!empty($prodTpl)) {
+			if(is_Int( $prodTpl )) {
 				$q = 'SELECT `product_template` FROM `#__virtuemart_products` WHERE `virtuemart_product_id` = "'.(int)$prodTpl.'" ';
-				$db->setQuery($q);
+				$db->setQuery( $q );
 				$temp = $db->loadResult();
-				if (!empty($temp)) $template = $temp;
+				if(!empty($temp)) $template = $temp;
 			} else {
 				$template = $prodTpl;
 			}
 		}
 
-		shopFunctionsF::setTemplate($template);
+		shopFunctionsF::setTemplate( $template );
 
 		//Lets get here the layout set in the shopconfig, if there is nothing set, get the joomla standard
-		if(JRequest::getWord('view')=='virtuemart'){
-			$layout = VmConfig::get('vmlayout','default');
-			$view->setLayout(strtolower($layout));
+		if(JRequest::getWord( 'view' ) == 'virtuemart') {
+			$layout = VmConfig::get( 'vmlayout', 'default' );
+			$view->setLayout( strtolower( $layout ) );
 		} else {
+
+			if(empty($catLayout) and empty($prodLayout)) {
+				$catLayout = VmConfig::get( 'productlayout', 'default' );
+			}
+
 			//Set specific category layout
-			if(!empty($catLayout) && empty($prodLayout)){
-				if(is_Int($catLayout)){
+			if(!empty($catLayout) && empty($prodLayout)) {
+				if(is_Int( $catLayout )) {
 					$q = 'SELECT `layout` FROM `#__virtuemart_categories` WHERE `virtuemart_category_id` = "'.(int)$catLayout.'" ';
-					$db->setQuery($q);
+					$db->setQuery( $q );
 					$temp = $db->loadResult();
-					if (!empty($temp)) $layout = $temp;
+					if(!empty($temp)) $layout = $temp;
 				} else {
 					$layout = $catLayout;
 				}
 			}
 
 			//Set specific product layout
-			if(!empty($prodLayout)){
-				if(is_Int($prodLayout)){
+			if(!empty($prodLayout)) {
+				if(is_Int( $prodLayout )) {
 					$q = 'SELECT `layout` FROM `#__virtuemart_products` WHERE `virtuemart_product_id` = "'.(int)$prodLayout.'" ';
-					$db->setQuery($q);
+					$db->setQuery( $q );
 					$temp = $db->loadResult();
-					if (!empty($temp)) $layout = $temp;
+					if(!empty($temp)) $layout = $temp;
 				} else {
 					$layout = $prodLayout;
 				}
 			}
+
 		}
 
-		if(!empty($layout)){
-			$view->setLayout(strtolower($layout));
+		if(!empty($layout)) {
+			$view->setLayout( strtolower( $layout ) );
 		}
 
+
+	}
+
+	function sendRatingEmailToVendor ($data) {
+		if(!class_exists('ShopFunctions')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'shopfunctions.php');
+
+		$vars = array();
+		$productModel = VmModel::getModel ('product');
+		$product = $productModel->getProduct ($data['virtuemart_product_id']);
+		$vars['subject'] = JText::sprintf('COM_VIRTUEMART_RATING_EMAIL_SUBJECT', $product->product_name);
+		$vars['mailbody'] = JText::sprintf('COM_VIRTUEMART_RATING_EMAIL_BODY', $product->product_name);
+
+		$vendorModel = VmModel::getModel ('vendor');
+		$vendor = $vendorModel->getVendor ($product->virtuemart_vendor_id);
+		$vendorModel->addImages ($vendor);
+		$vars['vendor'] = $vendor;
+		$vars['vendorEmail'] = $vendorModel->getVendorEmail ($product->virtuemart_vendor_id);
+
+		if (!class_exists ('shopFunctions')) require(JPATH_VM_SITE . DS . 'helpers' . DS . 'shopfunctions.php');
+		$vars['vendorAddress'] = shopFunctions::renderVendorAddress ($product->virtuemart_vendor_id);
+
+		//$orderModel = VmModel::getModel ('orders');
+	    shopFunctionsF::renderMail ('productdetails', $vars['vendorEmail'], $vars, 'productdetails', TRUE);
 
 	}
 
@@ -446,33 +491,78 @@ class shopFunctionsF {
 	 *
 	 * @author Max Milbers
 	 */
-	function setTemplate( $template ){
+	static function setTemplate ($template) {
 
-		if(!empty($template) && $template!='default'){
-			if (is_dir(JPATH_THEMES.DS.$template)) {
-				//$this->addTemplatePath(JPATH_THEMES.DS.$template);
-				$mainframe = JFactory::getApplication('site');
-				$mainframe->set('setTemplate', $template);
-			} else{
-				JError::raiseWarning(412,'The choosen template couldnt found on the filesystem: '.$template);
+		if(!empty($template) && $template != 'default') {
+
+			$app = JFactory::getApplication( 'site' );
+			if(JVM_VERSION === 1){
+				if(is_dir( JPATH_THEMES.DS.$template )) {
+					$app->set( 'setTemplate', $template );
+				} else {
+					JError::raiseWarning( 412, 'The chosen template couldnt find on the filesystem: '.$template );
+				}
+
+			} else {
+
+				$registry = null;
+				if(is_numeric($template)){
+					$db = JFactory::getDbo();
+					$query = 'SELECT `template`,`params` FROM `#__template_styles` WHERE `id`="'.$template.'" ';
+					$db->setQuery($query);
+					$res = $db->loadAssoc();
+					if($res){
+						$registry = new JRegistry;
+						$registry->loadString($res['params']);
+						$template = $res['template'];
+					}
+				} else {
+					vmAdminInfo('Your template settings are old, please check your template settings in the vm config and in your categories');
+					vmdebug('Your template settings are old, please check your template settings in the vm config and in your categories');
+				}
+				if(is_dir( JPATH_THEMES.DS.$template )) {
+					$app->setTemplate($template,$registry);
+				} else {
+					JError::raiseWarning( 412, 'The chosen template couldnt find on the filesystem: '.$template );
+				}
 			}
-		} else{
-				//JError::raiseWarning('No template set : '.$template);
 		}
+
+		return $template;
 	}
 
-	public function limitStringByWord($string, $maxlength, $suffix=''){
+	/**
+	 *
+	 * Enter description here ...
+	 * @author Max Milbers
+	 * @author Iysov
+	 * @param string $string
+	 * @param int $maxlength
+	 * @param string $suffix
+	 */
+	static public function limitStringByWord ($string, $maxlength, $suffix = '') {
 
-		if(strlen($string)<=$maxlength) return $string;
-		$string = substr($string,0,$maxlength);
-		$index = strrpos($string, ' ');
-		if($index===FALSE){
-			return $string;
-		} else{
-			return substr($string,0,$index).$suffix;
+		if(function_exists( 'mb_strlen' )) {
+			// use multibyte functions by Iysov
+			if(mb_strlen( $string )<=$maxlength) return $string;
+			$string = mb_substr( $string, 0, $maxlength );
+			$index = mb_strrpos( $string, ' ' );
+			if($index === FALSE) {
+				return $string;
+			} else {
+				return mb_substr( $string, 0, $index ).$suffix;
+			}
+		} else { // original code here
+			if(strlen( $string )<=$maxlength) return $string;
+			$string = substr( $string, 0, $maxlength );
+			$index = strrpos( $string, ' ' );
+			if($index === FALSE) {
+				return $string;
+			} else {
+				return substr( $string, 0, $index ).$suffix;
+			}
 		}
 	}
-
 
 	/**
 	 * Admin UI Tabs
@@ -480,45 +570,180 @@ class shopFunctionsF {
 	 * @param $load_template = a key => value array. key = template name, value = Language File contraction
 	 * @example 'shop' => 'COM_VIRTUEMART_ADMIN_CFG_SHOPTAB'
 	 */
-	function buildTabs($load_template = array()) {
-		$document = JFactory::getDocument ();
-		$document->addScript ( JURI::base () . 'components/com_virtuemart/assets/js/tabs.js' );
+	static function buildTabs ($view, $load_template = array()) {
 
+		vmJsApi::js( 'vmtabs' );
 		$html = '<div id="ui-tabs">';
 		$i = 1;
-		foreach ( $load_template as $tab_content => $tab_title ) {
-			$html .= '<div id="tab-' . $i . '" class="tabs" title="' . JText::_ ( $tab_title ) . '">';
-			$html .= $this->loadTemplate ( $tab_content );
-			$html .= '<div class="clear"></div></div>';
-			$i ++;
+		foreach( $load_template as $tab_content => $tab_title ) {
+			$html .= '<div id="tab-'.$i.'" class="tabs" title="'.JText::_( $tab_title ).'">';
+			$html .= $view->loadTemplate( $tab_content );
+			$html .= '<div class="clear"></div>
+			    </div>';
+			$i++;
 		}
 		$html .= '</div>';
 		echo $html;
 	}
-	/**
-	 * Align in plain text the strings
-	 * $string text to resize
-	 * $size, number of char
-	 * $toUpper uppercase Y/N ?
-	 * @author kohl patrick
-	 */
-	function tabPrint( $size, $string,$header = false){
-		if ($header) $string = strtoupper (JText::_($string ) );
-		sprintf("%".$size.".".$size."s",$string ) ;
 
-	}
-	function toupper($strings) {
-		foreach ($strings as &$string) {
-			$string = strtoupper (JText::_($string ) );
+
+
+	static function getComUserOption () {
+
+		if(JVM_VERSION === 1) {
+			return 'com_user';
+		} else {
+			return 'com_users';
 		}
-		return $strings;
+	}
+
+	/**
+	 * Checks if Joomla language keys exist and combines it according to existing keys.
+	 * @string $pkey : primary string to search for Language key (must have %s in the string to work)
+	 * @string $skey : secondary string to search for Language key
+	 * @return string
+	 * @author Max Milbers
+	 * @author Patrick Kohl
+	 */
+	static function translateTwoLangKeys ($pkey, $skey) {
+
+		$upper = strtoupper( $pkey ).'_2STRINGS';
+		if(JText::_( $upper ) !== $upper) {
+			return JText::sprintf( $upper, JText::_( $skey ) );
+		} else {
+			return JText::_( $pkey ).' '.JText::_( $skey );
+		}
+	}
+
+	/**
+	 * Writes a PDF icon
+	 * @author Patrick Kohl
+	 * @param string $link
+	 * @param boolean $use_icon
+	 * @deprecated
+	 */
+	function PdfIcon ($link, $use_icon = TRUE, $modal = TRUE) {
+
+		return VmView::linkIcon( $link, 'COM_VIRTUEMART_PDF', 'pdf_button', 'pdf_button_enable', $modal, $use_icon );
 
 	}
-	function getComUserOption() {
-	 if ( VmConfig::isJ15() ) {
-		return 'com_user';
-	    } else {
-		return 'com_users';
-	    }
+
+	/**
+	 * Writes an Email icon
+	 * @author Patrick Kohl
+	 * @param string $link
+	 * @param boolean $use_icon
+	 * @deprecated
+	 */
+	function EmailIcon ($virtuemart_product_id, $use_icon, $modal) {
+
+		if($virtuemart_product_id>0) {
+			$link = 'index.php?option=com_virtuemart&view=productdetails&task=recommend&virtuemart_product_id='.$virtuemart_product_id.'&tmpl=component';
+			return VmView::linkIcon( $link, 'COM_VIRTUEMART_EMAIL', 'emailButton', 'show_emailfriend', $modal, $use_icon );
+		}
+	}
+
+	/**
+	 * @author RolandD, Christopher Roussel
+	 *
+	 * @deprecated
+	 */
+	function PrintIcon ($link = '', $use_icon = TRUE, $add_text = '') {
+
+		if(VmConfig::get( 'show_printicon', 1 ) == '1') {
+
+			$folder = (JVM_VERSION === 1) ? '/images/M_images/' : '/media/system/images/';
+
+			// checks template image directory for image, if non found default are loaded
+			if($use_icon) {
+				$filter = JFilterInput::getInstance();
+				$text = JHtml::_( 'image.site', 'printButton.png', $folder, NULL, NULL, JText::_( 'COM_VIRTUEMART_PRINT' ) );
+				$text .= $filter->clean( $add_text );
+			} else {
+				$text = '|&nbsp;'.JText::_( 'COM_VIRTUEMART_PRINT' ).'&nbsp;|';
+			}
+			$isPopup = JRequest::getVar( 'pop' );
+			if($isPopup) {
+				// Print Preview button - used when viewing page
+				$html = '<span class="vmNoPrint">
+					<a href="javascript:void(0)" onclick="javascript:window.print(); return false;" title="'.JText::_( 'COM_VIRTUEMART_PRINT' ).'" rel="nofollow">
+					'.$text.'
+					</a></span>';
+				return $html;
+			} else {
+				// Print Button - used in pop-up window
+				return self::vmPopupLink( $link, $text, 640, 480, '_blank', JText::_( 'COM_VIRTUEMART_PRINT' ) );
+			}
+		}
+
+	}
+	
+	/**
+	 * Get Virtuemart itemID from joomla menu
+	 * @author Maik K�nnemann
+	 */
+	static function getMenuItemId( $lang = '*' ) {
+
+		$itemID = '';
+
+		if(empty($lang)) $lang = '*';
+
+		$component	= JComponentHelper::getComponent('com_virtuemart');
+
+		$db = JFactory::getDbo();
+		$q = 'SELECT * FROM `#__menu` WHERE `component_id` = "'. $component->id .'" and `language` = "'. $lang .'"';
+		$db->setQuery( $q );
+		$items = $db->loadObjectList();
+		if(empty($items)) {
+			$q = 'SELECT * FROM `#__menu` WHERE `component_id` = "'. $component->id .'" and `language` = "*"';
+			$db->setQuery( $q );
+			$items = $db->loadObjectList();
+		}
+
+		foreach ($items as $item) {
+			if(strstr($item->link, 'view=virtuemart')) {
+				$itemID = $item->id;
+				break;
+			}
+		}
+
+		if(empty($itemID) && !empty($items[0]->id)) {
+			$itemID = $items[0]->id;
+		}
+
+		return $itemID;
+	}
+
+	static function triggerContentPlugin(  &$article, $context, $field) {
+	// add content plugin //
+		$dispatcher =   JDispatcher::getInstance ();
+		JPluginHelper::importPlugin ('content');
+		$article->text = $article->$field;
+		jimport ('joomla.html.parameter');
+		$params = new JParameter('');
+
+		if (JVM_VERSION === 2) {
+			if (!isset($article->event)) {
+				$article->event = new stdClass();
+			}
+			$results = $dispatcher->trigger ('onContentPrepare', array('com_virtuemart.'.$context, &$article, &$params, 0));
+			// More events for 3rd party content plugins
+			// This do not disturb actual plugins, because we don't modify $vendor->text
+			$res = $dispatcher->trigger ('onContentAfterTitle', array('com_virtuemart.'.$context, &$article, &$params, 0));
+			$article->event->afterDisplayTitle = trim (implode ("\n", $res));
+
+			$res = $dispatcher->trigger ('onContentBeforeDisplay', array('com_virtuemart.'.$context, &$article, &$params, 0));
+			$article->event->beforeDisplayContent = trim (implode ("\n", $res));
+
+			$res = $dispatcher->trigger ('onContentAfterDisplay', array('com_virtuemart.'.$context, &$article, &$params, 0));
+			$article->event->afterDisplayContent = trim (implode ("\n", $res));
+		} else {
+			$results = $dispatcher->trigger ('onPrepareContent', array(& $article, & $params, 0));
+		}
+		$article->$field = $article->text;
+	}
+	static public function mask_string($cc, $mask_char='X')
+	{
+		return str_pad(substr($cc, -4), strlen($cc), $mask_char, STR_PAD_LEFT);
 	}
 }

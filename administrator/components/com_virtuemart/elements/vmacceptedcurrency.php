@@ -1,4 +1,5 @@
 <?php
+defined('_JEXEC') or die();
 
 /**
  *
@@ -14,6 +15,7 @@
  * other free or open source software licenses.
  * @version $Id: $
  */
+
 if (!class_exists('VmConfig'))
     require(JPATH_ROOT . DS . 'administrator' . DS . 'components' . DS . 'com_virtuemart' . DS . 'helpers' . DS . 'config.php');
 /*
@@ -34,6 +36,8 @@ class JElementVmAcceptedCurrency extends JElement {
     var $_name = 'AcceptedCurrency';
 
     function fetchElement($name, $value, &$node, $control_name) {
+
+	    VmConfig::loadJLang('com_virtuemart', false);
 	if (!class_exists('VirtueMartModelVendor'))
 	    require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'vendor.php');
 	$vendorId = 1;//VirtueMartModelVendor::getLoggedVendor();
@@ -51,7 +55,7 @@ class JElementVmAcceptedCurrency extends JElement {
 	$db->setQuery($q);
 	$currencies = $db->loadObjectList();
 	$options = array();
-	$options[] = array( 'value' => 0 ,'text' =>JTExt::_('COM_VIRTUEMART_DEFAULT_VENDOR_CURRENCY'));
+	$options[] = array( 'value' => 0 ,'text' =>JText::_('COM_VIRTUEMART_DEFAULT_VENDOR_CURRENCY'));
 	if (!is_array($currencies)) {
 	    $currencies=(array)$currencies;
 	}
@@ -59,8 +63,9 @@ class JElementVmAcceptedCurrency extends JElement {
 				$options[] = array( 'value' => $currency->value ,'text' =>$currency->text);
 			}
 
+	    $class = ($node->attributes('class') ? 'class="' . $node->attributes('class') . '"' : '');
 
-	return JHTML::_('select.genericlist', $options, $control_name . '[' . $name . ']', '', 'value', 'text', $value, $control_name . $name);
+	return JHTML::_('select.genericlist', $options, $control_name . '[' . $name . ']', $class, 'value', 'text', $value, $control_name . $name);
     }
 
 }

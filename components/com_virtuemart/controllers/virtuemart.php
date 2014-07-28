@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: virtuemart.php 4852 2011-11-28 22:10:02Z electrocity $
+* @version $Id: virtuemart.php 5310 2012-01-23 21:34:19Z Milbo $
  */
 
 // Check to ensure this file is included in Joomla!
@@ -40,28 +40,27 @@ class VirtueMartControllerVirtuemart extends JController
 	    }
 	}
 
-	function Virtuemart() {
+	/**
+	 * Override of display to prevent caching
+	 *
+	 * @return  JController  A JController object to support chaining.
+	 */
+	public function display($cachable = false, $urlparams = false){
 
-		$view = $this->getView(JRequest::getWord('view', 'virtuemart'), 'html');
+		$document = JFactory::getDocument();
+		$viewType = $document->getType();
+		$viewName = JRequest::getCmd('view', $this->default_view);
+		$viewLayout = JRequest::getCmd('layout', 'default');
 
-		/* Load the backend models */
-		/* Push a model into the view */
-		$this->addModelPath(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_virtuemart' . DS . 'models');
-		/* Category functions */
-		$view->setModel( $this->getModel( 'category', 'VirtuemartModel' ));
+		$view = $this->getView($viewName, $viewType, '', array('base_path' => $this->basePath, 'layout' => $viewLayout));
+		$view->assignRef('document', $document);
 
-		/* Vendor functions */
-		$view->setModel( $this->getModel( 'vendor', 'VirtuemartModel' ));
+		$view->display();
 
-		/* Product functions */
-		$view->setModel( $this->getModel( 'product', 'VirtuemartModel' ));
-
-		/* Set the layout */
-		$view->setLayout(JRequest::getWord('layout','default'));
-
-		/* Display it all */
-		$safeurlparams = array('virtuemart_category_id'=>'INT','virtuemart_currency_id'=>'INT','return'=>'BASE64','lang'=>'CMD');
-		parent::display(true, $safeurlparams);//$view->display();
+		return $this;
 	}
+
+
+
 }
  //pure php no closing tag

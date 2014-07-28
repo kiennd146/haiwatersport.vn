@@ -13,14 +13,14 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: view.html.php 4747 2011-11-17 22:54:03Z electrocity $
+ * @version $Id: view.html.php 5601 2012-03-04 18:22:24Z Milbo $
  */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 jimport('joomla.html.pane');
 /**
  * HTML View class for maintaining the list of manufacturers
@@ -29,42 +29,43 @@ jimport('joomla.html.pane');
  * @subpackage Manufacturer
  * @author Patrick Kohl
  */
-class VirtuemartViewManufacturer extends JView {
+class VirtuemartViewManufacturer extends VmView {
 
 	function display($tpl = null) {
 
 		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
+
+
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
 
 
 		// get necessary models
-		$model = $this->getModel();
-		$categoryModel = $this->getModel('manufacturercategories');
+		$model = VmModel::getModel('manufacturer');
 
-		$viewName=ShopFunctions::SetViewTitle();
-		$this->assignRef('viewName',$viewName);
+		$categoryModel = VmModel::getModel('manufacturercategories');
+
+		$this->SetViewTitle();
 
 		$layoutName = JRequest::getWord('layout', 'default');
 		if ($layoutName == 'edit') {
 
 			$manufacturer = $model->getManufacturer();
+
 			$isNew = ($manufacturer->virtuemart_manufacturer_id < 1);
 
 			$model->addImages($manufacturer);
 			$this->assignRef('manufacturer',	$manufacturer);
 
 			/* Process the images */
-			if(!class_exists('VirtueMartModelMedia')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'media.php');
-			$mediaModel = new VirtueMartModelMedia();
+			$mediaModel = VmModel::getModel('media');
 			$mediaModel -> setId($manufacturer->virtuemart_media_id);
 			$image = $mediaModel->getFile('manufacturer','image');
 
 			$manufacturerCategories = $categoryModel->getManufacturerCategories(false,true);
 			$this->assignRef('manufacturerCategories',	$manufacturerCategories);
 
-			ShopFunctions::addStandardEditViewCommands($manufacturer->virtuemart_manufacturer_id);
+			$this->addStandardEditViewCommands($manufacturer->virtuemart_manufacturer_id);
 
 			if(!class_exists('VirtueMartModelVendor')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'vendor.php');
 			$virtuemart_vendor_id = VirtueMartModelVendor::getLoggedVendor();
@@ -78,15 +79,17 @@ class VirtuemartViewManufacturer extends JView {
 
 			$categoryFilter = $categoryModel->getCategoryFilter();
 
+			$this->addStandardDefaultViewCommands();
+			$this->addStandardDefaultViewLists($model,'mf_name');
+
 			$manufacturers = $model->getManufacturers();
 			$this->assignRef('manufacturers',	$manufacturers);
 
-			ShopFunctions::addStandardDefaultViewCommands();
-			$lists = ShopFunctions::addStandardDefaultViewLists($model,'mf_name');
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
 
 			$virtuemart_manufacturercategories_id	= $mainframe->getUserStateFromRequest( 'com_virtuemart.virtuemart_manufacturercategories_id', 'virtuemart_manufacturercategories_id', 0, 'int' );
-			$lists['virtuemart_manufacturercategories_id'] =  JHTML::_('select.genericlist',   $categoryFilter, 'virtuemart_manufacturercategories_id', 'class="inputbox" onchange="this.form.submit()"', 'value', 'text', $virtuemart_manufacturercategories_id );
-			$this->assignRef('lists', $lists);
+			$this->lists['virtuemart_manufacturercategories_id'] =  JHTML::_('select.genericlist',   $categoryFilter, 'virtuemart_manufacturercategories_id', 'class="inputbox" onchange="this.form.submit()"', 'value', 'text', $virtuemart_manufacturercategories_id );
 
 		}
 

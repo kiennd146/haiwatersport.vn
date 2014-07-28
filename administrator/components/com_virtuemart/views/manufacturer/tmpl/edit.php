@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit.php 4700 2011-11-14 05:50:36Z electrocity $
+* @version $Id: edit.php 6350 2012-08-14 17:18:08Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 
@@ -28,13 +28,13 @@ AdminUIHelper::startAdminArea();
 <?php // Loading Templates in Tabs
 $tabarray = array();
 $tabarray['description'] = 'COM_VIRTUEMART_DESCRIPTION';
-$tabarray['images'] = 'COM_VIRTUEMART_IMAGE_S';
+$tabarray['images'] = 'COM_VIRTUEMART_IMAGES';
 
-AdminUIHelper::buildTabs ( $tabarray ,$this->manufacturer->virtuemart_manufacturer_id);
+AdminUIHelper::buildTabs ( $this,  $tabarray ,$this->manufacturer->virtuemart_manufacturer_id);
 // Loading Templates in Tabs END ?>
 
 	<input type="hidden" name="virtuemart_manufacturer_id" value="<?php echo $this->manufacturer->virtuemart_manufacturer_id; ?>" />
-	<?php echo VmHTML::HiddenEdit() ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 <script type="text/javascript">
 function toggleDisable( elementOnChecked, elementDisable, disableOnChecked ) {

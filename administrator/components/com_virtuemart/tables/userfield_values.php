@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: userfield_values.php 3438 2011-06-06 20:37:06Z Milbo $
+* @version $Id: userfield_values.php 6361 2012-08-21 16:05:40Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -64,14 +64,14 @@ class TableUserfield_values extends VmTable {
 	 */
 	function check()
 	{
-		if (preg_match('/[^a-z0-9\._\-]/i', $this->fieldtitle) > 0) {
-			$this->setError(JText::_('COM_VIRTUEMART_TITLE_IN_FIELDVALUES_CONTAINS_INVALID_CHARACTERS'));
+		if (preg_match('/[^a-z0-9\._\-]/i', $this->fieldvalue) > 0) {
+			vmError(JText::_('COM_VIRTUEMART_TITLE_IN_FIELDVALUES_CONTAINS_INVALID_CHARACTERS'));
 			return false;
 		}
 
 		$db = JFactory::getDBO();
 		$q = 'SELECT `virtuemart_userfield_value_id` FROM `#__virtuemart_userfield_values` '
-			. 'WHERE `fieldtitle`="' . $this->fieldtitle . '" '
+			. 'WHERE `fieldvalue`="' . $this->fieldvalue . '" '
 			. 'AND   `virtuemart_userfield_id`=' . $this->virtuemart_userfield_id;
 		$db->setQuery($q);
 		$_id = $db->loadResult();
@@ -88,12 +88,12 @@ class TableUserfield_values extends VmTable {
 	 * @var Field id
 	 * @return boolean True on success
 	 */
-	function delete($virtuemart_userfield_id)
-	{
+	function delete( $virtuemart_userfield_id=null , $where = 0 ){
+
 		$db = JFactory::getDBO();
 		$db->setQuery('DELETE from `#__virtuemart_userfield_values` WHERE `virtuemart_userfield_id` = ' . $virtuemart_userfield_id);
 		if ($db->query() === false) {
-			$this->setError($db->getError());
+			vmError($db->getError());
 			return false;
 		}
 		return true;

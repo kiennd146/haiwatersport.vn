@@ -16,7 +16,7 @@
 * @version $Id: default.php 2978 2011-04-06 14:21:19Z alatak $
 */
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 jimport('joomla.filesystem.file');
 
@@ -30,7 +30,7 @@ $keyword = JRequest::getWord('keyword', null);
 <div id="header">
 	<div>
 		<?php
-			if (JRequest::getInt('virtuemart_product_id', false)) echo JHTML::_('link', JRoute::_('index.php?view=custom&option='.$option), JText::_('COM_VIRTUEMART_PRODUCT_FILES_LIST_RETURN'));
+			if (JRequest::getInt('virtuemart_product_id', false)) echo JHTML::_('link', JRoute::_('index.php?option='.$option.'&view=custom',FALSE), JText::_('COM_VIRTUEMART_PRODUCT_FILES_LIST_RETURN'));
 		echo $this->customs->customsSelect ;
 		echo JText::_('COM_VIRTUEMART_SEARCH_LBL') .' '.JText::_('COM_VIRTUEMART_TITLE') ?>&nbsp;
 		<input type="text" value="<?php echo $keyword; ?>" name="keyword" size="25" class="inputbox" />
@@ -43,7 +43,7 @@ $keyword = JRequest::getWord('keyword', null);
 <?php
 $customs = $this->customs->items;
 //$roles = $this->customlistsroles;
-$pagination = $this->pagination;
+
 ?>
 
 
@@ -60,14 +60,11 @@ $pagination = $this->pagination;
 		<th><?php echo JText::_('COM_VIRTUEMART_CUSTOM_ADMIN_ONLY'); ?></th>
 		<th><?php echo JText::_('COM_VIRTUEMART_CUSTOM_IS_HIDDEN'); ?></th>
 		<th>
-		<?php echo JHTML::_('grid.sort'
-				, JText::_('COM_VIRTUEMART_ORDERING')
-				, 'ordering'
-				, $this->lists['filter_order_Dir']
-				, $this->lists['filter_order']); ?>
+		<?php echo $this->sort('ordering') ?>
 		<?php echo JHTML::_('grid.order',  $customs ); ?>
 		</th>
 		<th><?php echo JText::_('COM_VIRTUEMART_PUBLISHED'); ?></th>
+		  <th><?php echo $this->sort('virtuemart_custom_id', 'COM_VIRTUEMART_ID')  ?></th>
 	</tr>
 	</thead>
 	<tbody>
@@ -84,7 +81,7 @@ $pagination = $this->pagination;
 			?>
 			<tr class="row<?php echo $k ; ?>">
 				<!-- Checkbox -->
-				<td><?php echo $checked; echo $custom->virtuemart_custom_id; ?></td>
+				<td><?php echo $checked; ?></td>
 				<?php
 				$link = "index.php?view=custom&keyword=".urlencode($keyword)."&custom_parent_id=".$custom->custom_parent_id."&option=".$option;
 				?>
@@ -93,7 +90,7 @@ $pagination = $this->pagination;
                             $lang = JFactory::getLanguage();
                             $text = $lang->hasKey($custom->custom_parent_title) ? JText::_($custom->custom_parent_title) : $custom->custom_parent_title;
 
-                                echo JHTML::_('link', JRoute::_($link),$text, array('title' => JText::_('COM_VIRTUEMART_FILTER_BY').' '.$text)); ?></td>
+                                echo JHTML::_('link', JRoute::_($link,FALSE),$text, array('title' => JText::_('COM_VIRTUEMART_FILTER_BY').' '.$text)); ?></td>
 
 				<!-- Product name -->
 				<?php
@@ -101,7 +98,7 @@ $pagination = $this->pagination;
 				if ($custom->is_cart_attribute) $cartIcon=  'default';
 							 else  $cartIcon= 'default-off';
 				?>
-				<td><?php echo JHTML::_('link', JRoute::_($link), $custom->custom_title, array('title' => JText::_('COM_VIRTUEMART_EDIT').' '.$custom->custom_title)); ?></td>
+				<td><?php echo JHTML::_('link', JRoute::_($link, FALSE), $custom->custom_title, array('title' => JText::_('COM_VIRTUEMART_EDIT').' '.$custom->custom_title)); ?></td>
 				<td><?php echo $custom->custom_field_desc; ?></td>
 				<td><?php echo $custom->field_type_display; ?></td>
 				<td><span class="vmicon vmicon-16-<?php echo $cartIcon ?>"></span></td>
@@ -111,11 +108,12 @@ $pagination = $this->pagination;
 				<td><a href="javascript:void(0);" onclick="return listItemTask('cb<?php echo $i;?>','toggle.is_hidden')" title="<?php echo ($custom->is_hidden ) ? JText::_('COM_VIRTUEMART_YES') : JText::_('COM_VIRTUEMART_NO');?>">
 					<span class="vmicon <?php echo ( $custom->is_hidden  ? 'vmicon-16-checkin' : 'vmicon-16-bug' );?>"></span></a></td>
 				<td align="center" class="order">
-					<span><?php echo $this->pagination->orderUpIcon($i, true, 'orderUp', 'Move Up'); ?></span>
-					<span><?php echo $this->pagination->orderDownIcon( $i, $n, true, 'orderDown', 'Move Down'); ?></span>
+					<span><?php echo $this->pagination->orderUpIcon($i, true, 'orderUp', JText::_('COM_VIRTUEMART_MOVE_UP')); ?></span>
+					<span><?php echo $this->pagination->orderDownIcon( $i, $n, true, 'orderDown', JText::_('COM_VIRTUEMART_MOVE_DOWN')); ?></span>
 					<input class="ordering" type="text" name="order[<?php echo $i?>]" id="order[<?php echo $i?>]" size="5" value="<?php echo $custom->ordering; ?>" style="text-align: center" />
 				</td>
 				<td><?php echo $published; ?></td>
+				<td><?php echo $custom->virtuemart_custom_id; ?></td>
 			</tr>
 		<?php
 			$k = 1 - $k;

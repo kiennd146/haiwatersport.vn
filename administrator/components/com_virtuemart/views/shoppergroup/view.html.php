@@ -13,14 +13,14 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: view.html.php 5047 2011-12-12 21:12:33Z Milbo $
+ * @version $Id: view.html.php 6373 2012-08-24 10:41:03Z Milbo $
  */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport('joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * HTML View class for maintaining the list of shopper groups
@@ -29,46 +29,57 @@ jimport('joomla.application.component.view');
  * @subpackage ShopperGroup
  * @author Markus �hler
  */
-class VirtuemartViewShopperGroup extends JView {
+class VirtuemartViewShopperGroup extends VmView {
 
 	function display($tpl = null) {
 		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('shopFunctions');
+
+
 		if (!class_exists('VmHTML')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'html.php');
 
 // 		$this->assignRef('perms', Permissions::getInstance());
 
-		$model = $this->getModel();
+		$model = VmModel::getModel();
 
-		$layoutName = JRequest::getWord('layout', 'default');
+		$layoutName = $this->getLayout();
+
+		$task = JRequest::getWord('task',$layoutName);
+		$this->assignRef('task', $task);
+
 		if ($layoutName == 'edit') {
+			//For shoppergroup specific price display
+			VmConfig::loadJLang('com_virtuemart_config');
+
 			$shoppergroup = $model->getShopperGroup();
-			$viewName=ShopFunctions::SetViewTitle('SHOPPERGROUP',$shoppergroup->shopper_group_name);
-			$this->assignRef('viewName',$viewName);
+			$this->SetViewTitle('SHOPPERGROUP',$shoppergroup->shopper_group_name);
+
 
 			$vendors = ShopFunctions::renderVendorList($shoppergroup->virtuemart_vendor_id);
 			$this->assignRef('vendorList',	$vendors);
 
 			$this->assignRef('shoppergroup',	$shoppergroup);
 
-			ShopFunctions::addStandardEditViewCommands();
+			$this->addStandardEditViewCommands();
 
 
 		} else {
-			$viewName=ShopFunctions::SetViewTitle();
-			$this->assignRef('viewName',$viewName);
-			JToolBarHelper::makeDefault();
-			$shoppergroups = $model->getShopperGroups(false, true);
+			$this->SetViewTitle();
 
+			JToolBarHelper::makeDefault();
+
+
+			if(!class_exists('Permissions')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'permissions.php');
+			$showVendors = Permissions::getInstance()->check('admin');
+			$this->assignRef('showVendors',$showVendors);
+
+			$this->addStandardDefaultViewCommands();
+			$this->addStandardDefaultViewLists($model);
+
+			$shoppergroups = $model->getShopperGroups(false, true);
 			$this->assignRef('shoppergroups',	$shoppergroups);
 
-			$this->loadHelper('permissions');
-			$this->assignRef('showVendors',Permissions::getInstance()->check('admin'));
-
-			ShopFunctions::addStandardDefaultViewCommands();
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
-			$this->assignRef('lists', $lists);
+			$pagination = $model->getPagination();
+			$this->assignRef('sgrppagination', $pagination);
 
 		}
 		parent::display($tpl);

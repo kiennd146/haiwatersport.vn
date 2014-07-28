@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4787 2011-11-22 07:36:17Z alatak $
+* @version $Id: default.php 6475 2012-09-21 11:54:21Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 //if($virtuemart_vendor_id==1 || $perm->check( 'admin' )){
 
 ?>
@@ -29,40 +29,39 @@ AdminUIHelper::startAdminArea();
 		<table class="adminlist" cellspacing="0" cellpadding="0">
 		<thead>
 		<tr>
-			<th width="2">
-				<?php echo JText::_('COM_VIRTUEMART_#'); ?>
-			</th>
+
 			<th width="2">
 				<input type="checkbox" name="toggle" value="" onclick="checkAll(<?php echo count($this->payments); ?>);" />
 			</th>
 			<th >
-				<?php echo JText::_('COM_VIRTUEMART_PAYMENT_LIST_NAME'); ?>
+				<?php echo $this->sort('payment_name', 'COM_VIRTUEMART_PAYMENT_LIST_NAME'); ?>
 			</th>
 			 <th>
 				<?php echo JText::_('COM_VIRTUEMART_PAYMENT_LIST_DESCRIPTION_LBL'); ?>
 			</th>
 			<?php if($this->perms->check( 'admin' )){ ?>
 			<th >
-				<?php echo JText::_('COM_VIRTUEMART_VENDOR');  ?>
+				<?php echo $this->sort('virtuemart_vendor_id', 'COM_VIRTUEMART_VENDOR');  ?>
 			</th><?php }?>
 
 			<th  >
 				<?php echo JText::_('COM_VIRTUEMART_PAYMENT_SHOPPERGROUPS'); ?>
 			</th>
 			<th >
-				<?php echo JText::_('COM_VIRTUEMART_PAYMENT_ELEMENT'); ?>
+				<?php echo $this->sort('payment_element', 'COM_VIRTUEMART_PAYMENT_ELEMENT'); ?>
 			</th>
 			<th  >
-				<?php echo JText::_('COM_VIRTUEMART_LIST_ORDER'); ?>
+				<?php echo $this->sort('ordering', 'COM_VIRTUEMART_LIST_ORDER'); ?>
 			</th>
 			<th >
-				<?php echo JText::_('COM_VIRTUEMART_PUBLISHED'); ?>
+				<?php echo $this->sort('published', 'COM_VIRTUEMART_PUBLISHED'); ?>
 			</th>
 			<?php if(Vmconfig::get('multix','none')!=='none'){ ?>
 			<th width="10">
-				<?php echo JText::_('COM_VIRTUEMART_CALC_SHARED'); ?>
+				<?php echo JText::_('COM_VIRTUEMART_SHARED'); ?>
 			</th>
 			<?php } ?>
+			 <th><?php echo $this->sort('virtuemart_paymentmethod_id', 'COM_VIRTUEMART_ID')  ?></th>
 		</tr>
 		</thead>
 		<?php
@@ -76,9 +75,7 @@ AdminUIHelper::startAdminArea();
 			$editlink = JROUTE::_('index.php?option=com_virtuemart&view=paymentmethod&task=edit&cid[]=' . $row->virtuemart_paymentmethod_id);
 			?>
 			<tr class="<?php echo "row".$k; ?>">
-				<td align="center">
-					<?php echo $row->virtuemart_paymentmethod_id; ?>
-				</td>
+
 				<td align="center" >
 					<?php echo $checked; ?>
 				</td>
@@ -111,6 +108,9 @@ AdminUIHelper::startAdminArea();
 					<?php echo $row->shared; ?>
 				</td>
 				<?php } ?>
+				<td align="center">
+					<?php echo $row->virtuemart_paymentmethod_id; ?>
+				</td>
 			</tr>
 			<?php
 			$k = 1 - $k;
@@ -126,12 +126,7 @@ AdminUIHelper::startAdminArea();
 	</table>
 </div>
 
-	<input type="hidden" name="option" value="com_virtuemart" />
-	<input type="hidden" name="controller" value="paymentmethod" />
-	<input type="hidden" name="view" value="paymentmethod" />
-	<input type="hidden" name="task" value="" />
-	<input type="hidden" name="boxchecked" value="0" />
-	<?php echo JHTML::_( 'form.token' ); ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 

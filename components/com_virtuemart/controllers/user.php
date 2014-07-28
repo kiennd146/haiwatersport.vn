@@ -13,7 +13,7 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: user.php 4553 2011-10-26 13:16:31Z Milbo $
+ * @version $Id: user.php 6355 2012-08-20 09:23:27Z Milbo $
  */
 
 // Check to ensure this file is included in Joomla!
@@ -34,66 +34,46 @@ class VirtueMartControllerUser extends JController
 	{
 		parent::__construct();
 		$this->useSSL = VmConfig::get('useSSL',0);
-		$this->useXHTML = true;
+		$this->useXHTML = false;
+		VmConfig::loadJLang('com_virtuemart_shoppers',TRUE);
 	}
 
 	/**
-	 * The general user/account maintance view for editing userdata.
-	 * It redirects automatically to the task register for anonymous users.
+	 * Override of display to prevent caching
 	 *
+	 * @return  JController  A JController object to support chaining.
 	 */
-	public function User(){
+	public function display(){
 
-		//We just setup a new task for non registered users
-		$user = JFactory::getUser();
-		$view = $this->getView('user', 'html');
+		$document = JFactory::getDocument();
+		$viewType = $document->getType();
+		$viewName = JRequest::getCmd('view', $this->default_view);
+		$viewLayout = JRequest::getCmd('layout', 'default');
 
-		/* Add the default model */
-		$this->addModelPath( JPATH_VM_ADMINISTRATOR.DS.'models' );
-		$view->setModel( $this->getModel( 'user', 'VirtuemartModel' ), true );
-		$view->setModel( $this->getModel( 'vendor', 'VirtuemartModel' ), true );
-		$view->setModel( $this->getModel( 'userfields', 'VirtuemartModel' ), true );
-		$view->setModel( $this->getModel( 'currency', 'VirtuemartModel' ), true );
-		$view->setModel( $this->getModel( 'orders', 'VirtuemartModel' ), true );
+		$view = $this->getView($viewName, $viewType, '', array('base_path' => $this->basePath, 'layout' => $viewLayout));
+		$view->assignRef('document', $document);
 
-		$cid = JRequest::getVar('cid',null);
-		if(!isset($cid)){
-			JRequest::setVar('cid', (int)0);
-// 			$view->setLayout('default');
-		} else {
-// 			$view->setLayout('edit');
-		}
-
-		$view->setLayout('edit');
-
-		//Important! sanitize array to int
-		jimport( 'joomla.utilities.arrayhelper' );
-		JArrayHelper::toInteger($cid);
-
-		$ftask ='saveUser';
-		$view->assignRef('fTask', $ftask);
-
-		/* Display it all */
 		$view->display();
 
+		return $this;
 	}
 
 	function edit(){
 
 	}
 
-	function editAddressSt(){
+	/**
+	 * deprecated
+	 */
+	function editAddressST(){
 
 		$view = $this->getView('user', 'html');
 
-		$this->addModelPath( JPATH_VM_ADMINISTRATOR.DS.'models' );
-		$view->setModel( $this->getModel( 'user', 'VirtuemartModel' ), true );
-		$view->setModel( $this->getModel( 'userfields', 'VirtuemartModel' ), true );
 		$view->setLayout('edit_address');
 
-		$ftask ='saveUser';
+		$ftask ='saveAddressST';
 		$view->assignRef('fTask', $ftask);
-		/* Display it all */
+		// Display it all
 		$view->display();
 
 	}
@@ -110,15 +90,12 @@ class VirtueMartControllerUser extends JController
 
 		$view = $this->getView('user', 'html');
 
-		$this->addModelPath( JPATH_VM_ADMINISTRATOR.DS.'models' );
-		$view->setModel( $this->getModel( 'user', 'VirtuemartModel' ), true );
-		$view->setModel( $this->getModel( 'userfields', 'VirtuemartModel' ), true );
 		$view->setLayout('edit_address');
 
 		$ftask ='savecartuser';
 		$view->assignRef('fTask', $ftask);
 
-		/* Display it all */
+		// Display it all
 		$view->display();
 
 	}
@@ -134,15 +111,12 @@ class VirtueMartControllerUser extends JController
 
 		$view = $this->getView('user', 'html');
 
-		$this->addModelPath( JPATH_VM_ADMINISTRATOR.DS.'models' );
-		$view->setModel( $this->getModel( 'user', 'VirtuemartModel' ), true );
-		$view->setModel( $this->getModel( 'userfields', 'VirtuemartModel' ), true );
 		$view->setLayout('edit_address');
 
 		$ftask ='savecheckoutuser';
 		$view->assignRef('fTask', $ftask);
 
-		/* Display it all */
+		// Display it all
 		$view->display();
 	}
 
@@ -154,15 +128,17 @@ class VirtueMartControllerUser extends JController
 	 */
 	function saveCheckoutUser(){
 
-		$msg = $this->saveData(true);
+		$msg = $this->saveData(true,VmConfig::get('reg_silent',0));
 
 		//We may add here the option for silent registration.
 		$this->setRedirect( JRoute::_('index.php?option=com_virtuemart&view=cart&task=checkout',$this->useXHTML,$this->useSSL), $msg );
 	}
 
 	function registerCheckoutUser(){
-		$msg = $this->saveData(true,true);
-		$this->setRedirect(JRoute::_( 'index.php?option=com_virtuemart&view=cart&task=checkout',$this->useXHTML,$this->useSSL ),$msg);
+		if($this->checkCaptcha('index.php?option=com_virtuemart&view=user&task=editaddresscheckout&addrtype=BT') != FALSE) {
+			$msg = $this->saveData(true,true);
+			$this->setRedirect(JRoute::_( 'index.php?option=com_virtuemart&view=cart&task=checkout',$this->useXHTML,$this->useSSL ),$msg);
+		}
 	}
 
 	/**
@@ -173,14 +149,21 @@ class VirtueMartControllerUser extends JController
 	 */
 	function saveCartUser(){
 
-		$msg = $this->saveData(true);
-		$this->setRedirect(JRoute::_( 'index.php?option=com_virtuemart&view=cart' ),$msg);
+		$addressType = vRequest::getString('address_type');
+		if($addressType=='BT'){
+			$msg = $this->saveData(true,VmConfig::get('reg_silent',0));
+		} else {
+			$msg = $this->saveData(false,false,true);
+		}
+
+		$this->setRedirect(JRoute::_( 'index.php?option=com_virtuemart&view=cart', FALSE ),$msg);
 	}
 
 	function registerCartuser(){
-
-		$msg = $this->saveData(true, true);
-		$this->setRedirect(JRoute::_('index.php?option=com_virtuemart&view=cart') , $msg);
+		if($this->checkCaptcha('index.php?option=com_virtuemart&view=user&task=editaddresscart&addrtype=BT') != FALSE) {
+			$msg = $this->saveData(true, true);
+			$this->setRedirect(JRoute::_('index.php?option=com_virtuemart&view=cart', FALSE) , $msg);
+		}
 	}
 
 
@@ -193,81 +176,95 @@ class VirtueMartControllerUser extends JController
 	 */
 	function saveUser(){
 
-		$msg = $this->saveData(false,true);
-		$this->setRedirect( JRoute::_('index.php?option=com_virtuemart&view=user'), $msg );
+		$layout = JRequest::getWord('layout','edit');
+		if($this->checkCaptcha('index.php?option=com_virtuemart&view=user&layout='.$layout) != FALSE) {
+			$msg = $this->saveData(true, true);
+			$this->setRedirect( JRoute::_('index.php?option=com_virtuemart&view=user&layout='.$layout, FALSE), $msg );
+		}
+
 	}
 
+	function saveAddressST(){
+
+		$msg = $this->saveData(false,false,true);
+		$layout = 'edit';// JRequest::getWord('layout','edit');
+		$this->setRedirect( JRoute::_('index.php?option=com_virtuemart&view=user&layout='.$layout, FALSE), $msg );
+
+	}
 
 	/**
-	 * Save the user info. The saveData function dont use the userModel store function for anonymous shoppers, because it would register them.
+	 * Save the user info. The saveData function don't use the userModel store function for anonymous shoppers, because it would register them.
 	 * We make this function private, so we can do the tests in the tasks.
 	 *
 	 * @author Max Milbers
 	 * @author Valérie Isaksen
 	 *
-	 * @param boolean Defaults to false, the param is for the userModel->store function, which needs it to determin how to handle the data.
+	 * @param boolean Defaults to false, the param is for the userModel->store function, which needs it to determine how to handle the data.
 	 * @return String it gives back the messages.
 	 */
-	private function saveData($cart=false,$register=false) {
+	private function saveData($cart=false,$register=false, $onlyAddress=false) {
 		$mainframe = JFactory::getApplication();
 		$currentUser = JFactory::getUser();
 		$msg = '';
 
 		$data = JRequest::get('post');
 
-// 		vmdebug('$currentUser',$currentUser);
-		if($currentUser->id!=0 || $register){
-			$this->addModelPath( JPATH_VM_ADMINISTRATOR.DS.'models' );
-			$userModel = $this->getModel('user');
+		if(empty($data['address_type'])){
+			$data['address_type'] = vRequest::getCmd('addrtype','BT');
+		}
+
+		if($currentUser->guest!=1 || $register){
+			$userModel = VmModel::getModel('user');
 
 			if(!$cart){
 				// Store multiple selectlist entries as a ; separated string
-				if (key_exists('vendor_accepted_currencies', $data) && is_array($data['vendor_accepted_currencies'])) {
+				if (array_key_exists('vendor_accepted_currencies', $data) && is_array($data['vendor_accepted_currencies'])) {
 					$data['vendor_accepted_currencies'] = implode(',', $data['vendor_accepted_currencies']);
 				}
 
 				$data['vendor_store_name'] = JRequest::getVar('vendor_store_name','','post','STRING',JREQUEST_ALLOWHTML);
 				$data['vendor_store_desc'] = JRequest::getVar('vendor_store_desc','','post','STRING',JREQUEST_ALLOWHTML);
 				$data['vendor_terms_of_service'] = JRequest::getVar('vendor_terms_of_service','','post','STRING',JREQUEST_ALLOWHTML);
+				$data['vendor_letter_css'] = JRequest::getVar('vendor_letter_css','','post','STRING',JREQUEST_ALLOWHTML);
+				$data['vendor_letter_header_html'] = JRequest::getVar('vendor_letter_header_html','','post','STRING',JREQUEST_ALLOWHTML);
+				$data['vendor_letter_footer_html'] = JRequest::getVar('vendor_letter_footer_html','','post','STRING',JREQUEST_ALLOWHTML);
 			}
 
 			//It should always be stored
-			// 			if($currentUser->id==0 ){
-			$ret = $userModel->store($data);
-			// 			}
-
-			if($currentUser->id==0){
+			if($onlyAddress){
+				$ret = $userModel->storeAddress($data);
+			} else {
+				$ret = $userModel->store($data);
+			}
+			if(!$onlyAddress and $currentUser->guest==1){
 				$msg = (is_array($ret)) ? $ret['message'] : $ret;
-				$usersConfig = &JComponentHelper::getParams( 'com_users' );
+				$usersConfig = JComponentHelper::getParams( 'com_users' );
 				$useractivation = $usersConfig->get( 'useractivation' );
-				if (is_array($ret) && $ret['success'] && !$useractivation) {
+
+				if (is_array($ret) and $ret['success'] and !$useractivation) {
 					// Username and password must be passed in an array
 					$credentials = array('username' => $ret['user']->username,
 			  					'password' => $ret['user']->password_clear
 					);
 					$return = $mainframe->login($credentials);
+				} else if(VmConfig::get('oncheckout_only_registered',0)){
+					$layout = JRequest::getWord('layout','edit');
+					$this->redirect( JRoute::_('index.php?option=com_virtuemart&view=user&layout='.$layout, FALSE), $msg );
 				}
-			}
 
+			}
 
 		}
 
-		$this->saveToCart($data);
+		if(!class_exists('VirtueMartCart')) require(JPATH_VM_SITE.DS.'helpers'.DS.'cart.php');
+		$cart = VirtueMartCart::getCart();
+
+		$cart->saveAddressInCart($data, $data['address_type']);
+
 		return $msg;
 	}
 
-	/**
-	 * This function just gets the post data and put the data if there is any to the cart
-	 *
-	 * @author Max Milbers
-	 */
-	private function saveToCart($data){
 
-		if(!class_exists('VirtueMartCart')) require(JPATH_VM_SITE.DS.'helpers'.DS.'cart.php');
-		$cart = VirtueMartCart::getCart();
-		$cart->saveAddressInCart($data, $data['address_type']);
-
-	}
 
 	/**
 	 * Editing a user address was cancelled when called from the cart; return to the cart
@@ -276,7 +273,7 @@ class VirtueMartControllerUser extends JController
 	 */
 	function cancelCartUser(){
 
-		$this->setRedirect( JRoute::_('index.php?option=com_virtuemart&view=cart'), $msg );
+		$this->setRedirect( JRoute::_('index.php?option=com_virtuemart&view=cart', FALSE)  );
 	}
 
 	/**
@@ -285,7 +282,7 @@ class VirtueMartControllerUser extends JController
 	 * @author Oscar van Eijk
 	 */
 	function cancelCheckoutUser(){
-		$this->setRedirect( JRoute::_('index.php?option=com_virtuemart&view=cart&task=checkout',$this->useXHTML,$this->useSSL), $msg );
+		$this->setRedirect( JRoute::_('index.php?option=com_virtuemart&view=cart&task=checkout',$this->useXHTML,$this->useSSL) );
 	}
 
 	/**
@@ -299,6 +296,46 @@ class VirtueMartControllerUser extends JController
 		$this->setRedirect( $return );
 	}
 
+
+	function removeAddressST(){
+
+		$virtuemart_userinfo_id = JRequest::getVar('virtuemart_userinfo_id');
+
+		//Lets do it dirty for now
+		$userModel = VmModel::getModel('user');
+		$userModel->removeAddress($virtuemart_userinfo_id);
+
+		$layout = JRequest::getWord('layout','edit');
+		$this->setRedirect( JRoute::_('index.php?option=com_virtuemart&view=user&layout='.$layout, $this->useXHTML,$this->useSSL) );
+	}
+
+	/**
+	 * Check the Joomla ReCaptcha Plg
+	 *
+	 * @author Maik Künnemann
+	 */
+	function checkCaptcha($retUrl){
+		if(JFactory::getUser()->guest==1 and VmConfig::get ('reg_captcha')){
+			$recaptcha = vRequest::getVar ('recaptcha_response_field');
+			JPluginHelper::importPlugin('captcha');
+			$dispatcher = JDispatcher::getInstance();
+			$res = $dispatcher->trigger('onCheckAnswer',$recaptcha);
+			if(!$res[0]){
+				$data = vRequest::getPost();
+				$data['address_type'] = vRequest::getVar('addrtype','BT');
+				if(!class_exists('VirtueMartCart')) require(JPATH_VM_SITE.DS.'helpers'.DS.'cart.php');
+				$cart = VirtueMartCart::getCart();
+				$cart->saveAddressInCart($data, $data['address_type']);
+				$errmsg = vmText::_('PLG_RECAPTCHA_ERROR_INCORRECT_CAPTCHA_SOL');
+				$this->setRedirect (JRoute::_ ($retUrl . '&captcha=1', FALSE), $errmsg);
+				return FALSE;
+			} else {
+				return TRUE;
+			}
+		} else {
+			return TRUE;
+		}
+	}
 
 }
 // No closing tag

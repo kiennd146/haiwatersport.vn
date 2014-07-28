@@ -13,13 +13,13 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: edit_shipto.php 4322 2011-10-09 20:18:35Z Milbo $
+ * @version $Id: edit_shipto.php 5843 2012-04-09 17:29:17Z Milbo $
  */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 
@@ -32,7 +32,7 @@ AdminUIHelper::startAdminArea();
 	$_set = false;
 	$_table = false;
 	$_hiddenFields = '';
-
+// 	vmdebug('shipToFields',$this->shipToFields);
 	if (count($this->shipToFields['functions']) > 0) {
 		echo '<script language="javascript">'."\n";
 		echo join("\n", $this->shipToFields['functions']);
@@ -91,8 +91,11 @@ AdminUIHelper::startAdminArea();
 		echo '</fieldset>'."\n";
 	}
 	echo $_hiddenFields;
+
+if(!empty($this->virtuemart_userinfo_id)){
+	echo '<input type="hidden" name="shipto_virtuemart_userinfo_id" value="'.$this->shipToId.'" />';
+}
 ?>
-<input type="hidden" name="shipto_virtuemart_userinfo_id" value="<?php echo $this->shipToID; ?>" />
 
 </fieldset>
 

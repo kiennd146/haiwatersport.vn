@@ -13,15 +13,16 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit.php 5129 2011-12-19 10:06:57Z alatak $
+* @version $Id: edit.php 6361 2012-08-21 16:05:40Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 vmJsApi::JvalideForm();
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_USERFIELD_DETAILS');
+// vmdebug ('$this->userField',$this->userField);
 ?>
 
 <form action="index.php" method="post" name="adminForm" id="adminForm">
@@ -30,7 +31,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_USERFIELD_DETAILS');
 <div class="col50">
 	<fieldset>
 	<legend><?php echo JText::_('COM_VIRTUEMART_USERFIELD_DETAILS'); ?></legend>
-	<table class="admintable">
+	<table class="admintable" width="100%">
 		<?php echo VmHTML::row('raw','COM_VIRTUEMART_FIELDMANAGER_TYPE', $this->lists['type'] ); ?>
 
 		<!-- Start Type specific attributes -->
@@ -47,7 +48,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_USERFIELD_DETAILS');
 
 				<div id="divColsRows">
 					<fieldset>
-					<legend><?php echo JText::_('COM_VIRTUEMART_TEXTAREA_ATTRIBUTES'); ?></legend>
+					<legend><?php echo JText::_('COM_VIRTUEMART_COL_ROWS_ATTRIBUTES'); ?></legend>
 						<table class="admintable">
 							<?php echo VmHTML::row('input','COM_VIRTUEMART_USERFIELDS_COLUMNS','cols',$this->userField->cols,'class="inputbox"','',5); ?>
 							<?php echo VmHTML::row('input','COM_VIRTUEMART_USERFIELDS_ROWS','rows',$this->userField->rows,'class="inputbox"','',5); ?>
@@ -55,16 +56,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_USERFIELD_DETAILS');
 					</fieldset>
 				</div>
 
-				<div id="divShopperGroups">
-					<fieldset>
-					<legend><?php echo JText::_('COM_VIRTUEMART_FIELDS_EUVATID_ATTRIBUTES'); ?></legend>
-						<table class="admintable">
-							<?php echo VmHTML::row('raw','COM_VIRTUEMART_USERFIELDS_EUVATID_MOVESHOPPER', $this->lists['shoppergroups'] ); ?>
-						</table>
-					</fieldset>
-				</div>
-
-				<div id="divAgeVerification" style="text-align:left;height: 280px;overflow: auto;">
+				<div id="divAgeVerification" style="text-align:left;">
 					<fieldset>
 					<legend><?php echo JText::_('COM_VIRTUEMART_FIELDS_AGEVERIFICATION_ATTRIBUTES'); ?></legend>
 						<table class="admintable">
@@ -82,19 +74,27 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_USERFIELD_DETAILS');
 					</fieldset>
 				</div>
 
-				<div id="divValues" style="text-align:left;height: 200px;overflow: auto;">
+				<div id="divValues" style="text-align:left;">
 					<fieldset>
 					<legend><?php echo JText::_('COM_VIRTUEMART_USERFIELDS_ADDVALUES_TIP'); ?></legend>
-						<input type="button" class="button insertRow" onclick="insertRow();" value="<?php echo JText::_('COM_VIRTUEMART_USERFIELDS_ADDVALUE') ?>" />
 						<table align=left id="divFieldValues" cellpadding="4" cellspacing="1" border="0" width="100%" class="admintable">
 							<thead>
 								<tr>
-									<th class="title" width="20%"><?php echo JText::_('COM_VIRTUEMART_TITLE') ?></th>
-									<th class="title" width="80%"><?php echo JText::_('COM_VIRTUEMART_VALUE') ?></th>
+									<th class="title" width="20%"><?php echo JText::_('COM_VIRTUEMART_VALUE') ?></th>
+									<th class="title" width="60%"><?php echo JText::_('COM_VIRTUEMART_TITLE') ?></th>
 								</tr>
 							</thead>
 							<tbody id="fieldValuesBody"><?php echo $this->lists['userfield_values'];?></tbody>
 						</table>
+						<input type="button" class="button insertRow" value="<?php echo JText::_('COM_VIRTUEMART_USERFIELDS_ADDVALUE') ?>" />
+					</fieldset>
+				</div>
+				<div id="divPlugin" style="text-align:left;">
+					<fieldset>
+					<legend><?php echo JText::_('COM_VIRTUEMART_USERFIELDS_PLUGIN_TIP'); ?></legend>
+					<div id="fieldPluginBody">
+						<?php echo $this->userFieldPlugin;	?>
+					</div>
 					</fieldset>
 				</div>
 			</td>
@@ -132,7 +132,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_USERFIELD_DETAILS');
 			</td>
 		</tr>
 		<?php echo VmHTML::row('editor','COM_VIRTUEMART_USERFIELDS_DESCRIPTION','description', $this->userField->description,'100%','300', array('image','pagebreak', 'readmore') ); ?>
-
+		<?php echo VmHTML::row('input','COM_VIRTUEMART_DEFAULT','default',$this->userField->default,'class="inputbox"','',5); ?>
 		<?php echo $this->lists['required']; ?>
 		<?php echo $this->lists['registration']; ?>
 		<?php echo $this->lists['account']; ?>
@@ -150,7 +150,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_USERFIELD_DETAILS');
 
 <input type="hidden" name="virtuemart_userfield_id" value="<?php echo $this->userField->virtuemart_userfield_id; ?>" />
 <input type="hidden" name="valueCount" value="<?php echo $this->valueCount; ?>" />
-<?php echo VmHTML::HiddenEdit() ?>
+<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 <?php
@@ -164,31 +164,27 @@ $existingFields = '"'.implode('","',$db->loadResultArray()).'"';
 
 ?>
 <script type="text/javascript">
-function getObject(obj) {
-	var strObj;
-	if (document.all) {
-		strObj = document.all.item(obj);
-	} else if (document.getElementById) {
-		strObj = document.getElementById(obj);
-	}
-	return strObj;
-}
+
 
 jQuery(".insertRow").click( function() {
 	nr = jQuery('#fieldValuesBody tr').length ;
-	row = '<tr><td><input type="text" readonly="readonly" class="readonly" name="vNames['+nr+']" value="Mr"></td><td><input type="text" name="vValues['+nr+']" value="Mr"></td></tr>';
+	row = '<tr><td><input type="text" name="vValues['+nr+']" value=""> </td><td><input type="text" name="vNames['+nr+']" value=""> <input type="button" class="button deleteRow" value=" - " /></td></tr>';
 	jQuery('#fieldValuesBody').append( row );
+});
+jQuery("#fieldValuesBody").delegate("input.deleteRow", "click", function() {
+	nr = jQuery('#fieldValuesBody tr').length ;
+	if (nr>1) jQuery(this).closest('tr').remove();
 });
 
 jQuery(".readonly").click( function(e) {
-	return false})
+	return false});
 
 jQuery('select#type').chosen().change(function() {
 		selected = jQuery(this).find( 'option:selected').val() ;
 	toggleType(selected)
-})
+});
 function toggleType( sType ) {
-	jQuery('#toggler').children('div').slideUp();
+	jQuery('#toggler').children('div').filter(':visible').slideUp();
 	jQuery('input[name="vNames[0]"]').attr("mosReq", 0);
 	<?php if (!$this->userField->sys) : ?>
 	prep4SQL (document.adminForm.name);
@@ -233,7 +229,16 @@ function toggleType( sType ) {
 		break;
 
 		case 'delimiter':
+		break;
 		default:
+			//pluginistraxx_euvatchecker
+<?php if(!$this->userField->virtuemart_userfield_id) : ?>
+			jQuery('#fieldPluginBody').load( 'index.php?option=com_virtuemart&view=userfields&task=viewJson&format=json&field='+sType , function() { jQuery(this).find("[title]").vm2admin('tips',tip_image) });
+<?php endif; ?>
+			if (sType.substring(0,6) == "plugin") jQuery('#divPlugin').slideDown();
+		break;
+
+
 	}
 }
 <?php if (! $this->userField->virtuemart_userfield_id ) { ?>
@@ -260,8 +265,14 @@ function prep4SQL(o){
 		o.value=o.value.replace(/[^0-9a-zA-Z\_]+/g,'');
 	}
 }
-<?php if($this->userField->virtuemart_userfield_id > 0) : ?>
+<?php if($this->userField->virtuemart_userfield_id > 0) { ?>
 document.adminForm.name.readOnly = true;
-<?php endif; ?>
-toggleType('<?php echo $this->userField->type;?>');
+toggleType(jQuery('#type').val()) ;
+<?php } else { ?>
+	toggleType(jQuery('#type').find( 'option:selected').val()) ;
+<?php } ?>
+//toggleType('<?php echo $this->userField->type;?>');
+
+//<?php if ($this->userField->type !== "E") { ?>jQuery('#userField_plg').hide();<?php } ?>
+
 </script>

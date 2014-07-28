@@ -12,7 +12,7 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses
- * @version $Id: coupon.php 4509 2011-10-20 20:30:24Z alatak $
+ * @version $Id: coupon.php 5460 2012-02-16 16:38:34Z alatak $
  */
 
 // Check to ensure this file is included in Joomla!
@@ -48,8 +48,9 @@ abstract class CouponHelper
 			$_db = JFactory::getDBO();
 			$_q = 'SELECT IF( NOW() >= `coupon_start_date` , 1, 0 ) AS started '
 			. ', `coupon_start_date` '
-			. ', IF( NOW() > `coupon_expiry_date`, 1, 0 ) AS ended '
+			. ',  IFNULL(0, IF( NOW() > `coupon_expiry_date`, 1, 0 ) ) AS ended'
 			. ', `coupon_value_valid` '
+			. ', `coupon_used` '
 			. 'FROM `#__virtuemart_coupons` '
 			. 'WHERE `coupon_code` = "' . $_db->getEscaped($_code) . '"';
 			$_db->setQuery($_q);
@@ -59,6 +60,13 @@ abstract class CouponHelper
 		if (!$couponData) {
 			return JText::_('COM_VIRTUEMART_COUPON_CODE_INVALID');
 		}
+		if ($couponData->coupon_used) {
+			$session = JFactory::getSession();
+			$session_id = $session->getId();
+			if ($couponData->coupon_used != $session_id) {
+				return JText::_('COM_VIRTUEMART_COUPON_CODE_INVALID');
+			}
+		}
 		if (!$couponData->started) {
 			return JText::_('COM_VIRTUEMART_COUPON_CODE_NOTYET') . $couponData->coupon_start_date;
 		}
@@ -66,6 +74,7 @@ abstract class CouponHelper
 			self::RemoveCoupon($_code, true);
 			return JText::_('COM_VIRTUEMART_COUPON_CODE_EXPIRED');
 		}
+
 		if ($_billTotal < $couponData->coupon_value_valid) {
 			if (!class_exists('CurrencyDisplay'))
 			    require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'currencydisplay.php');
@@ -129,5 +138,46 @@ abstract class CouponHelper
 			. 'WHERE `coupon_code` = "' . $_db->getEscaped($_code) . '"';
 		$_db->setQuery($_q);
 		return ($_db->query() !== false);
+	}
+	/**
+	 * Remove a coupon from the database
+	 * @param $_code Coupon code
+	 * @param $_force True if the remove is forced. By default, only gift coupons are removed
+	 * @author Valérie Isaksen
+	 * @return boolean True on success
+	 */
+	static public function setInUseCoupon($code, $in_use=true){
+
+		JPluginHelper::importPlugin('vmcoupon');
+		$dispatcher = JDispatcher::getInstance();
+		$returnValues = $dispatcher->trigger('plgVmCouponInUse', array($code));
+		if(!empty($returnValues)){
+			foreach ($returnValues as $returnValue) {
+				if ($returnValue !== null  ) {
+					return $returnValue;
+				}
+			}
+		}
+		$session = JFactory::getSession();
+		$coupon_used = $session->getId();
+		$db = JFactory::getDBO();
+		if (!$in_use) {
+			$db = JFactory::getDBO();
+			$q = 'SELECT `coupon_used` '
+				. 'FROM `#__virtuemart_coupons` '
+				. 'WHERE `coupon_code` = "' . $db->getEscaped($code) . '"';
+			$db->setQuery($q);
+			$coupon_session_id=$db->loadResult();
+			if ($coupon_used !=$coupon_session_id) {
+				return;
+			}
+			$coupon_used=0;
+		}
+
+
+		$q = 'UPDATE `#__virtuemart_coupons` SET `coupon_used` = "' . $coupon_used . '" WHERE `coupon_type`= \'gift\' AND `coupon_code` = "' . $db->getEscaped($code) . '"';
+		$db->setQuery($q);
+
+		return ($db->query() !== false);
 	}
 }

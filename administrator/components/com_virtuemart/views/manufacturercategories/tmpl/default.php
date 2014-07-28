@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4722 2011-11-16 16:54:32Z electrocity $
+* @version $Id: default.php 5628 2012-03-08 09:00:21Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 
@@ -41,8 +41,9 @@ AdminUIHelper::startAdminArea();
 				<?php echo  JText::_('COM_VIRTUEMART_MANUFACTURER_CATEGORY_LIST'); ?>
 			</th>
 			<th width="20">
-				<?php echo JText::_('COM_VIRTUEMART_PUBLISH'); ?>
+				<?php echo JText::_('COM_VIRTUEMART_PUBLISHED'); ?>
 			</th>
+			   <th><?php echo $this->sort('virtuemart_manufacturercategories_id', 'COM_VIRTUEMART_ID')  ?></th>
 		</tr>
 		</thead>
 		<?php
@@ -73,6 +74,9 @@ AdminUIHelper::startAdminArea();
 				<td align="center">
 					<?php echo $published; ?>
 				</td>
+				<td align="right">
+		    <?php echo $row->virtuemart_manufacturercategories_id; ?>
+		</td>
 			</tr>
 			<?php
 			$k = 1 - $k;
@@ -88,12 +92,7 @@ AdminUIHelper::startAdminArea();
 	</table>
 </div>
 
-	<input type="hidden" name="option" value="com_virtuemart" />
-	<input type="hidden" name="controller" value="manufacturercategories" />
-	<input type="hidden" name="view" value="manufacturercategories" />
-	<input type="hidden" name="task" value="" />
-	<input type="hidden" name="boxchecked" value="0" />
-	<?php echo JHTML::_( 'form.token' ); ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 

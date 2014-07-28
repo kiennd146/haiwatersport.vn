@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: categories.php 4731 2011-11-17 01:35:45Z Milbo $
+* @version $Id: categories.php 5573 2012-02-29 14:05:31Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -53,16 +53,15 @@ class TableCategories extends VmTable {
 	var $ordering		= 0;
 
 	var $shared 		= 0;
-	/** @var int category limit start*/
-	var $limit_list_start 	 = 0;
+
 	/** @var int category limit step*/
-	var $limit_list_step 	 = 10;
-	/** @var int category limit max */
-	var $limit_list_max	= 0;
+	var $limit_list_step 	 = 0;
 	/** @var int category limit initial */
-	var $limit_list_initial	= 10;
+	var $limit_list_initial	= 0;
 	/** @var string Meta description */
 	var $metadesc	= '';
+	/** @var string custom title */
+	var $customtitle	= '';
 	/** @var string Meta keys */
 	var $metakey	= '';
 	/** @var string Meta robot */
@@ -70,13 +69,13 @@ class TableCategories extends VmTable {
 	/** @var string Meta author */
 	var $metaauthor	= '';
         /** @var integer Category publish or not */
-	var $published			= 1;
+	var $published			= 0;
 
 	/**
 	 * Class contructor
 	 *
 	 * @author Max Milbers
-	 * @param $db A database connector object
+	 * @param $db database connector object
 	 */
 	public function __construct($db) {
 		parent::__construct('#__virtuemart_categories', 'virtuemart_category_id', $db);
@@ -85,11 +84,25 @@ class TableCategories extends VmTable {
 // 		$this->setPrimaryKey('virtuemart_category_id');
 		$this->setObligatoryKeys('category_name');
 		$this->setLoggable();
-		$this->setTranslatable(array('category_name','category_description','metadesc','metakey'));
+		$this->setTranslatable(array('category_name','category_description','metadesc','metakey','customtitle'));
 		$this->setSlug('category_name');
 		$this->setTableShortCut('c');
 	}
 
+	public function check(){
+
+		$csValue = $this->limit_list_step;
+		if(!empty($csValue)){
+			$sequenceArray = explode(',', $csValue);
+			foreach($sequenceArray as &$csV){
+				$csV = (int)trim($csV);
+			}
+			$this->limit_list_step = implode(',',$sequenceArray);
+			vmdebug('my check',$this->limit_list_step);
+		}
+
+		return parent::check();
+	}
 
 	/**
 	 * Overwrite method
@@ -103,7 +116,7 @@ class TableCategories extends VmTable {
 	{
 		if (!in_array( 'ordering',  array_keys($this->getProperties())))
 		{
-			$this->setError( get_class( $this ).' does not support ordering' );
+			vmError( get_class( $this ).' does not support ordering' );
 			return false;
 		}
 
@@ -151,7 +164,7 @@ class TableCategories extends VmTable {
 			if (!$this->_db->query())
 			{
 				$err = $this->_db->getErrorMsg();
-				JError::raiseError( 500, $err );
+				JError::raiseError( 500, 'TableCategories move isset row this->k '.$err );
 			}
 
 			$query = 'UPDATE '.$this->_tbl
@@ -163,7 +176,7 @@ class TableCategories extends VmTable {
 			if (!$this->_db->query())
 			{
 				$err = $this->_db->getErrorMsg();
-				JError::raiseError( 500, $err );
+				JError::raiseError( 500, 'TableCategories move isset row $row->$k '.$err );
 			}
 
 			$this->ordering = $row->ordering;
@@ -179,7 +192,7 @@ class TableCategories extends VmTable {
 			if (!$this->_db->query())
 			{
 				$err = $this->_db->getErrorMsg();
-				JError::raiseError( 500, $err );
+				JError::raiseError( 500, 'TableCategories move update '.$err );
 			}
 		}
 		return true;
@@ -199,7 +212,7 @@ class TableCategories extends VmTable {
 
 		if (!in_array( 'ordering', array_keys($this->getProperties() ) ))
 		{
-			$this->setError( get_class( $this ).' does not support ordering');
+			vmError( get_class( $this ).' does not support ordering');
 			return false;
 		}
 
@@ -214,7 +227,7 @@ class TableCategories extends VmTable {
 		$this->_db->setQuery( $query );
 		if (!($orders = $this->_db->loadObjectList()))
 		{
-			$this->setError($this->_db->getErrorMsg());
+			vmError($this->_db->getErrorMsg());
 			return false;
 		}
 		// compact the ordering numbers

@@ -5,7 +5,7 @@ die('Direct Access to ' . basename(__FILE__) . ' is not allowed.');
 
 /**
  *
- * @version $Id: parameterparser.php 4839 2011-11-27 23:26:39Z Milbo $
+ * @version $Id: parameterparser.php 6080 2012-06-07 08:28:57Z alatak $
  * @package VirtueMart
  * @subpackage core
  * @copyright Copyright (c) 2006 Open Source Matters
@@ -35,7 +35,7 @@ class FileUtilities {
 	 */
 	function list_available_classes($name, $preselected='payment') {
 
-		$files = self::vmReadDirectory(JPATH_PLUGINS . DS . 'vmpayment', ".php$", true, true);
+		$files = self::vmReadDirectory(JPATH_ROOT .DS. 'plugins' . DS . 'vmpayment', ".php$", true, true);
 		$list = array();
 		foreach ($files as $file) {
 			$file_info = pathinfo($file);
@@ -157,15 +157,17 @@ class vmParameters extends JParameter {
 	 * @since	1.5
 	 */
 	function __construct($data, $element = '', $type='component', $pluginfolder ) {
-		JPlugin::loadLanguage('plg_'.$pluginfolder.'_' . $element);
-		if (version_compare(JVERSION, '1.6.0', 'ge')) {
-			$path = JPATH_PLUGINS . DS . $pluginfolder . DS . basename($element). DS . basename($element) . '.xml';
+		$lang = JFactory::getLanguage();
+		$lang->load('plg_'.$pluginfolder.'_' . $element,JPATH_ADMINISTRATOR);
+
+		if (JVM_VERSION === 2) {
+			$path = JPATH_ROOT .DS. 'plugins' . DS . $pluginfolder . DS . basename($element). DS . basename($element) . '.xml';
 		} else {
-			$path = JPATH_PLUGINS . DS . $pluginfolder . DS . basename($element) . '.xml';
+			$path = JPATH_ROOT .DS. 'plugins' . DS . $pluginfolder . DS . basename($element) . '.xml';
 		}
 		parent::__construct($element, $path);
 		$this->_type = $type;
-		if (version_compare(JVERSION, '1.6.0', 'ge')) {
+		if (JVM_VERSION === 2) {
 
 		} else {
 
@@ -185,7 +187,7 @@ class vmParameters extends JParameter {
 	function render($name = 'params', $group = '_default') {
 
 // 		vmdebug('render',$this);
-		//             if (version_compare(JVERSION, '1.6.0', 'ge')) {
+		//             if (JVM_VERSION === 2) {
 		$parameters = $this->vmRender($name, $group);
 		//             } else {
 		//                 $parameters = parent::render($name, $group);
@@ -210,7 +212,7 @@ class vmParameters extends JParameter {
 		//remove any occurance of a mos_ prefix
 		$type = str_replace('mos_', '', $type);
 
-		$element =& $this->loadElement($type);
+		$element = $this->loadElement($type);
 
 		// error happened
 		if ($element === false)
@@ -228,7 +230,11 @@ class vmParameters extends JParameter {
 
 		return $element->render($node, $value, $control_name);
 	}
-
+	function getParamByName($name){
+		
+		return $this->$name;
+		
+	}
 	/**
 	 * vmRender copied from Joomla 1.5
 	 *
@@ -590,13 +596,6 @@ class vmParameters extends JParameter {
 		}
 	}
 
-	function _form_secret_key($name, $value, &$node, $control_name) {
-
-		return '<a class="button" id="changekey" href="'
-		. JRoute::_($_SERVER['SCRIPT_NAME'] . "?page=store.payment_method_keychange&element=$name") . '" >'
-		. JText::_('COM_VIRTUEMART_CHANGE_TRANSACTION_KEY')
-		. '<a/>';
-	}
 
 	/**
 	 * special handling for textarea param
@@ -622,7 +621,7 @@ class vmParameters extends JParameter {
 	var $_name = 'SQL';
 
 	function _form_sql($name, $value, &$node, $control_name) {
-		$db = & JFactory::getDBO();
+		$db = JFactory::getDBO();
 		$db->setQuery($node->attributes('query'));
 		$key = ($node->attributes('key_field') ? $node->attributes('key_field') : 'value');
 		$val = ($node->attributes('value_field') ? $node->attributes('value_field') : $name);

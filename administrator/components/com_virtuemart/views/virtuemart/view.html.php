@@ -13,14 +13,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.html.php 4885 2011-11-30 20:14:42Z electrocity $
+* @version $Id: view.html.php 5820 2012-04-06 19:14:38Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 jimport('joomla.html.pane');
 
 /**
@@ -29,15 +29,14 @@ jimport('joomla.html.pane');
  * @package		VirtueMart
  * @author
  */
-class VirtuemartViewVirtuemart extends JView {
+class VirtuemartViewVirtuemart extends VmView {
 
 	function display($tpl = null) {
 
-		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('image');
-
-		$model = $this->getModel();
+		if (!class_exists('VmImage'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'image.php');
+		VmConfig::loadJLang('com_virtuemart_orders',TRUE);
+		$model = VmModel::getModel('virtuemart');
 
 		$nbrCustomers = $model->getTotalCustomers();
 		$this->assignRef('nbrCustomers', $nbrCustomers);
@@ -63,13 +62,22 @@ class VirtuemartViewVirtuemart extends JView {
 				if (!array_key_exists('v'.$order->virtuemart_vendor_id, $_currencies)) {
 					$_currencies['v'.$order->virtuemart_vendor_id] = CurrencyDisplay::getInstance('',$order->virtuemart_vendor_id);
 				}
-				$order->order_total = $_currencies['v'.$order->virtuemart_vendor_id]->priceDisplay($order->order_total,'',false);
+				$order->order_total = $_currencies['v'.$order->virtuemart_vendor_id]->priceDisplay($order->order_total);
 			}
 		$this->assignRef('recentOrders', $recentOrders);
 		$recentCustomers = $model->getRecentCustomers();
 		$this->assignRef('recentCustomers', $recentCustomers);
+
+		if (!class_exists('ShopFunctions')) require(JPATH_VM_ADMINISTRATOR.'/helpers/shopfunctions.php');
+
+		$extensionsFeed = ShopFunctions::getExtensionsRssFeed();
+		$this->assignRef('extensionsFeed', $extensionsFeed);
+
+		$virtuemartFeed = ShopFunctions::getVirtueMartRssFeed();
+		$this->assignRef('virtuemartFeed', $virtuemartFeed);
+
 		// Options button.
-		// if ( !VmConfig::isJ15()) {
+		// if ( !JVM_VERSION===1) {
 			// if (JFactory::getUser()->authorise('core.admin', 'com_virtuemart')) {
 				// JToolBarHelper::preferences('com_virtuemart');
 			// }

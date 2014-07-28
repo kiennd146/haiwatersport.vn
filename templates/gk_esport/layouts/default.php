@@ -50,6 +50,7 @@ $btn_login_text = ($userID == 0) ? JText::_('TPL_GK_LANG_LOGIN') : JText::_('TPL
     <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
     <?php endif; ?>
     <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <script>$GK_UPDATE = new Array()</script>
     <jdoc:include type="head" />
     <?php $this->loadBlock('head'); ?>
 </head>

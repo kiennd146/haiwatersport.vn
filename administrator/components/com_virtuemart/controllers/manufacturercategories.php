@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: manufacturercategories.php 3438 2011-06-06 20:37:06Z Milbo $
+* @version $Id: manufacturercategories.php 6007 2012-05-07 12:58:30Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -41,22 +41,8 @@ class VirtuemartControllermanufacturercategories extends VmController {
 	 * @author
 	 */
 	function __construct() {
-		parent::__construct();
+		parent::__construct('virtuemart_manufacturercategories_id');
 
-	}
-
-	function Manufacturercategories () {
-
-		$document = JFactory::getDocument();
-		$viewType = $document->getType();
-		$view = $this->getView($this->_cname, $viewType);
-
-		// Push a model into the view
-		$model = $this->getModel( 'manufacturercategories' );
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
-		parent::display();
 	}
 
 

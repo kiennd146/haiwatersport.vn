@@ -13,14 +13,11 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: state.php 5097 2011-12-15 21:14:48Z Milbo $
+* @version $Id: state.php 6383 2012-08-27 16:53:06Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-
-// Load the model framework
-jimport( 'joomla.application.component.model');
 
 if(!class_exists('VmModel'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmmodel.php');
 
@@ -42,6 +39,7 @@ class VirtueMartModelState extends VmModel {
 	function __construct() {
 		parent::__construct('virtuemart_state_id');
 		$this->setMainTable('states');
+		$this->_selectedOrderingDir = 'ASC';
 	}
 
     /**
@@ -68,10 +66,14 @@ class VirtueMartModelState extends VmModel {
      * @author RickG, Max Milbers
 	 * @return object List of state objects
 	 */
-	public function getStates($countryId, $noLimit=false)
+	public function getStates($countryId, $noLimit=false, $published = false)
 	{
-		$quer= 'SELECT * FROM `#__virtuemart_states`  WHERE `virtuemart_country_id`= "'.(int)$countryId.'"
-				ORDER BY `#__virtuemart_states`.`state_name`';
+		$quer= 'SELECT * FROM `#__virtuemart_states`  WHERE `virtuemart_country_id`= "'.(int)$countryId.'" ';
+		if($published){
+			$quer .= 'AND `published`="1" ';
+		}
+
+		$quer .= 'ORDER BY `#__virtuemart_states`.`state_name`';
 
 		if ($noLimit) {
 		    $this->_data = $this->_getList($quer);
@@ -93,34 +95,39 @@ class VirtueMartModelState extends VmModel {
 	 * @author Max Milbers
 	 * @return String Attention, this function gives a 0=false back in case of success
 	 */
-	public function testStateCountry($countryId,$stateId)
+	public static function testStateCountry($countryId,$stateId)
 	{
 
 		$countryId = (int)$countryId;
 		$stateId = (int)$stateId;
-
+		vmdebug('testStateCountry country '.$countryId.' $stateId '.$stateId);
 		$db = JFactory::getDBO();
-		$q = 'SELECT * FROM `#__virtuemart_countries` WHERE `virtuemart_country_id`= "'.$countryId.'" AND `published`="1"';
+		$q = 'SELECT * FROM `#__virtuemart_countries` WHERE `virtuemart_country_id`= "'.$countryId.'" AND `published`="1" ';
 		$db->setQuery($q);
 		if($db->loadResult()){
 			//Test if country has states
-			$q = 'SELECT * FROM `#__virtuemart_states`  WHERE `virtuemart_country_id`= "'.$countryId.'" ';
+			$q = 'SELECT * FROM `#__virtuemart_states`  WHERE `virtuemart_country_id`= "'.$countryId.'" AND `published`="1" ';
 			$db->setQuery($q);
-			if($db->loadResult()){
+			if($res = $db->loadResult()){
+				vmdebug('testStateCountry country has states ',$res);
 				//Test if virtuemart_state_id fits to virtuemart_country_id
 				$q = 'SELECT * FROM `#__virtuemart_states` WHERE `virtuemart_country_id`= "'.$countryId.'" AND `virtuemart_state_id`="'.$stateId.'" and `published`="1"';
 				$db->setQuery($q);
 				if($db->loadResult()){
-					return 0;
+					return true;
 				} else {
-					return 'virtuemart_state_id';
+					//There is a country, but the state does not exist or is unlisted
+					return false;
 				}
 			} else {
-				return 0;
+				vmdebug('testStateCountry country has no states listed');
+				//This country has no states listed
+				return true;
 			}
 
 		} else {
-			return 'virtuemart_country_id';
+			//The given country does not exist, this can happen, when no country was chosen, which maybe valid.
+			return true;
 		}
 	}
 

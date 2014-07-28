@@ -1,4 +1,6 @@
 <?php
+defined('_JEXEC') or die('');
+
 /**
 *
 * Template for the shopping cart
@@ -15,12 +17,10 @@
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
 */
-?>
-
-<?php
 
 
-echo "<h3>".JText::_('COM_VIRTUEMART_CART_ORDERDONE_THANK_YOU')."</h3>";
+if ($this->display_title) {
+	echo "<h3>".JText::_('COM_VIRTUEMART_CART_ORDERDONE_THANK_YOU')."</h3>";
+}
+	echo $this->html;
 
-echo $this->html;
-?> 

@@ -13,14 +13,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.html.php 4700 2011-11-14 05:50:36Z electrocity $
+* @version $Id: view.html.php 6068 2012-06-06 14:59:42Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * HTML View class for maintaining the list of states
@@ -29,19 +29,20 @@ jimport( 'joomla.application.component.view');
  * @subpackage State
  * @author Max Milbers
  */
-class VirtuemartViewState extends JView {
+class VirtuemartViewState extends VmView {
 
 	function display($tpl = null) {
 
 		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
 
-		$viewName=ShopFunctions::SetViewTitle();
-		$this->assignRef('viewName',$viewName);
 
-		$model = $this->getModel();
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
+
+		$this->SetViewTitle();
+
+
+		$model = VmModel::getModel();
 
 //		$stateId = JRequest::getVar('virtuemart_state_id');
 //		$model->setId($stateId);
@@ -58,7 +59,7 @@ class VirtuemartViewState extends JView {
 			return false;
 		}
 
-		$country = $this->getModel('country');
+		$country = VmModel::getModel('country');
 		$country->setId($countryId);
 		$this->assignRef('country_name', $country->getData()->country_name);
 
@@ -69,19 +70,23 @@ class VirtuemartViewState extends JView {
 
 			$this->assignRef('state', $state);
 
-			$zoneModel = $this->getModel('Worldzones');
-			$this->assignRef('worldZones', $zoneModel->getWorldZonesSelectList());
+			$zoneModel = VmModel::getModel('Worldzones');
+			$wzsList = $zoneModel->getWorldZonesSelectList();
+			$this->assignRef('worldZones', $wzsList);
 
-			ShopFunctions::addStandardEditViewCommands();
+			$this->addStandardEditViewCommands();
 
 		} else {
+
+			$this->addStandardDefaultViewCommands();
+			$this->addStandardDefaultViewLists($model);
 
 			$states = $model->getStates($countryId);
 			$this->assignRef('states',	$states);
 
-			ShopFunctions::addStandardDefaultViewCommands();
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
-			$this->assignRef('lists', $lists);
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
+
 		}
 
 		parent::display($tpl);

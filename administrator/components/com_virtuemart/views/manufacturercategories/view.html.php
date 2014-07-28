@@ -13,14 +13,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.html.php 4747 2011-11-17 22:54:03Z electrocity $
+* @version $Id: view.html.php 6006 2012-05-07 09:28:42Z electrocity $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * HTML View class for maintaining the list of manufacturer categories
@@ -29,38 +29,37 @@ jimport( 'joomla.application.component.view');
  * @subpackage Manufacturer Categories
  * @author Patrick Kohl
  */
-class VirtuemartViewManufacturercategories extends JView {
+class VirtuemartViewManufacturercategories extends VmView {
 
 	function display($tpl = null) {
 
 		// Load the helper(s)
-		$this->loadHelper('adminui');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
 
 		// get necessary model
-		$model = $this->getModel();
+		$model = VmModel::getModel();
 
-		$viewName=ShopFunctions::SetViewTitle('MANUFACTURER_CATEGORY');
-		$this->assignRef('viewName',$viewName);
+		$this->SetViewTitle('MANUFACTURER_CATEGORY');
 
-                $layoutName = JRequest::getWord('layout', 'default');
+     	$layoutName = JRequest::getWord('layout', 'default');
 		if ($layoutName == 'edit') {
 
-			$manufacturerCategory = $model->getManufacturerCategory();
+			$manufacturerCategory = $model->getData();
 			$this->assignRef('manufacturerCategory',	$manufacturerCategory);
 
-			ShopFunctions::addStandardEditViewCommands($manufacturerCategory->virtuemart_manufacturercategories_id);
-
+			$this->addStandardEditViewCommands($manufacturerCategory->virtuemart_manufacturercategories_id);
 
         }
         else {
+        	$this->addStandardDefaultViewCommands();
+        	$this->addStandardDefaultViewLists($model);
 
 			$manufacturerCategories = $model->getManufacturerCategories();
 			$this->assignRef('manufacturerCategories',	$manufacturerCategories);
 
-			ShopFunctions::addStandardDefaultViewCommands();
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
 
 		}
 		parent::display($tpl);

@@ -26,7 +26,7 @@ defined('_JEXEC') or die('Restricted access');
 	<div class="spacer">
 
 	<?php // Manufacturer Image
-	if (!empty($manufacturerImage)) { ?>
+	if (!empty($this->manufacturerImage)) { ?>
 		<div class="manufacturer-image">
 		<?php echo $this->manufacturerImage; ?>
 		</div>
@@ -55,7 +55,7 @@ defined('_JEXEC') or die('Restricted access');
 	<?php } ?>
 
 	<?php // Manufacturer Product Link
-	$manufacturerProductsURL = JROUTE::_('index.php?option=com_virtuemart&view=category&virtuemart_manufacturer_id=' . $this->manufacturer->virtuemart_manufacturer_id);
+	$manufacturerProductsURL = JRoute::_('index.php?option=com_virtuemart&view=category&virtuemart_manufacturer_id=' . $this->manufacturer->virtuemart_manufacturer_id, FALSE);
 
 	if(!empty($this->manufacturer->virtuemart_manufacturer_id)) { ?>
 		<div class="manufacturer-product-link">

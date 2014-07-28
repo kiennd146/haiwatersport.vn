@@ -13,14 +13,14 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.html.php 4852 2011-11-28 22:10:02Z electrocity $
+* @version $Id: view.html.php 6326 2012-08-08 14:14:28Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
 // Load the view framework
-jimport( 'joomla.application.component.view');
+if(!class_exists('VmView'))require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'vmview.php');
 
 /**
  * HTML View class for maintaining the list of shipment
@@ -29,32 +29,33 @@ jimport( 'joomla.application.component.view');
  * @subpackage Shipment
  * @author RickG
  */
-class VirtuemartViewShipmentmethod extends JView {
+class VirtuemartViewShipmentmethod extends VmView {
 
 	function display($tpl = null) {
 
 		// Load the helper(s)
 		$this->addHelperPath(JPATH_VM_ADMINISTRATOR.DS.'helpers');
-		$this->loadHelper('adminui');
-		$this->loadHelper('permissions');
-		$this->loadHelper('vmpsplugin');
-		$this->loadHelper('shopFunctions');
-		$this->loadHelper('html');
 
-		$model = $this->getModel();
+		if(!class_exists('Permissions')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'permissions.php');
+		if(!class_exists('vmPSPlugin')) require(JPATH_VM_PLUGINS.DS.'vmpsplugin.php');
 
+		if (!class_exists('VmHTML'))
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'html.php');
+
+		$model = VmModel::getModel();
 
 		$layoutName = JRequest::getWord('layout', 'default');
-		$viewName=ShopFunctions::SetViewTitle();
-		$this->assignRef('viewName',$viewName);
+		$this->SetViewTitle();
 
 		$layoutName = JRequest::getWord('layout', 'default');
 		if ($layoutName == 'edit') {
 		        $shipment = $model->getShipment();
-			$this->loadHelper('image');
-			// $this->loadHelper('html');
-			$this->loadHelper('parameterparser');
-			// jimport('joomla.html.pane');
+			if (!class_exists('VmImage'))
+				require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'image.php');
+
+				if (!class_exists('vmParameters'))
+				require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'parameterparser.php');
+
 			 if(!class_exists('VirtueMartModelVendor')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'vendor.php');
 			 $vendor_id = 1;
 			 $currency=VirtueMartModelVendor::getVendorCurrency ($vendor_id);
@@ -69,16 +70,19 @@ class VirtuemartViewShipmentmethod extends JView {
 			$this->assignRef('shipment',	$shipment);
 			$this->assignRef('shopperGroupList', ShopFunctions::renderShopperGroupList($shipment->virtuemart_shoppergroup_ids,true));
 
-			ShopFunctions::addStandardEditViewCommands($shipment->virtuemart_shipmentmethod_id);
+			$this->addStandardEditViewCommands($shipment->virtuemart_shipmentmethod_id);
 
 		} else {
+			JToolBarHelper::custom('cloneshipment', 'copy', 'copy', JText::_('COM_VIRTUEMART_SHIPMENT_CLONE'), true);
+
+			$this->addStandardDefaultViewCommands();
+			$this->addStandardDefaultViewLists($model);
 
 			$shipments = $model->getShipments();
 			$this->assignRef('shipments', $shipments);
 
-			ShopFunctions::addStandardDefaultViewCommands();
-			$lists = ShopFunctions::addStandardDefaultViewLists($model);
-			$this->assignRef('lists', $lists);
+			$pagination = $model->getPagination();
+			$this->assignRef('pagination', $pagination);
 
 		}
 
@@ -89,7 +93,7 @@ class VirtuemartViewShipmentmethod extends JView {
 	{
 		$db = JFactory::getDBO();
 
-		if (VmConfig::isJ15()) {
+		if (JVM_VERSION===1) {
 			$table = '#__plugins';
 			$enable = 'published';
 			$ext_id = 'id';
@@ -99,14 +103,19 @@ class VirtuemartViewShipmentmethod extends JView {
 			$enable = 'enabled';
 			$ext_id = 'extension_id';
 		}
-		$q = 'SELECT * FROM `'.$table.'` WHERE `folder` = "vmshipment" AND `'.$enable.'`="1" ';
+		$q = 'SELECT * FROM `'.$table.'` WHERE `folder` = "vmshipment" AND `state`="0" ORDER BY `ordering`,`name` ASC';
 		$db->setQuery($q);
 		$result = $db->loadAssocList($ext_id);
 		if(empty($result)){
 			$app = JFactory::getApplication();
 			$app -> enqueueMessage(JText::_('COM_VIRTUEMART_NO_SHIPMENT_PLUGINS_INSTALLED'));
 		}
-		return JHtml::_('select.genericlist', $result, 'shipment_jplugin_id', null, $ext_id, 'name', $selected);
+
+		foreach ($result as &$sh) {
+			$sh['name'] = JText::_($sh['name']);
+		}
+		$attribs='style= "width: 300px;"';
+		return JHtml::_('select.genericlist', $result, 'shipment_jplugin_id', $attribs, $ext_id, 'name', $selected);
 	}
 
 }

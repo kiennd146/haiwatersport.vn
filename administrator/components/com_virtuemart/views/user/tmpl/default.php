@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4884 2011-11-30 19:56:42Z Milbo $
+* @version $Id: default.php 6477 2012-09-24 14:33:54Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 <form action="<?php echo JRoute::_( 'index.php' );?>" method="post" name="adminForm" id="adminForm">
@@ -30,6 +30,14 @@ AdminUIHelper::startAdminArea();
 				<td width="100%">
 					<?php echo JText::_('COM_VIRTUEMART_FILTER'); ?>:
 					<input type="text" name="search" id="search" value="<?php echo $this->lists['search'];?>" class="text_area" onchange="document.adminForm.submit();" />
+					<?php
+					$selected = JRequest::getString('searchTable','juser');
+					$searchOptionTables = array(
+						'0' => array('searchTable' => 'juser', 'searchTable_name' => JText::_('COM_VIRTUEMART_ONLY_JUSER')),
+						'1' => array('searchTable' => 'all', 'searchTable_name' => JText::_('JALL'))
+					);
+					echo JHTML::_('Select.genericlist', $searchOptionTables, 'searchTable', '', 'searchTable', 'searchTable_name', $selected );
+					?>
 					<button onclick="this.form.submit();"><?php echo JText::_('COM_VIRTUEMART_GO'); ?></button>
 					<button onclick="document.adminForm.search.value='';this.form.submit();"><?php echo JText::_('COM_VIRTUEMART_RESET'); ?></button>
 				</td>
@@ -45,70 +53,46 @@ AdminUIHelper::startAdminArea();
 			<th width="10">
 				<input type="checkbox" name="toggle" value="" onclick="checkAll(<?php echo count($this->userList); ?>);" />
 			</th>
-			<th width="10">
-				<?php echo JText::_('COM_VIRTUEMART_#'); ?>
-			</th>
-			<th>
-			<?php echo JHTML::_('grid.sort'
-					, JText::_('COM_VIRTUEMART_USERNAME')
-					, 'ju.username'
-					, $this->lists['filter_order_Dir']
-					, $this->lists['filter_order']); ?>
-			</th>
-			<th>
-			<?php echo JHTML::_('grid.sort'
-					, JText::_('COM_VIRTUEMART_USER_DISPLAYED_NAME')
-					, 'ju.name'
-					, $this->lists['filter_order_Dir']
-					, $this->lists['filter_order']); ?>
-			</th>
-<?php		if(Vmconfig::get('multix','none')!=='none'){ ?>
-		<th width="80">
-			<?php echo JText::_('COM_VIRTUEMART_USER_IS_VENDOR'); ?>
-			</th>
-	<?php } ?>
 
-			<th>
-			<?php echo JText::_('COM_VIRTUEMART_USER_GROUP'); ?>
-			</th>
-			<th>
-			<?php echo JHTML::_('grid.sort'
-					, JText::_('COM_VIRTUEMART_SHOPPERGROUP')
-					, 'shopper_group_name'
-					, $this->lists['filter_order_Dir']
-					, $this->lists['filter_order']); ?>
-			</th>
+			<th><?php echo $this->sort('ju.username', 'COM_VIRTUEMART_USERNAME')  ?></th>
+			<th><?php echo $this->sort('ju.name', 'COM_VIRTUEMART_USER_DISPLAYED_NAME')  ?></th>
+			<th><?php echo JText::_('COM_VIRTUEMART_EMAIL'); ?></th>
+			<th><?php echo JText::_('COM_VIRTUEMART_USER_GROUP'); ?></th>
+			<th><?php echo $this->sort('shopper_group_name', 'COM_VIRTUEMART_SHOPPERGROUP')  ?></th>
+			<?php if(Vmconfig::get('multix','none')!=='none'){ ?>
+			<th width="80"><?php echo JText::_('COM_VIRTUEMART_USER_IS_VENDOR'); ?></th>
+			<?php } ?>
+			<th><?php echo  JText::_('COM_VIRTUEMART_ID') ?></th>
+		</tr>
 		</thead>
 		<?php
 		$k = 0;
 		for ($i = 0, $n = count($this->userList); $i < $n; $i++) {
+
 			$row = $this->userList[$i];
 			$checked = JHTML::_('grid.id', $i, $row->id);
-			$editlink = JROUTE::_('index.php?option=com_virtuemart&view=user&task=edit&cid[]=' . $row->id);
+			$editlink = JROUTE::_('index.php?option=com_virtuemart&view=user&task=edit&virtuemart_user_id[]=' . $row->id);
 			$is_vendor = $this->toggle($row->is_vendor, $i, 'toggle.user_is_vendor');
 		?>
 			<tr class="row<?php echo $k ; ?>">
 				<td>
 					<?php echo $checked; ?>
 				</td>
-				<td>
-					<?php echo $i; ?>
-				</td>
+
 				<td align="left">
 					<a href="<?php echo $editlink; ?>"><?php echo $row->username; ?></a>
 				</td>
 				<td align="left">
 					<?php echo $row->name; ?>
 				</td>
-				<?php		if(Vmconfig::get('multix','none')!=='none'){ ?>
-				<td align="center">
-					<?php echo $is_vendor; ?>
+				<td align="left">
+					<?php echo $row->email; ?>
 				</td>
-				<?php } ?>
 				<td align="left">
 					<?php
-					if(empty($row->perms)) $row->perms = 'shopper';
-					echo $row->perms . ' / (' . $row->usertype . ')';
+					echo $this->perm->getPermissions($row->id);
+				//	if(empty($row->perms)) $row->perms = 'shopper';
+				//	echo $row->perms . ' / (' . $row->usertype . ')';
 					?>
 				</td>
 				<td align="left">
@@ -116,6 +100,14 @@ AdminUIHelper::startAdminArea();
 					if(empty($row->shopper_group_name)) $row->shopper_group_name = $this->defaultShopperGroup;
 					echo $row->shopper_group_name;
 					?>
+				</td>
+				<?php if(Vmconfig::get('multix','none')!=='none'){ ?>
+				<td align="center">
+					<?php echo $is_vendor; ?>
+				</td>
+				<?php } ?>
+				<td align="right">
+					<?php echo $row->id; ?>
 				</td>
 			</tr>
 			<?php
@@ -132,14 +124,7 @@ AdminUIHelper::startAdminArea();
 	</table>
 </div>
 
-	<input type="hidden" name="filter_order_Dir" value="<?php echo $this->lists['filter_order_Dir']; ?>" />
-	<input type="hidden" name="filter_order" value="<?php echo $this->lists['filter_order']; ?>" />
-	<input type="hidden" name="option" value="com_virtuemart" />
-	<input type="hidden" name="controller" value="user" />
-	<input type="hidden" name="view" value="user" />
-	<input type="hidden" name="task" value="" />
-	<input type="hidden" name="boxchecked" value="0" />
-	<?php echo JHTML::_( 'form.token' ); ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 <?php AdminUIHelper::endAdminArea(); ?>

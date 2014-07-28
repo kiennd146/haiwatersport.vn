@@ -68,15 +68,19 @@ class TableCustoms extends VmTable {
 	/** @var int(1)  1= cart attributes and price added to cart */
 	var $is_cart_attribute		= 0;
 
+	var $layout_pos = '';
+
 	/** @var int custom published or not */
 	var $published		= 1;
 	/** @var int listed Order */
 	var $ordering	= 0;
+	/** @var int show title or not */
+	var $show_title		= 1;
 
 
 	/**
 	 * @author  Patrick Kohl
-	 * @param $db A database connector object
+	 * @param JDataBase $db
 	 */
 	function __construct(&$db) {
 		parent::__construct('#__virtuemart_customs', 'virtuemart_custom_id', $db);
@@ -88,37 +92,17 @@ class TableCustoms extends VmTable {
 		$this->setOrderable('ordering',false);
 	}
 
-
-	/**
-	 *
-	 * @author  Patrick Kohl
-	 * @return boolean True .
-	 */
-	// function check(){
-
-		// if( $this->virtuemart_custom_id > 0  && $this->virtuemart_custom_id==$this->custom_parent_id ) {
-			// $this->setError(JText::_('COM_VIRTUEMART_CUSTOM_CANNOT_PARENT'));
-			// return false ;
-		// }
-
-		// return parent::check();
-	// }
-
 	/*
 	* field from 3 table have to be checked at delete
 	* #__vm_custom_field,#__virtuemart_customs,#__virtuemart_product_customfields
 	*/
-	function delete($id)
-	{
-// 		$this->_db->setQuery('DELETE X,F,C FROM `#__virtuemart_customs` AS C
-// 			LEFT JOIN `#__virtuemart_customfields` AS F ON F.`virtuemart_custom_id` = C.`virtuemart_custom_id`
-// 			LEFT JOIN  `#__virtuemart_product_customfields` AS X ON  X.`virtuemart_customfield_id` = F.`virtuemart_customfield_id`
-// 			WHERE C.`virtuemart_custom_id`=' . $id);
+	function delete( $id=null , $where = 0 ){
+
 		$this->_db->setQuery('DELETE X,C FROM `#__virtuemart_customs` AS C
 			LEFT JOIN  `#__virtuemart_product_customfields` AS X ON  X.`virtuemart_custom_id` = C.`virtuemart_custom_id`
 			WHERE C.`virtuemart_custom_id`=' . $id);
 		if ($this->_db->query() === false) {
-			$this->setError($this->_db->getError());
+			vmError($this->_db->getError());
 			return false;
 		}
 		return true;

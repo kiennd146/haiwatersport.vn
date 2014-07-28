@@ -13,19 +13,19 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit.php 3646 2011-07-07 11:52:44Z enytheme $
+* @version $Id: edit.php 6053 2012-06-05 12:36:21Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 // Loading Templates in Tabs
 $tabarray = array();
 $tabarray['calc'] = 'COM_VIRTUEMART_CALC_DETAILS';
 
-AdminUIHelper::buildTabs ( $tabarray );
+AdminUIHelper::buildTabs ( $this, $tabarray );
 // Loading Templates in Tabs END
 
-AdminUIHelper::endAdminArea(); ?>
+AdminUIHelper::endAdminArea();

@@ -7,13 +7,13 @@
 * @subpackage
 * @author RolandD
 * @link http://www.virtuemart.net
-* @copyright Copyright (c) 2004 - 2010 VirtueMart Team. All rights reserved.
+* @copyright Copyright (c) 2004 - 2012 VirtueMart Team. All rights reserved.
 * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
 * VirtueMart is free software. This version may have been modified pursuant
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: ratings.php 4731 2011-11-17 01:35:45Z Milbo $
+* @version $Id: ratings.php 6244 2012-07-09 13:18:04Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -45,12 +45,12 @@ class TableRatings extends VmTable {
 
 	/**
 	* @author Max Milbers
-	* @param $db A database connector object
+	* @param JDataBase $db
 	*/
 	function __construct(&$db) {
 		parent::__construct('#__virtuemart_ratings', 'virtuemart_rating_id', $db);
 		//In a VmTable the primary key is the same as the _tbl_key and therefore not needed
-// 		$this->setPrimaryKey('virtuemart_product_id');
+  		$this->setPrimaryKey('virtuemart_rating_id');
 //		$this->setObligatoryKeys('virtuemart_product_id');
 
 		$this->setLoggable();

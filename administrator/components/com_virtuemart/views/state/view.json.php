@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: view.json.php 3778 2011-08-01 00:56:08Z electrocity $
+* @version $Id: view.json.php 6043 2012-05-21 21:40:56Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -33,8 +33,6 @@ class VirtuemartViewState extends JView {
 
 	function display($tpl = null) {
 
-
-		$stateModel = $this->getModel('state');
 		$states = array();
 		$db = JFactory::getDBO();
 		//retrieving countries id

@@ -13,7 +13,7 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: state.php 3590 2011-07-01 13:07:52Z impleri $
+* @version $Id: state.php 5399 2012-02-08 19:29:45Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
@@ -43,25 +43,6 @@ class VirtuemartControllerState extends VmController {
 	function __construct() {
 		parent::__construct('virtuemart_state_id');
 
-		$document = JFactory::getDocument();
-		$viewType	= $document->getType();
-		$view = $this->getView('state', $viewType);
-
-		// Push a model into the view
-		$model = $this->getModel('state');
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
-		$model1 = $this->getModel('Worldzones');
-		if (!JError::isError($model1)) {
-			$view->setModel($model1, false);
-		}
-
-		$model = $this->getModel('country');
-		if (!JError::isError($model)) {
-			$view->setModel($model, true);
-		}
-
 		$country = JRequest::getInt('virtuemart_country_id', 0);
 		$this->redirectPath .= ($country > 0) ? '&virtuemart_country_id=' . $country : '';
 	}
@@ -74,9 +55,6 @@ class VirtuemartControllerState extends VmController {
 
 		/* Create the view object. */
 		$view = $this->getView('state', 'json');
-
-		/* Standard model */
-		$view->setModel( $this->getModel( 'state', 'VirtueMartModel' ), true );
 
 		/* Now display the view. */
 		$view->display(null);

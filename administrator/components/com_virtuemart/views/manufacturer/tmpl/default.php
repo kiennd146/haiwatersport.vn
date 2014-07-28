@@ -13,32 +13,31 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4884 2011-11-30 19:56:42Z Milbo $
+* @version $Id: default.php 5814 2012-04-06 10:23:12Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 
 <form action="index.php" method="post" name="adminForm" id="adminForm">
-    <table>
-	<tr>
-	    <td width="100%">
-		<?php echo JText::_('COM_VIRTUEMART_FILTER').' '. JText::_('COM_VIRTUEMART_MANUFACTURER_NAME').' '; ?>:
-		<input type="text" name="search" id="search" value="<?php echo $this->lists['search'];?>" class="text_area" onchange="document.adminForm.submit();" />
-		<button onclick="this.form.submit();"><?php echo JText::_('COM_VIRTUEMART_GO'); ?></button>
-		<button onclick="document.getElementById('search').value='';document.getElementById('virtuemart_manufacturercategories_id').value='0';this.form.submit();"><?php echo JText::_('COM_VIRTUEMART_RESET'); ?></button>
-	    </td>
-	    <td nowrap="nowrap">
-		<?php
-		echo $this->lists['virtuemart_manufacturercategories_id'];
-		?>
-	    </td>
-	</tr>
-    </table>
+<div id="header">
+<div id="filterbox">
+	<table class="">
+		<tr>
+			<td align="left">
+			<?php echo $this->displayDefaultViewSearch() ?>
+			</td>
+
+		</tr>
+	</table>
+	</div>
+	<div id="resultscounter"><?php echo $this->pagination->getResultsCounter(); ?></div>
+
+</div>
     <div id="editcell">
 	<table class="adminlist" cellspacing="0" cellpadding="0">
 	    <thead>
@@ -47,23 +46,24 @@ AdminUIHelper::startAdminArea();
 			<input type="checkbox" name="toggle" value="" onclick="checkAll(<?php echo count($this->manufacturers); ?>);" />
 		    </th>
 		    <th>
-				<?php echo JHTML::_('grid.sort', JText::_('COM_VIRTUEMART_MANUFACTURER_NAME') , 'mf_name', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?>
+				<?php echo $this->sort('mf_name', 'COM_VIRTUEMART_MANUFACTURER_NAME') ; ?>
 		    </th>
 		    <th>
-				<?php echo JHTML::_('grid.sort', JText::_('COM_VIRTUEMART_MANUFACTURER_EMAIL') , 'mf_email', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?>
+				<?php echo $this->sort('mf_email', 'COM_VIRTUEMART_MANUFACTURER_EMAIL') ; ?>
 		    </th>
 		    <th>
-				<?php echo JHTML::_('grid.sort', JText::_('COM_VIRTUEMART_MANUFACTURER_DESCRIPTION') , 'mf_desc', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?>
+				<?php echo $this->sort('mf_desc', 'COM_VIRTUEMART_MANUFACTURER_DESCRIPTION'); ?>
 		    </th>
 		    <th>
-				<?php echo JHTML::_('grid.sort', JText::_('COM_VIRTUEMART_MANUFACTURER_CATEGORY') , 'mf_category_name', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?>
+				<?php echo $this->sort('mf_category_name', 'COM_VIRTUEMART_MANUFACTURER_CATEGORY'); ?>
 		    </th>
 		    <th>
-				<?php echo JHTML::_('grid.sort', JText::_('COM_VIRTUEMART_MANUFACTURER_URL') , 'mf_url', $this->lists['filter_order_Dir'], $this->lists['filter_order'] ); ?>
+				<?php echo $this->sort('mf_url', 'COM_VIRTUEMART_MANUFACTURER_URL'); ?>
 		    </th>
 		    <th width="20">
-				<?php echo JText::_('COM_VIRTUEMART_PUBLISH'); ?>
+				<?php echo JText::_('COM_VIRTUEMART_PUBLISHED'); ?>
 		    </th>
+		      <th><?php echo $this->sort('m.virtuemart_manufacturer_id', 'COM_VIRTUEMART_ID')  ?></th>
 		</tr>
 	    </thead>
 	    <?php
@@ -98,6 +98,9 @@ AdminUIHelper::startAdminArea();
 		<td align="center">
 			<?php echo $published; ?>
 		</td>
+		<td align="right">
+		    <?php echo $row->virtuemart_manufacturer_id; ?>
+		</td>
 	    </tr>
 		<?php
 		$k = 1 - $k;
@@ -113,14 +116,7 @@ AdminUIHelper::startAdminArea();
 	</table>
     </div>
 
-    <input type="hidden" name="option" value="com_virtuemart" />
-    <input type="hidden" name="controller" value="manufacturer" />
-    <input type="hidden" name="view" value="manufacturer" />
-    <input type="hidden" name="task" value="" />
-	<input type="hidden" name="boxchecked" value="0" />
-	<input type="hidden" name="filter_order" value="<?php echo $this->lists['filter_order']; ?>" />
-	<input type="hidden" name="filter_order_Dir" value="<?php echo $this->lists['filter_order_Dir']; ?>" />
-    <?php echo JHTML::_( 'form.token' ); ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 

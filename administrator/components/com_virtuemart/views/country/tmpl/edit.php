@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: edit.php 4700 2011-11-14 05:50:36Z electrocity $
+* @version $Id: edit.php 6326 2012-08-08 14:14:28Z alatak $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_COUNTRY_DETAILS');
 ?>
 
@@ -30,8 +30,14 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_COUNTRY_DETAILS');
 	<fieldset>
 	<legend><?php echo JText::_('COM_VIRTUEMART_COUNTRY_DETAILS'); ?></legend>
 	<table class="admintable">
-		<?php echo VmHTML::row('input','COM_VIRTUEMART_COUNTRY_NAME','country_name',$this->country->country_name); ?>
-		<?php echo VmHTML::row('booleanlist','COM_VIRTUEMART_PUBLISH','published',$this->country->published); ?>
+		<?php
+		$lang = JFactory::getLanguage();
+		$prefix="COM_VIRTUEMART_COUNTRY_";
+		$country_string = $lang->hasKey($prefix.$this->country->country_3_code) ? ' (' . JText::_($prefix.$this->country->country_3_code) . ')' : ' ';
+        ?>
+		<?php echo VmHTML::row('input','COM_VIRTUEMART_COUNTRY_REFERENCE_NAME','country_name',$this->country->country_name, 'class="inputbox"', '', 50, 50, $country_string); ?>
+
+		<?php echo VmHTML::row('booleanlist','COM_VIRTUEMART_PUBLISHED','published',$this->country->published); ?>
 <?php /* TODO not implemented		<tr>
 			<td width="110" class="key">
 				<label for="title">
@@ -50,7 +56,7 @@ AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_COUNTRY_DETAILS');
 
 	<input type="hidden" name="virtuemart_country_id" value="<?php echo $this->country->virtuemart_country_id; ?>" />
 
-	<?php echo VmHTML::HiddenEdit('country') ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 <?php 

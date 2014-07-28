@@ -13,13 +13,13 @@
 * to the GNU General Public License, and as distributed it includes or
 * is derivative of works licensed under the GNU General Public License or
 * other free or open source software licenses.
-* @version $Id: default.php 4690 2011-11-12 14:47:46Z electrocity $
+* @version $Id: default.php 6048 2012-05-30 20:18:53Z Milbo $
 */
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 ?>
 
@@ -39,13 +39,13 @@ AdminUIHelper::startAdminArea();
 			<?php echo JText::_('COM_VIRTUEMART_ZONE_ASSIGN_CURRENT_LBL'); ?>
 		    </th>
 		    <th>
-			<?php echo JText::_('COM_VIRTUEMART_STATE_3_CODE'); ?>
-		    </th>
-		    <th>
 			<?php echo JText::_('COM_VIRTUEMART_STATE_2_CODE'); ?>
 		    </th>
+		    <th>
+			<?php echo JText::_('COM_VIRTUEMART_STATE_3_CODE'); ?>
+		    </th>
 		    <th width="20">
-			<?php echo JText::_('COM_VIRTUEMART_PUBLISH'); ?>
+			<?php echo JText::_('COM_VIRTUEMART_PUBLISHED'); ?>
 		    </th>
 		</tr>
 	    </thead>
@@ -93,14 +93,8 @@ AdminUIHelper::startAdminArea();
 	    </tfoot>
 	</table>
     </div>
-
-    <input type="hidden" name="option" value="com_virtuemart" />
-    <input type="hidden" name="controller" value="state" />
-    <input type="hidden" name="view" value="state" />
-    <input type="hidden" name="task" value="" />
-    <input type="hidden" name="boxchecked" value="0" />
     <input type="hidden" name="virtuemart_country_id" value="<?php echo $this->virtuemart_country_id; ?>" />
-    <?php echo JHTML::_( 'form.token' ); ?>
+	<?php echo $this->addStandardHiddenToForm(); ?>
 </form>
 
 
