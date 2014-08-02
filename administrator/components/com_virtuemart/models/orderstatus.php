@@ -79,7 +79,7 @@ class VirtueMartModelOrderstatus extends VmModel {
 
 	}
 
-	function renderOSList($value,$name = 'order_status',$multiple=FALSE,$attrs='',$langkey='' ){
+	function renderOSList($value,$name = 'order_status',$multiple=FALSE,$attrs='',$langkey=''){
 
 		$idA = $id = $name;
  		$attrs .= ' class="inputbox" ';

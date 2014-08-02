@@ -7,7 +7,7 @@
 
 defined('_JEXEC') or die();
 
-jimport('joomla.application.component.model');
+if(!class_exists('JModel')) require JPATH_VM_LIBRARIES.DS.'joomla'.DS.'application'.DS.'component'.DS.'model.php';
 
 /**
  * The Live Update MVC model
@@ -17,7 +17,7 @@ class LiveUpdateModel extends JModel
 	public function download()
 	{
 		// Get the path to Joomla!'s temporary directory
-		$jreg =& JFactory::getConfig();
+		$jreg =JFactory::getConfig();
 		$tmpdir = $jreg->getValue('config.tmp_path');
 		
 		jimport('joomla.filesystem.folder');

@@ -3,7 +3,7 @@ defined('_JEXEC') or  die( 'Direct Access to '.basename(__FILE__).' is not allow
 /*
 *Cart Ajax Module
 *
-* @version $Id: mod_virtuemart_cart.php 4673 2011-11-11 00:46:30Z electrocity $
+* @version $Id: mod_virtuemart_cart.php 6555 2012-10-17 15:49:43Z alatak $
 * @package VirtueMart
 * @subpackage modules
 *
@@ -17,12 +17,7 @@ defined('_JEXEC') or  die( 'Direct Access to '.basename(__FILE__).' is not allow
 *
 * www.virtuemart.net
 */
-/*if (!class_exists( 'VmConfig' )) {
-require(JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_virtuemart'.DS.'helpers'.DS.'config.php');}
-//VmConfig::loadConfig();
 
-vmJsApi::jPrice();
-vmJsApi::cssSite();*/
 $jsVars  = ' jQuery(document).ready(function(){
 	jQuery(".vmCartModule").productUpdate();
 
@@ -30,9 +25,23 @@ $jsVars  = ' jQuery(document).ready(function(){
 
 if (!class_exists( 'VmConfig' )) require(JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_virtuemart'.DS.'helpers'.DS.'config.php');
 
+VmConfig::loadConfig();
+VmConfig::loadJLang('com_virtuemart', true);
+VmConfig::loadModJLang('mod_virtuemart_cart', true);
+
+//This is strange we have the whole thing again in controllers/cart.php public function viewJS()
 if(!class_exists('VirtueMartCart')) require(JPATH_VM_SITE.DS.'helpers'.DS.'cart.php');
-$cart = VirtueMartCart::getCart(false,false);
-$data = $cart->prepareAjaxData();
+$cart = VirtueMartCart::getCart(false);
+
+$viewName = JRequest::getString('view',0);
+if($viewName=='cart'){
+	$checkAutomaticPS = true;
+} else {
+	$checkAutomaticPS = false;
+}
+$data = $cart->prepareAjaxData($checkAutomaticPS);
+if (!class_exists('CurrencyDisplay')) require(JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_virtuemart' . DS . 'helpers' . DS . 'currencydisplay.php');
+$currencyDisplay = CurrencyDisplay::getInstance( );
 $lang = JFactory::getLanguage();
 $extension = 'com_virtuemart';
 $lang->load($extension);//  when AJAX it needs to be loaded manually here >> in case you are outside virtuemart !!!
@@ -41,7 +50,7 @@ else if ($data->totalProduct == 1) $data->totalProductTxt = JText::_('COM_VIRTUE
 else $data->totalProductTxt = JText::_('COM_VIRTUEMART_EMPTY_CART');
 if (false && $data->dataValidated == true) {
 	$taskRoute = '&task=confirm';
-	$linkName = JText::_('COM_VIRTUEMART_CART_CONFIRM');
+	$linkName = JText::_('COM_VIRTUEMART_ORDER_CONFIRM_MNU');
 } else {
 	$taskRoute = '';
 	$linkName = JText::_('COM_VIRTUEMART_CART_SHOW');
@@ -51,8 +60,7 @@ $useXHTML = true;
 $data->cart_show = '<a style ="float:right;" href="'.JRoute::_("index.php?option=com_virtuemart&view=cart".$taskRoute,$useXHTML,$useSSL).'">'.$linkName.'</a>';
 $data->billTotal = $lang->_('COM_VIRTUEMART_CART_TOTAL').' : <strong>'. $data->billTotal .'</strong>';
 
-vmJsApi::jQuery();
-vmJsApi::jPrice();
+//vmJsApi::jPrice();
 vmJsApi::cssSite();
 $document = JFactory::getDocument();
 //$document->addScriptDeclaration($jsVars);

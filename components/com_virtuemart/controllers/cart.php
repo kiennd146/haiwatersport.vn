@@ -165,10 +165,9 @@ class VirtueMartControllerCart extends JController {
 		require(JPATH_VM_SITE . DS . 'helpers' . DS . 'cart.php');
 		$cart = VirtueMartCart::getCart(false);
 		$this->data = $cart->prepareAjaxData();
-
+		$lang = JFactory::getLanguage();
 		$extension = 'com_virtuemart';
-		VmConfig::loadJLang($extension); //  when AJAX it needs to be loaded manually here >> in case you are outside virtuemart !
- 
+		$lang->load($extension); //  when AJAX it needs to be loaded manually here >> in case you are outside virtuemart !!!
 		if ($this->data->totalProduct > 1)
 		$this->data->totalProductTxt = JText::sprintf('COM_VIRTUEMART_CART_X_PRODUCTS', $this->data->totalProduct);
 		else if ($this->data->totalProduct == 1)
@@ -183,7 +182,7 @@ class VirtueMartControllerCart extends JController {
 			$linkName = JText::_('COM_VIRTUEMART_CART_SHOW');
 		}
 		$this->data->cart_show = '<a class="floatright" href="' . JRoute::_("index.php?option=com_virtuemart&view=cart" . $taskRoute, $this->useXHTML, $this->useSSL) . '" rel="nofollow">' . $linkName . '</a>';
-		$this->data->billTotal = vmText::_('COM_VIRTUEMART_CART_TOTAL') . ' : <strong>' . $this->data->billTotal . '</strong>';
+		$this->data->billTotal = $lang->_('COM_VIRTUEMART_CART_TOTAL') . ' : <strong>' . $this->data->billTotal . '</strong>';
 		echo json_encode($this->data);
 		Jexit();
 	}

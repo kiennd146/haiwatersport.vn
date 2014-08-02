@@ -63,12 +63,9 @@ class VirtuemartViewCustom extends JView {
 			if (!class_exists('vmParameters'))
 				require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'parameterparser.php');
 			$parameters = new vmParameters($this->plugin->params,  $this->plugin->element , 'plugin' ,'vmcustom');
-
-			if (!class_exists('vmPlugin'))
-				require(JPATH_VM_ADMINISTRATOR . DS . 'plugins' . DS . 'vmplugin.php');
+			$lang = JFactory::getLanguage();
 			$filename = 'plg_vmcustom_' .  $this->plugin->element;
-			vmPlugin::loadJLang($filename,'vmcustom',$this->plugin->element);
-
+			$lang->load($filename, JPATH_ADMINISTRATOR);
 			echo $parameters->render();
 			echo '<input type="hidden" value="'.$this->plugin->element.'" name="custom_value">';
 			jExit();

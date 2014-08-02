@@ -162,7 +162,7 @@ class VirtueMartModelProduct extends VmModel {
 			}
 			$filter_order_Dir = strtoupper (JRequest::getWord ('dir', VmConfig::get('prd_brws_orderby_dir', 'ASC')));
 			$valid_search_fields = VmConfig::get ('browse_search_fields');
-			//vmdebug('$valid_search_fields ',$valid_search_fields);
+			vmdebug('$valid_search_fields ',$valid_search_fields);
 			//unset($valid_search_fields[]
 		}
 		else {
@@ -389,12 +389,12 @@ class VirtueMartModelProduct extends VmModel {
 			//vmdebug('my filter ordering ',$this->filter_order);
 			$ff_select_price = '';
 			switch ($this->filter_order) {
-				case '`p`.product_special':
+				case 'product_special':
 					if($isSite){
 						$where[] = ' p.`product_special`="1" '; // TODO Change  to  a  individual button
 						$orderBy = 'ORDER BY RAND()';
 					} else {
-						$orderBy = 'ORDER BY p.`product_special`';
+						$orderBy = 'ORDER BY `product_special`';
 					}
 
 					break;
@@ -425,7 +425,7 @@ class VirtueMartModelProduct extends VmModel {
 					$ff_select_price = ' , IF(pp.override, pp.product_override_price, pp.product_price) as product_price ';
 					$joinPrice = TRUE;
 					break;
-				case '`p`.created_on':
+				case 'created_on':
 					$orderBy = ' ORDER BY p.`created_on` ';
 					break;
 				default;
@@ -474,27 +474,26 @@ class VirtueMartModelProduct extends VmModel {
 			}
 		}
 
-		$joinedTables = array();
-		//This option switches between showing products without the selected language or only products with language.
-		if($app->isSite() and !VmConfig::get('prodOnlyWLang',true)){
-			//Maybe we have to join the language to order by product name, description, etc,...
-			if(!$joinLang){
-				$productLangFields = array('product_s_desc','product_desc','product_name','metadesc','metakey','slug');
-				foreach($productLangFields as $field){
-					if(strpos($orderBy,$field,6)!==FALSE){
-						$joinLang = true;
-						break;
-					}
+		//write the query, incldue the tables
+		//$selectFindRows = 'SELECT SQL_CALC_FOUND_ROWS * FROM `#__virtuemart_products` ';
+		//$selectFindRows = 'SELECT COUNT(*) FROM `#__virtuemart_products` ';
+		//Maybe we have to join the language to order by product name, description, etc,...
+		if(!$joinLang){
+			$productLangFields = array('product_s_desc','product_desc','product_name','metadesc','metakey','slug');
+			foreach($productLangFields as $field){
+				if(strpos($orderBy,$field,6)!==FALSE){
+					$joinLang = true;
+					break;
 				}
 			}
-		} else {
-			$joinLang = true;
 		}
 
+		$joinedTables = array();
 		$select = ' p.`virtuemart_product_id`'.$ff_select_price.' FROM `#__virtuemart_products` as p ';
 		if ($joinLang) {
-			$joinedTables[] = ' INNER JOIN `#__virtuemart_products_' . VmConfig::$vmlang . '` as l using (`virtuemart_product_id`)';
+			$joinedTables[] = ' LEFT JOIN `#__virtuemart_products_' . VmConfig::$vmlang . '` as l using (`virtuemart_product_id`)';
 		}
+
 
 		if ($joinShopper == TRUE) {
 			$joinedTables[] = ' LEFT JOIN `#__virtuemart_product_shoppergroups` as ps ON p.`virtuemart_product_id` = `ps`.`virtuemart_product_id` ';
@@ -1467,8 +1466,12 @@ class VirtueMartModelProduct extends VmModel {
 				}
 			}
 
-
-			$q = 'SELECT p.`virtuemart_product_id`, l.`product_name`, `pc`.ordering FROM `#__virtuemart_products` as p';
+			if($queryArray[4]){
+				$q = 'SELECT l.`virtuemart_product_id`, l.`product_name`, `pc`.ordering FROM `#__virtuemart_products` as p';
+			} else {
+				$q = 'SELECT l.`virtuemart_product_id`, l.`product_name`, `pc`.ordering FROM `#__virtuemart_products_' . VMLANG . '` as l ';
+				array_unshift($queryArray[1],' LEFT JOIN `#__virtuemart_products` as p ON p.`virtuemart_product_id` = l.`virtuemart_product_id` ');
+			}
 
 			$joinT = '';
 			if(is_array($queryArray[1])){
@@ -1491,7 +1494,7 @@ class VirtueMartModelProduct extends VmModel {
 
 				$qm = ' AND '.$orderByName.' '.$op.' "'.$orderByValue.'" ORDER BY '.$orderByName.' '.$direction.' LIMIT 1';
 				$db->setQuery ($q.$qm);
-				//vmdebug('getNeighborProducts ',$q.$qm);
+
 				if ($result = $db->loadAssocList ()) {
 					$neighbor = $result;
 				}
@@ -1840,14 +1843,12 @@ class VirtueMartModelProduct extends VmModel {
 		$db = JFactory::getDBO ();
 		$vendorId = 1;
 		$childs = count ($this->getProductChildIds ($id));
-		$db->setQuery ('SELECT `product_name`,`slug` FROM `#__virtuemart_products` JOIN `#__virtuemart_products_' . VmConfig::$vmlang . '` as l using (`virtuemart_product_id`) WHERE `virtuemart_product_id`=' . (int)$id);
+		$db->setQuery ('SELECT `product_name`,`slug` FROM `#__virtuemart_products` JOIN `#__virtuemart_products_' . VMLANG . '` as l using (`virtuemart_product_id`) WHERE `virtuemart_product_id`=' . (int)$id);
 		$parent = $db->loadObject ();
-		$prodTable = $this->getTable ('products');
-		//$newslug = $parent->slug . $id . rand (1, 9);
-		$prodTable->slug = $parent->slug;
-		$prodTable->checkCreateUnique('#__virtuemart_products_' . VmConfig::$vmlang,'slug');
-		$data = array('product_name' => $parent->product_name, 'slug' => $prodTable->slug, 'virtuemart_vendor_id' => (int)$vendorId, 'product_parent_id' => (int)$id);
+		$newslug = $parent->slug . $id . rand (1, 9);
+		$data = array('product_name' => $parent->product_name, 'slug' => $newslug, 'virtuemart_vendor_id' => (int)$vendorId, 'product_parent_id' => (int)$id);
 
+		$prodTable = $this->getTable ('products');
 		$prodTable->bindChecknStore ($data);
 
 		$langs = (array)VmConfig::get ('active_languages');
@@ -1857,7 +1858,7 @@ class VirtueMartModelProduct extends VmModel {
 				$db->setQuery ('SELECT `product_name` FROM `#__virtuemart_products_' . $lang . '` WHERE `virtuemart_product_id` = "' . $prodTable->virtuemart_product_id . '" ');
 				$res = $db->loadResult ();
 				if (!$res) {
-					$db->setQuery ('INSERT INTO `#__virtuemart_products_' . $lang . '` (`virtuemart_product_id`,`slug`) VALUES ("' . $prodTable->virtuemart_product_id . '","' . $prodTable->slug . '");');
+					$db->setQuery ('INSERT INTO `#__virtuemart_products_' . $lang . '` (`virtuemart_product_id`,`slug`) VALUES ("' . $prodTable->virtuemart_product_id . '","' . $newslug . '");');
 					$db->query ();
 					$err = $db->getErrorMsg ();
 					if (!empty($err)) {

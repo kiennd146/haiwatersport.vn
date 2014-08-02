@@ -77,6 +77,7 @@ class VirtueMartModelMedia extends VmModel {
 		if (!class_exists('VmMediaHandler')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'mediahandler.php');
 
 		$app = JFactory::getApplication();
+		$lang =  JFactory::getLanguage();
 		$medias = array();
 
 		static $_medias = array();
@@ -110,7 +111,6 @@ class VirtueMartModelMedia extends VmModel {
 						if($app->isSite()){
 							$selectedLangue = explode(",", $data->file_lang);
 							//vmdebug('selectedLangue',$selectedLangue);
-							$lang =  JFactory::getLanguage();
 							if(in_array($lang->getTag(), $selectedLangue) || $data->file_lang == '') {
 								$_medias[$id] = VmMediaHandler::createMedia($data,$file_type,$mime);
 								if(is_object($virtuemart_media_id) && !empty($virtuemart_media_id->product_name)) $_medias[$id]->product_name = $virtuemart_media_id->product_name;
@@ -306,7 +306,7 @@ class VirtueMartModelMedia extends VmModel {
 	function storeMedia($data,$type){
 
 // 		vmdebug('my data in media to store start',$data['virtuemart_media_id']);
-		vRequest::vmCheckToken() or jexit( 'Invalid Token, while trying to save media' );
+		JRequest::checkToken() or jexit( 'Invalid Token, while trying to save media' );
 
 		if(empty($data['media_action'])){
 			$data['media_action'] = 'none';

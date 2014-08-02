@@ -4,7 +4,9 @@ defined('_JEXEC') or die('Restricted access');
 
 /* ID for jQuery dropdown */
 $ID = str_replace('.', '_', substr(microtime(true), -8, 8));
-$js="jQuery(document).ready(function() {
+$js="
+//<![CDATA[
+jQuery(document).ready(function() {
 		jQuery('#VMmenu".$ID." li.VmClose ul').hide();
 		jQuery('#VMmenu".$ID." li .VmArrowdown').click(
 		function() {
@@ -15,13 +17,14 @@ $js="jQuery(document).ready(function() {
 				jQuery(this).parents('li').addClass('VmOpen').removeClass('VmClose');
 			}
 		});
-	});" ;
+	});
+//]]>
+" ;
 
 		$document = JFactory::getDocument();
-		$document->addScriptDeclaration($js);
-?>
+		$document->addScriptDeclaration($js);?>
 
-<ul class="VMmenu<?php echo $class_sfx ?>" ID="<?php echo "VMmenu".$ID ?>" >
+<ul class="VMmenu<?php echo $class_sfx ?>" id="<?php echo "VMmenu".$ID ?>" >
 <?php foreach ($categories as $category) {
 		 $active_menu = 'class="VmClose"';
 		$caturl = JRoute::_('index.php?option=com_virtuemart&view=category&virtuemart_category_id='.$category->virtuemart_category_id);
@@ -32,7 +35,7 @@ $js="jQuery(document).ready(function() {
 		?>
 
 <li <?php echo $active_menu ?>>
-	<div >
+	<div>
 		<?php echo JHTML::link($caturl, $cattext);
 		if ($category->childs) {
 			?>

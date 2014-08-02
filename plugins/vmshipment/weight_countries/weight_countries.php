@@ -1,15 +1,14 @@
 <?php
 
-if (!defined('_JEXEC'))
-    die('Direct Access to ' . basename(__FILE__) . ' is not allowed.');
+defined ('_JEXEC') or die('Restricted access');
 
 /**
  * Shipment plugin for weight_countries shipments, like regular postal services
  *
- * @version $Id: weight_countries.php 3220 2011-05-12 20:09:14Z Milbo $
+ * @version $Id: weight_countries.php 6542 2012-10-15 17:55:59Z alatak $
  * @package VirtueMart
  * @subpackage Plugins - shipment
- * @copyright Copyright (C) 2004-2011 VirtueMart Team - All rights reserved.
+ * @copyright Copyright (C) 2004-2012 VirtueMart Team - All rights reserved.
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
  * VirtueMart is free software. This version may have been modified pursuant
  * to the GNU General Public License, and as distributed it includes or
@@ -21,424 +20,504 @@ if (!defined('_JEXEC'))
  * @author Valerie Isaksen
  *
  */
-if (!class_exists('vmPSPlugin'))
-    require(JPATH_VM_PLUGINS . DS . 'vmpsplugin.php');
+if (!class_exists ('vmPSPlugin')) {
+	require(JPATH_VM_PLUGINS . DS . 'vmpsplugin.php');
+}
 
+/**
+ *
+ */
 class plgVmShipmentWeight_countries extends vmPSPlugin {
 
-    // instance of class
-    public static $_this = false;
+	/**
+	 * @param object $subject
+	 * @param array  $config
+	 */
+	function __construct (& $subject, $config) {
 
-    function __construct(& $subject, $config) {
-	//if (self::$_this)
-	//   return self::$_this;
-	parent::__construct($subject, $config);
+		parent::__construct ($subject, $config);
 
-	$this->_loggable = true;
-	$this->tableFields = array_keys($this->getTableSQLFields());
-	$varsToPush = array('shipment_logos' => array('', 'char'),
-	    'countries' => array(0, 'char'),
-	    'zip_start' => array(0, 'int'),
-	    'zip_stop' => array(0, 'int'),
-	    'weight_start' => array(0, 'int'),
-	    'weight_stop' => array(0, 'int'),
-	    'weight_unit' => array(0, 'char'),
-	    'cost' => array(0, 'int'),
-	    'package_fee' => array(0, 'int'),
-	    'tax_id' => array(0, 'int'),
-	    'free_shipment' => array(0, 'int')
-	);
+		$this->_loggable = TRUE;
+		$this->_tablepkey = 'id';
+		$this->_tableId = 'id';
+		$this->tableFields = array_keys ($this->getTableSQLFields ());
+		$varsToPush = $this->getVarsToPush ();
+		$this->setConfigParameterable ($this->_configTableFieldName, $varsToPush);
 
-
-
-	$this->setConfigParameterable($this->_configTableFieldName, $varsToPush);
-
-// 		self::$_this
-	//$this->createPluginTable($this->_tablename);
-	//self::$_this = $this;
-    }
-
-    /**
-     * Create the table for this plugin if it does not yet exist.
-     * @author Valérie Isaksen
-     */
-    protected function getVmPluginCreateTableSQL() {
-
-	return $this->createTableSQL('Shipment Weight Countries Table');
-    }
-
-    function getTableSQLFields() {
-	$SQLfields = array(
-	    'id' => ' tinyint(1) unsigned NOT NULL AUTO_INCREMENT',
-	    'virtuemart_order_id' => 'int(11) UNSIGNED DEFAULT NULL',
-	    'order_number' => 'char(32) DEFAULT NULL',
-	    'virtuemart_shipmentmethod_id' => 'mediumint(1) UNSIGNED DEFAULT NULL',
-	    'shipment_name' => 'char(255) NOT NULL DEFAULT \'\' ',
-	    'order_weight' => 'decimal(10,4) DEFAULT NULL',
-	    'shipment_weight_unit' => 'char(3) DEFAULT \'KG\' ',
-	    'shipment_cost' => 'decimal(10,2) DEFAULT NULL',
-	    'shipment_package_fee' => 'decimal(10,2) DEFAULT NULL',
-	    'tax_id' => 'smallint(1) DEFAULT NULL'
-	);
-	return $SQLfields;
-    }
-
-    /**
-     * This method is fired when showing the order details in the frontend.
-     * It displays the shipment-specific data.
-     *
-     * @param integer $order_number The order Number
-     * @return mixed Null for shipments that aren't active, text (HTML) otherwise
-     * @author Valérie Isaksen
-     * @author Max Milbers
-     */
-    public function plgVmOnShowOrderFEShipment($virtuemart_order_id, $virtuemart_shipmentmethod_id, &$shipment_name) {
-	$this->onShowOrderFE($virtuemart_order_id, $virtuemart_shipmentmethod_id, $shipment_name);
-    }
-
-    /**
-     * This event is fired after the order has been stored; it gets the shipment method-
-     * specific data.
-     *
-     * @param int $order_id The order_id being processed
-     * @param object $cart  the cart
-     * @param array $priceData Price information for this order
-     * @return mixed Null when this method was not selected, otherwise true
-     * @author Valerie Isaksen
-     */
-    function plgVmConfirmedOrder(VirtueMartCart $cart, $order) {
-	if (!($method = $this->getVmPluginMethod($order['details']['BT']->virtuemart_shipmentmethod_id))) {
-	    return null; // Another method was selected, do nothing
-	}
-	if (!$this->selectedThisElement($method->shipment_element)) {
-	    return false;
 	}
 
-	$values['order_number'] = $order['details']['BT']->order_number;
-	$values['shipment_id'] = $order['details']['BT']->virtuemart_shipmentmethod_id;
-	$values['shipment_name'] = $this->renderPluginName($method);
-	$values['order_weight'] = $this->getOrderWeight($cart, $method->weight_unit);
-	$values['shipment_weight_unit'] = $method->weight_unit;
-	$values['shipment_cost'] = $method->cost;
-	$values['shipment_package_fee'] = $method->package_fee;
-	$values['tax_id'] = $method->tax_id;
-	$this->storePSPluginInternalData($values);
+	/**
+	 * Create the table for this plugin if it does not yet exist.
+	 *
+	 * @author Valérie Isaksen
+	 */
+	public function getVmPluginCreateTableSQL () {
 
-	return true;
-    }
-
-    /**
-     * This method is fired when showing the order details in the backend.
-     * It displays the shipment-specific data.
-     * NOTE, this plugin should NOT be used to display form fields, since it's called outside
-     * a form! Use plgVmOnUpdateOrderBE() instead!
-     *
-     * @param integer $virtuemart_order_id The order ID
-     * @param integer $vendorId Vendor ID
-     * @param object $_shipInfo Object with the properties 'shipment' and 'name'
-     * @return mixed Null for shipments that aren't active, text (HTML) otherwise
-     * @author Valerie Isaksen
-     */
-    public function plgVmOnShowOrderBEShipment($virtuemart_order_id, $virtuemart_shipmentmethod_id) {
-	if (!($this->selectedThisByMethodId($virtuemart_shipmentmethod_id))) {
-	    return null;
-	}
-	$html = $this->getOrderShipmentHtml($virtuemart_order_id);
-	return $html;
-    }
-
-    function getOrderShipmentHtml($virtuemart_order_id) {
-
-	$db = JFactory::getDBO();
-	$q = 'SELECT * FROM `' . $this->_tablename . '` '
-		. 'WHERE `virtuemart_order_id` = ' . $virtuemart_order_id;
-	$db->setQuery($q);
-	if (!($shipinfo = $db->loadObject())) {
-	    vmWarn(500, $q . " " . $db->getErrorMsg());
-	    return '';
+		return $this->createTableSQL ('Shipment Weight Countries Table');
 	}
 
-	if (!class_exists('CurrencyDisplay'))
-	    require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'currencydisplay.php');
+	/**
+	 * @return array
+	 */
+	function getTableSQLFields () {
 
-	$currency = CurrencyDisplay::getInstance();
-	$tax = ShopFunctions::getTaxByID($shipinfo->tax_id);
-	$taxDisplay = is_array($tax) ? $tax['calc_value'] . ' ' . $tax['calc_value_mathop'] : $shipinfo->tax_id;
-	$taxDisplay = ($taxDisplay == -1 ) ? JText::_('COM_VIRTUEMART_PRODUCT_TAX_NONE') : $taxDisplay;
-
-	$html = '<table class="adminlist">' . "\n";
-	$html .=$this->getHtmlHeaderBE();
-	$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_SHIPPING_NAME', $shipinfo->shipment_name);
-	$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_WEIGHT', $shipinfo->order_weight . ' ' . ShopFunctions::renderWeightUnit($shipinfo->shipment_weight_unit));
-	$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_COST', $currency->priceDisplay($shipinfo->shipment_cost, '', false));
-	$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_PACKAGE_FEE', $currency->priceDisplay($shipinfo->shipment_package_fee, '', false));
-	$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_TAX', $taxDisplay);
-	$html .= '</table>' . "\n";
-
-	return $html;
-    }
-
-    function getCosts(VirtueMartCart $cart, $method, $cart_prices) {
-
-	if ($method->free_shipment && $cart_prices['salesPrice'] >= $method->free_shipment) {
-	    return 0;
-	} else {
-	    return $method->cost + $method->package_fee;
-	}
-    }
-
-    protected function checkConditions($cart, $method, $cart_prices) {
-
-
-	$orderWeight = $this->getOrderWeight($cart, $method->weight_unit);
-	$address = (($cart->ST == 0) ? $cart->BT : $cart->ST);
-
-	$nbShipment = 0;
-	$countries = array();
-	if (!empty($method->countries)) {
-	    if (!is_array($method->countries)) {
-		$countries[0] = $method->countries;
-	    } else {
-		$countries = $method->countries;
-	    }
-	}
-	// probably did not gave his BT:ST address
-	if (!is_array($address)) {
-	    $address = array();
-	    $address['zip'] = 0;
-	    $address['virtuemart_country_id'] = 0;
-	}
-	$weight_cond = $this->_weightCond($orderWeight, $method);
-
-	if (isset($address['zip'])) {
-	    $zip_cond = $this->_zipCond($address['zip'], $method);
-	} else {
-	    //no zip in address data normally occurs only, when it is removed from the form by the shopowner
-	    //Todo for  valerie, you may take a look, maybe should be false, or configurable.
-	    $zip_cond = true;
+		$SQLfields = array(
+			'id'                           => 'int(1) UNSIGNED NOT NULL AUTO_INCREMENT',
+			'virtuemart_order_id'          => 'int(11) UNSIGNED',
+			'order_number'                 => 'char(32)',
+			'virtuemart_shipmentmethod_id' => 'mediumint(1) UNSIGNED',
+			'shipment_name'                => 'varchar(5000)',
+			'order_weight'                 => 'decimal(10,4)',
+			'shipment_weight_unit'         => 'char(3) DEFAULT \'KG\'',
+			'shipment_cost'                => 'decimal(10,2)',
+			'shipment_package_fee'         => 'decimal(10,2)',
+			'tax_id'                       => 'smallint(1)'
+		);
+		return $SQLfields;
 	}
 
-	if (!isset($address['virtuemart_country_id']))
-	    $address['virtuemart_country_id'] = 0;
-	if (in_array($address['virtuemart_country_id'], $countries) || count($countries) == 0) {
-	    if ($weight_cond AND $zip_cond) {
-		return true;
-	    }
+	/**
+	 * This method is fired when showing the order details in the frontend.
+	 * It displays the shipment-specific data.
+	 *
+	 * @param integer $virtuemart_order_id The order ID
+	 * @param integer $virtuemart_shipmentmethod_id The selected shipment method id
+	 * @param string  $shipment_name Shipment Name
+	 * @return mixed Null for shipments that aren't active, text (HTML) otherwise
+	 * @author Valérie Isaksen
+	 * @author Max Milbers
+	 */
+	public function plgVmOnShowOrderFEShipment ($virtuemart_order_id, $virtuemart_shipmentmethod_id, &$shipment_name) {
+
+		$this->onShowOrderFE ($virtuemart_order_id, $virtuemart_shipmentmethod_id, $shipment_name);
 	}
 
-	return false;
-    }
+	/**
+	 * This event is fired after the order has been stored; it gets the shipment method-
+	 * specific data.
+	 *
+	 * @param int    $order_id The order_id being processed
+	 * @param object $cart  the cart
+	 * @param array  $order The actual order saved in the DB
+	 * @return mixed Null when this method was not selected, otherwise true
+	 * @author Valerie Isaksen
+	 */
+	function plgVmConfirmedOrder (VirtueMartCart $cart, $order) {
 
-    private function _weightCond($orderWeight, $method) {
-	if ($orderWeight) {
+	
+		if (!($method = $this->getVmPluginMethod ($order['details']['BT']->virtuemart_shipmentmethod_id))) {
+			return NULL; // Another method was selected, do nothing
+		}
+		if (!$this->selectedThisElement ($method->shipment_element)) {
+			return FALSE;
+		}
+		$values['virtuemart_order_id'] = $order['details']['BT']->virtuemart_order_id;
+		$values['order_number'] = $order['details']['BT']->order_number;
+		$values['virtuemart_shipmentmethod_id'] = $order['details']['BT']->virtuemart_shipmentmethod_id;
+		$values['shipment_name'] = $this->renderPluginName ($method);
+		$values['order_weight'] = $this->getOrderWeight ($cart, $method->weight_unit);
+		$values['shipment_weight_unit'] = $method->weight_unit;
+		$values['shipment_cost'] = $method->cost;
+		$values['shipment_package_fee'] = $method->package_fee;
+		$values['tax_id'] = $method->tax_id;
+		$this->storePSPluginInternalData ($values);
 
-	    $weight_cond = ($orderWeight >= $method->weight_start AND $orderWeight <= $method->weight_stop
-		    OR
-		    ($method->weight_start <= $orderWeight AND ($method->weight_stop == 0) ));
-	} else
-	    $weight_cond = true;
-	return $weight_cond;
-    }
-
-    /**
-     * Check the conditions on Zip code
-     * @param int $zip : zip code
-     * @param $params paremters for this specific shiper
-     * @author Valérie Isaksen
-     * @return string if Zip condition is ok or not
-     */
-    private function _zipCond($zip, $method) {
-	if (!empty($zip)) {
-	    $zip_cond = (( $zip >= $method->zip_start AND $zip <= $method->zip_stop )
-		    OR
-		    ($method->zip_start <= $zip AND ($method->zip_stop == 0) ));
-	} else {
-	    $zip_cond = true;
+		return TRUE;
 	}
-	return $zip_cond;
-    }
 
-    /*
-     * We must reimplement this triggers for joomla 1.7
-     */
+	/**
+	 * This method is fired when showing the order details in the backend.
+	 * It displays the shipment-specific data.
+	 * NOTE, this plugin should NOT be used to display form fields, since it's called outside
+	 * a form! Use plgVmOnUpdateOrderBE() instead!
+	 *
+	 * @param integer $virtuemart_order_id The order ID
+	 * @param integer $virtuemart_shipmentmethod_id The order shipment method ID
+	 * @param object  $_shipInfo Object with the properties 'shipment' and 'name'
+	 * @return mixed Null for shipments that aren't active, text (HTML) otherwise
+	 * @author Valerie Isaksen
+	 */
+	public function plgVmOnShowOrderBEShipment ($virtuemart_order_id, $virtuemart_shipmentmethod_id) {
 
-    /**
-     * Create the table for this plugin if it does not yet exist.
-     * This functions checks if the called plugin is active one.
-     * When yes it is calling the standard method to create the tables
-     * @author Valérie Isaksen
-     *
-     */
-    function plgVmOnStoreInstallShipmentPluginTable($jplugin_id) {
-	return $this->onStoreInstallPluginTable($jplugin_id);
-    }
+		if (!($this->selectedThisByMethodId ($virtuemart_shipmentmethod_id))) {
+			return NULL;
+		}
+		$html = $this->getOrderShipmentHtml ($virtuemart_order_id);
+		return $html;
+	}
 
-    /**
-     * This event is fired after the shipment method has been selected. It can be used to store
-     * additional payment info in the cart.
-     *
-     * @author Max Milbers
-     * @author Valérie isaksen
-     *
-     * @param VirtueMartCart $cart: the actual cart
-     * @return null if the payment was not selected, true if the data is valid, error message if the data is not vlaid
-     *
-     */
-    public function plgVmOnSelectCheck($psType, VirtueMartCart $cart) {
-	return $this->OnSelectCheck($psType, $cart);
-    }
+	/**
+	 * @param $virtuemart_order_id
+	 * @return string
+	 */
+	function getOrderShipmentHtml ($virtuemart_order_id) {
 
-    /**
-     * plgVmDisplayListFE
-     * This event is fired to display the pluginmethods in the cart (edit shipment/payment) for exampel
-     *
-     * @param object $cart Cart object
-     * @param integer $selected ID of the method selected
-     * @return boolean True on succes, false on failures, null when this plugin was not selected.
-     * On errors, JError::raiseWarning (or JError::raiseError) must be used to set a message.
-     *
-     * @author Valerie Isaksen
-     * @author Max Milbers
-     */
-    public function plgVmDisplayListFEShipment(VirtueMartCart $cart, $selected = 0, &$htmlIn) {
-	return $this->displayListFE($cart, $selected, $htmlIn);
-    }
+		$db = JFactory::getDBO ();
+		$q = 'SELECT * FROM `' . $this->_tablename . '` '
+			. 'WHERE `virtuemart_order_id` = ' . $virtuemart_order_id;
+		$db->setQuery ($q);
+		if (!($shipinfo = $db->loadObject ())) {
+			vmWarn (500, $q . " " . $db->getErrorMsg ());
+			return '';
+		}
 
-    /*
-     * plgVmonSelectedCalculatePrice
-     * Calculate the price (value, tax_id) of the selected method
-     * It is called by the calculator
-     * This function does NOT to be reimplemented. If not reimplemented, then the default values from this function are taken.
-     * @author Valerie Isaksen
-     * @cart: VirtueMartCart the current cart
-     * @cart_prices: array the new cart prices
-     * @return null if the method was not selected, false if the shiiping rate is not valid any more, true otherwise
-     *
-     *
-     */
+		if (!class_exists ('CurrencyDisplay')) {
+			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'currencydisplay.php');
+		}
 
-    public function plgVmonSelectedCalculatePriceShipment(VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name) {
-	return $this->onSelectedCalculatePrice($cart, $cart_prices, $cart_prices_name);
-    }
+		$currency = CurrencyDisplay::getInstance ();
+		$tax = ShopFunctions::getTaxByID ($shipinfo->tax_id);
+		$taxDisplay = is_array ($tax) ? $tax['calc_value'] . ' ' . $tax['calc_value_mathop'] : $shipinfo->tax_id;
+		$taxDisplay = ($taxDisplay == -1) ? JText::_ ('COM_VIRTUEMART_PRODUCT_TAX_NONE') : $taxDisplay;
 
-    /**
-     * plgVmOnCheckAutomaticSelected
-     * Checks how many plugins are available. If only one, the user will not have the choice. Enter edit_xxx page
-     * The plugin must check first if it is the correct type
-     * @author Valerie Isaksen
-     * @param VirtueMartCart cart: the cart object
-     * @return null if no plugin was found, 0 if more then one plugin was found,  virtuemart_xxx_id if only one plugin is found
-     *
-     */
-    function plgVmOnCheckAutomaticSelectedShipment(VirtueMartCart $cart, array $cart_prices = array()) {
-	return $this->onCheckAutomaticSelected($cart, $cart_prices);
-    }
+		$html = '<table class="adminlist">' . "\n";
+		$html .= $this->getHtmlHeaderBE ();
+		$html .= $this->getHtmlRowBE ('WEIGHT_COUNTRIES_SHIPPING_NAME', $shipinfo->shipment_name);
+		$html .= $this->getHtmlRowBE ('WEIGHT_COUNTRIES_WEIGHT', $shipinfo->order_weight . ' ' . ShopFunctions::renderWeightUnit ($shipinfo->shipment_weight_unit));
+		$html .= $this->getHtmlRowBE ('WEIGHT_COUNTRIES_COST', $currency->priceDisplay ($shipinfo->shipment_cost));
+		$html .= $this->getHtmlRowBE ('WEIGHT_COUNTRIES_PACKAGE_FEE', $currency->priceDisplay ($shipinfo->shipment_package_fee));
+		$html .= $this->getHtmlRowBE ('WEIGHT_COUNTRIES_TAX', $taxDisplay);
+		$html .= '</table>' . "\n";
 
-    /**
-     * This event is fired during the checkout process. It can be used to validate the
-     * method data as entered by the user.
-     *
-     * @return boolean True when the data was valid, false otherwise. If the plugin is not activated, it should return null.
-     * @author Max Milbers
+		return $html;
+	}
 
-      public function plgVmOnCheckoutCheckData($psType, VirtueMartCart $cart) {
-      return null;
-      }
-     */
+	/**
+	 * @param VirtueMartCart $cart
+	 * @param                $method
+	 * @param                $cart_prices
+	 * @return int
+	 */
+	function getCosts (VirtueMartCart $cart, $method, $cart_prices) {
 
-    /**
-     * This method is fired when showing when priting an Order
-     * It displays the the payment method-specific data.
-     *
-     * @param integer $_virtuemart_order_id The order ID
-     * @param integer $method_id  method used for this order
-     * @return mixed Null when for payment methods that were not selected, text (HTML) otherwise
-     * @author Valerie Isaksen
-     */
-    function plgVmonShowOrderPrint($order_number, $method_id) {
-	return $this->onShowOrderPrint($order_number, $method_id);
-    }
+		if ($method->free_shipment && $cart_prices['salesPrice'] >= $method->free_shipment) {
+			return 0;
+		} else {
+			return $method->cost + $method->package_fee;
+		}
+	}
 
-    /**
-     * Save updated order data to the method specific table
-     *
-     * @param array $_formData Form data
-     * @return mixed, True on success, false on failures (the rest of the save-process will be
-     * skipped!), or null when this method is not actived.
-     * @author Oscar van Eijk
+	/**
+	 * @param \VirtueMartCart $cart
+	 * @param int             $method
+	 * @param array           $cart_prices
+	 * @return bool
+	 */
+	protected function checkConditions ($cart, $method, $cart_prices) {
 
-      public function plgVmOnUpdateOrder($psType, $_formData) {
-      return null;
-      }
-     */
-    /**
-     * Save updated orderline data to the method specific table
-     *
-     * @param array $_formData Form data
-     * @return mixed, True on success, false on failures (the rest of the save-process will be
-     * skipped!), or null when this method is not actived.
-     * @author Oscar van Eijk
+		$this->convert ($method);
+	//vmTrace('checkConditions');
+		$orderWeight = $this->getOrderWeight ($cart, $method->weight_unit);
 
-      public function plgVmOnUpdateOrderLine($psType, $_formData) {
-      return null;
-      }
-     */
-    /**
-     * plgVmOnEditOrderLineBE
-     * This method is fired when editing the order line details in the backend.
-     * It can be used to add line specific package codes
-     *
-     * @param integer $_orderId The order ID
-     * @param integer $_lineId
-     * @return mixed Null for method that aren't active, text (HTML) otherwise
-     * @author Oscar van Eijk
+		$address = (($cart->ST == 0) ? $cart->BT : $cart->ST);
+		$type = (($cart->ST == 0) ? 'BT' : 'ST');
+		$countries = array();
+		if (!empty($method->countries)) {
+			if (!is_array ($method->countries)) {
+				$countries[0] = $method->countries;
+			} else {
+				$countries = $method->countries;
+			}
+		}
+		// probably did not gave his BT:ST address
+		if (!is_array ($address)) {
+			// there are some address dependant conditions, redirect then
+			/*
+			if ($method->zip_start or $method->zip_stop or empty($countries)) {
+				$mainframe = JFactory::getApplication ();
+				$redirectMsg = JText::_ ('VMSHIPMENT_WEIGHT_COUNTRIES_ADDRESS_FIRST');
+				//vmWarn($redirectMsg);
+				$mainframe->redirect (JRoute::_ ('index.php?option=com_virtuemart&view=user&task=editaddresscheckout&addrtype=BT'), $redirectMsg);
+			}
+			*/
+			vmdebug('checkConditions $address is not an array, set zip and country id = 0');
+			$address = array();
+			$address['zip'] = 0;
+			$address['virtuemart_country_id'] = 0;
+		}
 
-      public function plgVmOnEditOrderLineBE($psType, $_orderId, $_lineId) {
-      return null;
-      }
-     */
-    /**
-     * This method is fired when showing the order details in the frontend, for every orderline.
-     * It can be used to display line specific package codes, e.g. with a link to external tracking and
-     * tracing systems
-     *
-     * @param integer $_orderId The order ID
-     * @param integer $_lineId
-     * @return mixed Null for method that aren't active, text (HTML) otherwise
-     * @author Oscar van Eijk
+		$weight_cond = $this->testRange($orderWeight,$method,'weight_start','weight_stop','weight');
+		$nbproducts_cond = $this->_nbproductsCond ($cart, $method);
+		if(isset($cart_prices['salesPrice'])){
+			$orderamount_cond = $this->testRange($cart_prices['salesPrice'],$method,'orderamount_start','orderamount_stop','order amount');
+		} else {
+			$orderamount_cond = FALSE;
+		}
 
-      public function plgVmOnShowOrderLineFE($psType, $_orderId, $_lineId) {
-      return null;
-      }
-     */
+		$userFieldsModel =VmModel::getModel('Userfields');
+		if ($userFieldsModel->fieldPublished('zip', $type)){
+			if (!isset($address['zip'])) {
+				$address['zip'] = '';
+			}
+			$zip_cond = $this->testRange($address['zip'],$method,'zip_start','zip_stop','zip');
+		} else {
+			$zip_cond = true;
+		}
 
-    /**
-     * plgVmOnResponseReceived
-     * This event is fired when the  method returns to the shop after the transaction
-     *
-     *  the method itself should send in the URL the parameters needed
-     * NOTE for Plugin developers:
-     *  If the plugin is NOT actually executed (not the selected payment method), this method must return NULL
-     *
-     * @param int $virtuemart_order_id : should return the virtuemart_order_id
-     * @param text $html: the html to display
-     * @return mixed Null when this method was not selected, otherwise the true or false
-     *
-     * @author Valerie Isaksen
-     *
+		if ($userFieldsModel->fieldPublished('virtuemart_country_id', $type)){
 
-      function plgVmOnResponseReceived($psType, &$virtuemart_order_id, &$html) {
-      return null;
-      }
-     */
-    function plgVmDeclarePluginParamsShipment($name, $id, &$data) {
+			if (!isset($address['virtuemart_country_id'])) {
+				$address['virtuemart_country_id'] = 0;
+			}
 
-	return $this->declarePluginParams('shipment', $name, $id, $data);
-    }
+			if (in_array ($address['virtuemart_country_id'], $countries) || count ($countries) == 0) {
 
-    function plgVmSetOnTablePluginParamsShipment($name, $id, &$table) {
-	return $this->setOnTablePluginParams($name, $id, $table);
-    }
+				//vmdebug('checkConditions '.$method->shipment_name.' fit ',$weight_cond,(int)$zip_cond,$nbproducts_cond,$orderamount_cond);
+				vmdebug('shipmentmethod '.$method->shipment_name.' = TRUE for variable virtuemart_country_id = '.$address['virtuemart_country_id'].', Reason: Countries in rule '.implode($countries,', ').' or none set');
+				$country_cond = true;
+			}
+			else{
+				vmdebug('shipmentmethod '.$method->shipment_name.' = FALSE for variable virtuemart_country_id = '.$address['virtuemart_country_id'].', Reason: Country '.implode($countries,', ').' does not fit');
+				$country_cond = false;
+			}
+		} else {
+			vmdebug('shipmentmethod '.$method->shipment_name.' = TRUE for variable virtuemart_country_id, Reason: no boundary conditions set');
+			$country_cond = true;
+		}
+
+		$allconditions = (int) $weight_cond + (int)$zip_cond + (int)$nbproducts_cond + (int)$orderamount_cond + (int)$country_cond;
+		if($allconditions === 5){
+			return TRUE;
+		} else {
+			vmdebug('checkConditions '.$method->shipment_name.' does not fit',(int)$nbproducts_cond,(int)$zip_cond);
+			return FALSE;
+		}
+
+
+		return FALSE;
+	}
+
+	/**
+	 * @param $method
+	 */
+	function convert (&$method) {
+
+		//$method->weight_start = (float) $method->weight_start;
+		//$method->weight_stop = (float) $method->weight_stop;
+		$method->orderamount_start =  (float)str_replace(',','.',$method->orderamount_start);
+		$method->orderamount_stop =   (float)str_replace(',','.',$method->orderamount_stop);
+		$method->zip_start = (int)$method->zip_start;
+		$method->zip_stop = (int)$method->zip_stop;
+		$method->nbproducts_start = (int)$method->nbproducts_start;
+		$method->nbproducts_stop = (int)$method->nbproducts_stop;
+		$method->free_shipment = (float)str_replace(',','.',$method->free_shipment);
+	}
+
+	/**
+	 * @param $cart
+	 * @param $method
+	 * @return bool
+	 */
+	private function _nbproductsCond ($cart, $method) {
+
+		if (empty($method->nbproducts_start) and empty($method->nbproducts_stop)) {
+			//vmdebug('_nbproductsCond',$method);
+			return true;
+		}
+
+		$nbproducts = 0;
+		foreach ($cart->products as $product) {
+			$nbproducts += $product->quantity;
+		}
+
+		if ($nbproducts) {
+
+			$nbproducts_cond = $this->testRange($nbproducts,$method,'nbproducts_start','nbproducts_stop','products quantity');
+
+		} else {
+			$nbproducts_cond = false;
+		}
+
+		return $nbproducts_cond;
+	}
+
+
+	private function testRange($value, $method, $floor, $ceiling,$name){
+
+		$cond = true;
+		if(!empty($method->$floor) and !empty($method->$ceiling)){
+			$cond = (($value >= $method->$floor AND $value <= $method->$ceiling));
+			if(!$cond){
+				$result = 'FALSE';
+				$reason = 'is NOT within Range of the condition from '.$method->$floor.' to '.$method->$ceiling;
+			} else {
+				$result = 'TRUE';
+				$reason = 'is within Range of the condition from '.$method->$floor.' to '.$method->$ceiling;
+			}
+		} else if(!empty($method->$floor)){
+			$cond = ($value >= $method->$floor);
+			if(!$cond){
+				$result = 'FALSE';
+				$reason = 'is not at least '.$method->$floor;
+			} else {
+				$result = 'TRUE';
+				$reason = 'is over min limit '.$method->$floor;
+			}
+		} else if(!empty($method->$ceiling)){
+			$cond = ($value <= $method->$ceiling);
+			if(!$cond){
+				$result = 'FALSE';
+				$reason = 'is over '.$method->$ceiling;
+			} else {
+				$result = 'TRUE';
+				$reason = 'is lower than the set '.$method->$ceiling;
+			}
+		} else {
+			$result = 'TRUE';
+			$reason = 'no boundary conditions set';
+		}
+
+		vmdebug('shipmentmethod '.$method->shipment_name.' = '.$result.' for variable '.$name.' = '.$value.' Reason: '.$reason);
+		return $cond;
+	}
+
+	/**
+	 * Create the table for this plugin if it does not yet exist.
+	 * This functions checks if the called plugin is active one.
+	 * When yes it is calling the standard method to create the tables
+	 *
+	 * @author Valérie Isaksen
+	 *
+	 */
+	function plgVmOnStoreInstallShipmentPluginTable ($jplugin_id) {
+
+		return $this->onStoreInstallPluginTable ($jplugin_id);
+	}
+
+	/**
+	 * @param VirtueMartCart $cart
+	 * @return null
+	 */
+	public function plgVmOnSelectCheckShipment (VirtueMartCart &$cart) {
+
+		return $this->OnSelectCheck ($cart);
+	}
+
+	/**
+	 * plgVmDisplayListFE
+	 * This event is fired to display the pluginmethods in the cart (edit shipment/payment) for example
+	 *
+	 * @param object  $cart Cart object
+	 * @param integer $selected ID of the method selected
+	 * @return boolean True on success, false on failures, null when this plugin was not selected.
+	 * On errors, JError::raiseWarning (or JError::raiseError) must be used to set a message.
+	 *
+	 * @author Valerie Isaksen
+	 * @author Max Milbers
+	 */
+	public function plgVmDisplayListFEShipment (VirtueMartCart $cart, $selected = 0, &$htmlIn) {
+
+		return $this->displayListFE ($cart, $selected, $htmlIn);
+	}
+
+	/**
+	 * @param VirtueMartCart $cart
+	 * @param array          $cart_prices
+	 * @param                $cart_prices_name
+	 * @return bool|null
+	 */
+	public function plgVmOnSelectedCalculatePriceShipment (VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name) {
+
+		return $this->onSelectedCalculatePrice ($cart, $cart_prices, $cart_prices_name);
+	}
+
+	/**
+	 * plgVmOnCheckAutomaticSelected
+	 * Checks how many plugins are available. If only one, the user will not have the choice. Enter edit_xxx page
+	 * The plugin must check first if it is the correct type
+	 *
+	 * @author Valerie Isaksen
+	 * @param VirtueMartCart cart: the cart object
+	 * @return null if no plugin was found, 0 if more then one plugin was found,  virtuemart_xxx_id if only one plugin is found
+	 *
+	 */
+	function plgVmOnCheckAutomaticSelectedShipment (VirtueMartCart $cart, array $cart_prices, &$shipCounter) {
+
+		if ($shipCounter > 1) {
+			return 0;
+		}
+
+		return $this->onCheckAutomaticSelected ($cart, $cart_prices, $shipCounter);
+	}
+
+	/**
+	 * This method is fired when showing when priting an Order
+	 * It displays the the payment method-specific data.
+	 *
+	 * @param integer $_virtuemart_order_id The order ID
+	 * @param integer $method_id  method used for this order
+	 * @return mixed Null when for payment methods that were not selected, text (HTML) otherwise
+	 * @author Valerie Isaksen
+	 */
+	function plgVmonShowOrderPrint ($order_number, $method_id) {
+
+		return $this->onShowOrderPrint ($order_number, $method_id);
+	}
+
+	function plgVmDeclarePluginParamsShipment ($name, $id, &$data) {
+
+		return $this->declarePluginParams ('shipment', $name, $id, $data);
+	}
+
+
+	/**
+	 * @author Max Milbers
+	 * @param $data
+	 * @param $table
+	 * @return bool
+	 */
+	function plgVmSetOnTablePluginShipment(&$data,&$table){
+
+		$name = $data['shipment_element'];
+		$id = $data['shipment_jplugin_id'];
+
+		if (!empty($this->_psType) and !$this->selectedThis ($this->_psType, $name, $id)) {
+			return FALSE;
+		} else {
+			$toConvert = array('weight_start','weight_stop','orderamount_start','orderamount_stop');
+			foreach($toConvert as $field){
+
+				if(!empty($data[$field])){
+					$data[$field] = str_replace(array(',',' '),array('.',''),$data[$field]);
+				} else {
+					unset($data[$field]);
+				}
+			}
+
+			$data['nbproducts_start'] = (int) $data['nbproducts_start'];
+			$data['nbproducts_stop'] = (int) $data['nbproducts_stop'];
+			//I dont see a reason for it
+			/*$toConvert = array('zip_start','zip_stop','nbproducts_start' , 'nbproducts_stop');
+			foreach($toConvert as $field){
+				if(!empty($data[$field])){
+					$data[$field] = str_replace( ' ','',$data[$field]);
+				} else {
+					unset($data[$field]);
+				}
+				if (preg_match ("/[^0-9]/", $data[$field])) {
+					vmWarn( JText::sprintf('VMSHIPMENT_WEIGHT_COUNTRIES_NUMERIC', JText::_('VMSHIPMENT_WEIGHT_COUNTRIES_'.$field) ) );
+				}
+			}*/
+			//Reasonable tests:
+			if(!empty($data['zip_start']) and !empty($data['zip_stop']) and (int)$data['zip_start']>=(int)$data['zip_stop']){
+				vmWarn('VMSHIPMENT_WEIGHT_COUNTRIES_ZIP_CONDITION_WRONG');
+			}
+			if(!empty($data['weight_start']) and !empty($data['weight_stop']) and (float)$data['weight_start']>=(float)$data['weight_stop']){
+				vmWarn('VMSHIPMENT_WEIGHT_COUNTRIES_WEIGHT_CONDITION_WRONG');
+			}
+
+			if(!empty($data['orderamount_start']) and !empty($data['orderamount_stop']) and (float)$data['orderamount_start']>=(float)$data['orderamount_stop']){
+				vmWarn('VMSHIPMENT_WEIGHT_COUNTRIES_AMOUNT_CONDITION_WRONG');
+			}
+
+			if(!empty($data['nbproducts_start']) and !empty($data['nbproducts_stop']) and (float)$data['nbproducts_start']>=(float)$data['nbproducts_stop']){
+				vmWarn('VMSHIPMENT_WEIGHT_COUNTRIES_NBPRODUCTS_CONDITION_WRONG');
+			}
+
+			return $this->setOnTablePluginParams ($name, $id, $table);
+		}
+	}
+
 
 }
 

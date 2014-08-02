@@ -31,19 +31,19 @@ class vmVersion {
 	/** @var string Product */
 	static $PRODUCT = 'VirtueMart';
 	/** @var int Release Number */
-	static $RELEASE = '2.6.6';
+	static $RELEASE = '2.6.0';
 	/** @var string Development Status */
 	static $DEV_STATUS = 'MINOR';
 	/** @var string Codename */
-	static $CODENAME = 'loadFox';
+	static $CODENAME = 'PowerFox';
 	/** @var string Date */
-	static $RELDATE = 'May 29 2014';
+	static $RELDATE = 'April 07 2014';
 	/** @var string Time */
-	static $RELTIME = '1604';
+	static $RELTIME = '1658';
 	/** @var string Timezone */
 	static $RELTZ = 'GMT';
 	/** @var string Revision */
-	static $REVISION = 'Revision: 8010';
+	static $REVISION = 'Revision: 7816';
 	/** @var string Copyright Text */
 	static $COPYRIGHT = 'Copyright (C) 2005-2012 VirtueMart Development Team  - All rights reserved.';
 	/** @var string URL */

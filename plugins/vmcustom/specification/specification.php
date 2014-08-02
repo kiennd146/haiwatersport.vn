@@ -25,16 +25,13 @@ if (!class_exists('vmCustomPlugin')) require(JPATH_VM_PLUGINS . DS . 'vmcustompl
 class plgVmCustomSpecification extends vmCustomPlugin {
 
 
-	// instance of class
-	public static $_this = false;
-
 	function __construct(& $subject, $config) {
-// 		if(self::$_this) return self::$_this;
+
 		parent::__construct($subject, $config);
 
 		$this->_tablepkey = 'id';
 		$this->tableFields = array_keys($this->getTableSQLFields());
-		$varsToPush = array(
+		$this->varsToPush = array(
 			'custom_specification_name1'=> array('', 'char'),
 			'custom_specification_default1'=> array('', 'string'),
 			'custom_specification_name2'=> array('', 'char'),
@@ -42,15 +39,14 @@ class plgVmCustomSpecification extends vmCustomPlugin {
 
 		);
 
-		$this->setConfigParameterable('custom_params',$varsToPush);
+		$this->setConfigParameterable('custom_params',$this->varsToPush);
 
-// 		self::$_this = $this;
 	}
 	/**
 	 * Create the table for this plugin if it does not yet exist.
 	 * @author Val�rie Isaksen
 	 */
-	protected function getVmPluginCreateTableSQL() {
+	public function getVmPluginCreateTableSQL() {
 		return $this->createTableSQL('Product Specification Table');
 	}
 
@@ -59,9 +55,7 @@ class plgVmCustomSpecification extends vmCustomPlugin {
 	    'id' => 'int(11) unsigned NOT NULL AUTO_INCREMENT',
 	    'virtuemart_product_id' => 'int(11) UNSIGNED DEFAULT NULL',
 	    'virtuemart_custom_id' => 'int(11) UNSIGNED DEFAULT NULL',
-	    'custom_specification_name1' => 'char(128) NOT NULL DEFAULT \'\' ',
 	    'custom_specification_default1' => 'varchar(1024) NOT NULL DEFAULT \'\' ',
-	    'custom_specification_name2' => 'char(128) NOT NULL DEFAULT \'\' ',
 	    'custom_specification_default2' => 'varchar(1024) NOT NULL DEFAULT \'\' '
 		);
 
@@ -78,10 +72,9 @@ class plgVmCustomSpecification extends vmCustomPlugin {
 	*/
 	public function plgVmSelectSearchableCustom(&$selectList,&$searchCustomValues,$virtuemart_custom_id)
 	{
-		$db =&JFactory::getDBO();
+		$db =JFactory::getDBO();
 		$db->setQuery('SELECT `virtuemart_custom_id`, `custom_title` FROM `#__virtuemart_customs` WHERE `custom_element` ="'.$this->_name.'"');
 		if ($this->selectList = $db->loadAssocList() ) {
-			//vmdebug('$this->selectedPlugin',$this->selectedPlugin);
 			foreach ($this->selectList as $selected_custom_id) {
 				if ($virtuemart_custom_id == $selected_custom_id['virtuemart_custom_id']) {
 					$searchCustomValues.='<input type="text" value="" size="20" class="inputbox" name="custom_specification_name1" style="height:16px;vertical-align :middle;">';
@@ -102,32 +95,32 @@ class plgVmCustomSpecification extends vmCustomPlugin {
 	*/
 	public function plgVmAddToSearch(&$where,&$PluginJoinTables,$custom_id)
 	{
-		if ($keyword = vmRequest::uword('custom_specification_name1', null, ' ')) {
-			$db = & JFactory::getDBO();
+		if ($keyword = vRequest::uword('custom_specification_name1', null, ' ')) {
+			$db = JFactory::getDBO();
 			if ($this->_name != $this->GetNameByCustomId($custom_id)) return;
 			$keyword = '"%' . $db->getEscaped( $keyword, true ) . '%"' ;
 			$where[] = $this->_name .'.`custom_specification_default1` LIKE '.$keyword;
 			$PluginJoinTables[] = $this->_name ;
 		}
-
+		return true;
 	}
 
 	// get product param for this plugin on edit
 	function plgVmOnProductEdit($field, $product_id, &$row,&$retValue) {
 		if ($field->custom_element != $this->_name) return '';
 		// $this->tableFields = array ( 'id', 'virtuemart_custom_id', 'custom_specification_default1', 'custom_specification_default2' );
-		$this->parseCustomParams($field);
-		$this->getPluginProductDataCustom($field, $product_id);
+		$this->getCustomParams($field);
+		$this->getPluginCustomData($field, $product_id);
 
 		// 		$data = $this->getVmPluginMethod($field->virtuemart_custom_id);
 		// 		VmTable::bindParameterable($field,$this->_xParams,$this->_varsToPushParam);
 		// 		$html  ='<input type="text" value="'.$field->custom_title.'" size="10" name="custom_param['.$row.'][custom_title]"> ';
 		$html ='<div>';
-		$html .='<div>'.$field->custom_specification_name1.'</div>';
-		$html .='<input type="text" value="'.$field->custom_specification_default1.'" size="10" name="plugin_param['.$row.']['.$this->_name.'][custom_specification_default1]">';
-		$html .='<div>'.$field->custom_specification_name2.'</div>';
-		$html .='<input type="text" value="'.$field->custom_specification_default2.'" size="10" name="plugin_param['.$row.']['.$this->_name.'][custom_specification_default2]">';
-		$html .='<input type="hidden" value="'.$field->virtuemart_custom_id.'" name="plugin_param['.$row.']['.$this->_name.'][virtuemart_custom_id]">';
+		$html .='<div>'.$this->params->custom_specification_name1.'</div>';
+		$html .='<input type="text" value="'.$this->params->custom_specification_default1.'" size="10" name="plugin_param['.$row.']['.$this->_name.'][custom_specification_default1]">';
+		$html .='<div>'.$this->params->custom_specification_name2.'</div>';
+		$html .='<input type="text" value="'.$this->params->custom_specification_default2.'" size="10" name="plugin_param['.$row.']['.$this->_name.'][custom_specification_default2]">';
+		$html .='<input type="hidden" value="'.$this->virtuemart_custom_id.'" name="plugin_param['.$row.']['.$this->_name.'][virtuemart_custom_id]">';
 		$html .='</div>';
 		// 		$field->display =
 		$retValue .= $html  ;
@@ -143,29 +136,22 @@ class plgVmCustomSpecification extends vmCustomPlugin {
 	 */
 	function plgVmOnDisplayProductFE($product,&$idx,&$group) {
 		// default return if it's not this plugin
-		if ($group->custom_value != $this->_name) return '';
+		if ($group->custom_element != $this->_name) return '';
 
 		$this->_tableChecked = true;
-		//$this->tableFields = array ( 'id', 'virtuemart_custom_id', 'custom_specification_default1', 'custom_specification_default2' );
-
-		$this->parseCustomParams($group);
-		$this->getPluginProductDataCustom($group, $product->virtuemart_product_id);
+		$this->getCustomParams($group);
+		$this->getPluginCustomData($group, $product->virtuemart_product_id);
 
 		// Here the plugin values
 		//$html =JTEXT::_($group->custom_title) ;
-		$html ='<div>';
-		$html .='<div class="product-fields-title">'.$group->custom_specification_name1.'</div>';
-		$html .='<div>'.$group->custom_specification_default1.'</div>';
-		$html .='<div class="product-fields-title">'.$group->custom_specification_name2.'</div>';
-		$html .='<div>'.$group->custom_specification_default2.'</div>';
-		$html .='</div>';
-		$group->display .= $html;
+
+		$group->display .=  $this->renderByLayout('default',array($this->params,&$idx,&$group ) );
 
 		return true;
 	}
 
 	function plgVmOnStoreProduct($data,$plugin_param){
-		$this->tableFields = array ( 'id', 'virtuemart_product_id', 'virtuemart_custom_id', 'custom_specification_default1', 'custom_specification_default2' );
+		// $this->tableFields = array ( 'id', 'virtuemart_product_id', 'virtuemart_custom_id', 'custom_specification_default1', 'custom_specification_default2' );
 
 		return $this->OnStoreProduct($data,$plugin_param);
 	}
@@ -173,8 +159,8 @@ class plgVmCustomSpecification extends vmCustomPlugin {
 	 * We must reimplement this triggers for joomla 1.7
 	 * vmplugin triggers note by Max Milbers
 	 */
-	protected function plgVmOnStoreInstallPluginTable($psType) {
-		return $this->onStoreInstallPluginTable($psType);
+	public function plgVmOnStoreInstallPluginTable($psType,$name) {
+		return $this->onStoreInstallPluginTable($psType,$name);
 	}
 
 	function plgVmSetOnTablePluginParamsCustom($name, $id, &$table){
@@ -182,7 +168,7 @@ class plgVmCustomSpecification extends vmCustomPlugin {
 	}
 
 	function plgVmDeclarePluginParamsCustom($psType,$name,$id, &$data){
-		return $this->declarePluginParams($psType, $name, $id, $data);
+		return $this->declarePluginParams('custom', $name, $id, $data);
 	}
 
 	/**

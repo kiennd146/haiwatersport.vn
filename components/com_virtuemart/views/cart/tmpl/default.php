@@ -19,7 +19,7 @@
 
 // Check to ensure this file is included in Joomla!
 defined ('_JEXEC') or die('Restricted access');
-if(VmConfig::get('usefancy',1)){
+if(VmConfig::get('usefancy',0)){
 	vmJsApi::js( 'fancybox/jquery.fancybox-1.3.4.pack');
 	vmJsApi::css('jquery.fancybox-1.3.4');
 	$box = "
@@ -78,23 +78,6 @@ $document->addScriptDeclaration ("
 //]]>
 
 ");
-
-
-$document->addScriptDeclaration ("
-
-//<![CDATA[
-	jQuery(document).ready(function($) {
-	$('#checkoutFormSubmit').click(function(e){
-    $(this).attr('disabled', 'true');
-    $(this).fadeIn( 400 );
-    $('#checkoutForm').submit();
-});
-	});
-
-//]]>
-
-");
-
 $document->addStyleDeclaration ('#facebox .content {display: block !important; height: 480px !important; overflow: auto; width: 560px !important; }');
 
 ?>

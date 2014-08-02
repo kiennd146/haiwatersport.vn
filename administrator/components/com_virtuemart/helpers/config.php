@@ -513,7 +513,6 @@ class VmConfig {
 	public static $vmlang = FALSE;
 	public static $langTag = FALSE;
 	public static $vmlangTag = FALSE;
-	public static $langCount = 0;
 
 	var $_params = array();
 	var $_raw = array();
@@ -650,10 +649,10 @@ class VmConfig {
 	 * @param $name
 	 * @return bool
 	 */
-	static public function loadJLang($name,$site=false,$tag=0){
+	static public function loadJLang($name,$site=false){
 
 		$jlang =JFactory::getLanguage();
-		if(empty($tag))$tag = $jlang->getTag();
+		$tag = $jlang->getTag();
 
 		$path = $basePath = JPATH_VM_ADMINISTRATOR;
 		if($site){
@@ -663,14 +662,12 @@ class VmConfig {
 		if(VmConfig::get('enableEnglish', true) and $tag!='en-GB'){
 			$testpath = $basePath.DS.'language'.DS.'en-GB'.DS.'en-GB.'.$name.'.ini';
 			if(!file_exists($testpath)){
-				$epath = JPATH_ADMINISTRATOR;
+				$path = JPATH_ADMINISTRATOR;
 				if($site){
-					$epath = JPATH_SITE;
+					$path = JPATH_SITE;
 				}
-			} else {
-				$epath = $path;
 			}
-			$jlang->load($name, $epath, 'en-GB');
+			$jlang->load($name, $path, 'en-GB');
 		}
 
 		$testpath = $basePath.DS.'language'.DS.$tag.DS.$tag.'.'.$name.'.ini';
@@ -890,7 +887,7 @@ class VmConfig {
 		}
 
 		$langs = (array)self::get('active_languages',array());
-		self::$langCount = count($langs);
+
 		$siteLang = JRequest::getString('vmlang',FALSE );
 		//vmdebug('My $siteLang by JRequest::getString("vmlang",JRequest::getString("lang")) '.$siteLang);
 		$params = JComponentHelper::getParams('com_languages');

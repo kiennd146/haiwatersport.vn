@@ -21,9 +21,12 @@ require('helper.php');
 if (!class_exists( 'VirtueMartModelManufacturer' ))
    JLoader::import( 'manufacturer', JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_virtuemart' . DS . 'models' );
 
-/* Setting */
+if (!class_exists( 'VmConfig' )) require(JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_virtuemart'.DS.'helpers'.DS.'config.php');
+
+VmConfig::loadConfig();
+VmConfig::loadModJLang('mod_virtuemart_manufacturer', true);
 $vendorId = JRequest::getInt('vendorid', 1);
-$model = new VirtueMartModelManufacturer();
+$model = VmModel::getModel('Manufacturer');
 
 $display_style = 	$params->get( 'display_style', "div" ); // Display Style
 $manufacturers_per_row = $params->get( 'manufacturers_per_row', 1 ); // Display X manufacturers per Row

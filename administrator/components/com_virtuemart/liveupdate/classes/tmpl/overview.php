@@ -50,25 +50,36 @@ defined('_JEXEC') or die();
 	<div class="liveupdate-<?php echo $class?>">
 		<h3><?php echo JText::_('LIVEUPDATE_'.strtoupper($class).'_HEAD') ?></h3>
 		<div class="liveupdate-infotable">
+			<div class="liveupdate-row row1">
+				<span ><?php echo JText::_('LIVEUPDATE_CONSIDER_COMPATIBILITY') ?></span>
+			</div>
 			<div class="liveupdate-row row0">
+				<span ><?php echo JText::_('LIVEUPDATE_REMEMBER_TO_UPDATE_AIO') ?></span>
+			</div>
+			<div class="liveupdate-row row1">
 				<span class="liveupdate-label"><?php echo JText::_('LIVEUPDATE_CURRENTVERSION') ?></span>
 				<span class="liveupdate-data"><?php echo $this->updateInfo->extInfo->version ?></span>
 			</div>
-			<div class="liveupdate-row row1">
+			<div class="liveupdate-row row0">
 				<span class="liveupdate-label"><?php echo JText::_('LIVEUPDATE_LATESTVERSION') ?></span>
 				<span class="liveupdate-data"><?php echo $this->updateInfo->version ?></span>
 			</div>
-			<div class="liveupdate-row row0">
+			<div class="liveupdate-row row1">
 				<span class="liveupdate-label"><?php echo JText::_('LIVEUPDATE_LATESTRELEASED') ?></span>
 				<span class="liveupdate-data"><?php echo $this->updateInfo->date ?></span>
 			</div>
-			<div class="liveupdate-row row1">
+			<div class="liveupdate-row row0">
 				<span class="liveupdate-label"><?php echo JText::_('LIVEUPDATE_DOWNLOADURL') ?></span>
 				<span class="liveupdate-data"><a href="<?php echo $this->updateInfo->downloadURL.$auth?>"><?php echo $this->escape($this->updateInfo->downloadURL)?></a></span>
 			</div>
 			<div class="liveupdate-row row1">
-				<span ><?php echo JText::_('LIVEUPDATE_REMEMBER_TO_UPDATE_AIO') ?></span>
-
+			<?php require_once(JPATH_ROOT.DS.'administrator'.DS.'components'.DS.'com_virtuemart'.DS.'version.php'); ?>
+				<span ><?php echo $myVersion ?></span>
+			</div>
+			<div class="liveupdate-row row0">
+			<iframe src="http://virtuemart.net/index.php?option=com_content&id=416&tmpl=component" width="90%" height="400" name="Live update information">
+  <p>Your browser blocks to display iFrames, please use the following link instead: <a href="http://virtuemart.net/index.php?option=com_content&id=416&tmpl=component">Live update information</a></p>
+</iframe>
 			</div>
 		</div>
 

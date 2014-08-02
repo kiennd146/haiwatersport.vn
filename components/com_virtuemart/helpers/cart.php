@@ -187,6 +187,7 @@ class VirtueMartCart {
 			$lastName = empty($this->BT['last_name'])? '':$this->BT['last_name'];
 			$email = empty($this->BT['email'])? '':$this->BT['email'];
 			$this->customer_number = 'nonreg_'.$firstName.$lastName.$email;
+			vmdebug('getShopperData customer_number  '.$user->virtuemart_user_id);
 		}
 
 	}
@@ -710,6 +711,7 @@ class VirtueMartCart {
 	private function checkForQuantities($product, &$quantity=0,&$errorMsg ='') {
 
 		$stockhandle = VmConfig::get('stockhandle','none');
+		$mainframe = JFactory::getApplication();
 		// Check for a valid quantity
 		if (!is_numeric( $quantity)) {
 			$errorMsg = JText::_('COM_VIRTUEMART_CART_ERROR_NO_VALID_QUANTITY', false);
@@ -726,10 +728,6 @@ class VirtueMartCart {
 			vmInfo($errorMsg,$product->product_name);
 			return false;
 		}
-
-		// update the stock info from the database
-		$product_model = VmModel::getModel('product');
-		$product = $product_model->getProduct($product->virtuemart_product_id);
 
 		// Check to see if checking stock quantity
 		if ($stockhandle!='none' && $stockhandle!='risetime') {
@@ -894,7 +892,6 @@ class VirtueMartCart {
 
 		$this->_redirect = $redirect;
 		$this->_inCheckOut = true;
-		$this->setCartIntoSession();
 		$this->tosAccepted = JRequest::getInt('tosAccepted', $this->tosAccepted);
 		$this->STsameAsBT = JRequest::getInt('STsameAsBT', $this->STsameAsBT);
 		$this->order_language = JRequest::getVar('order_language', $this->order_language);
@@ -1180,22 +1177,21 @@ class VirtueMartCart {
 	 * @author Valerie Cartan Isaksen
 	 *
 	 */
-	static public function emptyCartValues($cart){
+	static public function emptyCartValues($cartData){
 
 		//We delete the old stuff
-		$cart->products = array();
-		$cart->_inCheckOut = false;
-		$cart->_dataValidated = false;
-		$cart->_confirmDone = false;
-		$cart->customer_comment = '';
-		$cart->couponCode = '';
-		$cart->order_language = '';
-		$cart->tosAccepted = null;
-		$cart->virtuemart_shipmentmethod_id = 0; //OSP 2012-03-14
-		$cart->virtuemart_paymentmethod_id = 0;
-		$cart->order_number=null;
-		$cart->pricesUnformatted = null;
-		$cart->cartData = null;
+		$cartData->products = array();
+		$cartData->_inCheckOut = false;
+		$cartData->_dataValidated = false;
+		$cartData->_confirmDone = false;
+		$cartData->customer_comment = '';
+		$cartData->couponCode = '';
+		$cartData->order_language = '';
+		$cartData->tosAccepted = null;
+		$cartData->virtuemart_shipmentmethod_id = 0; //OSP 2012-03-14
+		$cartData->virtuemart_paymentmethod_id = 0;
+		$cartData->order_number=null;
+
 	}
 
 	function saveAddressInCart($data, $type, $putIntoSession = true) {

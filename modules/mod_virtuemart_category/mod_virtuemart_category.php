@@ -22,32 +22,33 @@ defined('_JEXEC') or  die( 'Direct Access to '.basename(__FILE__).' is not allow
 */
 /* Load  VM fonction */
 require('helper.php');
-JTable::addIncludePath(JPATH_VM_ADMINISTRATOR.DS.'tables');
+if (!class_exists( 'VmConfig' )) require(JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_virtuemart'.DS.'helpers'.DS.'config.php');
 
+VmConfig::loadConfig();
+VmConfig::loadModJLang('mod_virtuemart_category', true);
 vmJsApi::jQuery();
 vmJsApi::cssSite();
 
 /* Setting */
-$categoryModel = new VirtueMartModelCategory();
+$categoryModel = VmModel::getModel('Category');
 $category_id = $params->get('Parent_Category_id', 0);
 $class_sfx = $params->get('class_sfx', '');
 $moduleclass_sfx = $params->get('moduleclass_sfx','');
 $layout = $params->get('layout','default');
 $active_category_id = JRequest::getInt('virtuemart_category_id', '0');
 $vendorId = '1';
-		$cache = & JFactory::getCache('com_virtuemart','callback');
-		$categories = $cache->call( array( 'VirtueMartModelCategory', 'getChildCategoryList' ),$vendorId, $category_id );
-// $categories = $categoryModel->getChildCategoryList($vendorId, $category_id);
-// We dont use image here 
+
+$categories = $categoryModel->getChildCategoryList($vendorId, $category_id);
+// We dont use image here
 //$categoryModel->addImages($categories);
 
 if(empty($categories)) return false;
 
 
 foreach ($categories as $category) {
-
-		$category->childs = $cache->call( array( 'VirtueMartModelCategory', 'getChildCategoryList' ),$vendorId, $category->virtuemart_category_id );
-   // $category->childs = $categoryModel->getChildCategoryList($vendorId, $category->virtuemart_category_id) ;
+	//$category->childs = VirtueMartModelCategory::getChildCategoryList($vendorId, $category->virtuemart_category_id);
+	//$category->childs = $cache->call( array( 'VirtueMartModelCategory', 'getChildCategoryList' ),$vendorId, $category->virtuemart_category_id );
+   	$category->childs = $categoryModel->getChildCategoryList($vendorId, $category->virtuemart_category_id) ;
 	// No image used here
 	//$categoryModel->addImages($category->childs);
 }

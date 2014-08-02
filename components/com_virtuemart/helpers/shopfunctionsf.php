@@ -318,22 +318,24 @@ class shopFunctionsF {
 	private static function sendVmMail (&$view, $recipient, $noVendorMail = FALSE) {
 
 		VmConfig::ensureMemoryLimit(96);
-
-		VmConfig::loadJLang('com_virtuemart',true);
+		$jlang = JFactory::getLanguage();
+		if(VmConfig::get( 'enableEnglish', 1 )) {
+			$jlang->load( 'com_virtuemart', JPATH_SITE, 'en-GB', TRUE );
+		}
+		$jlang->load( 'com_virtuemart', JPATH_SITE, $jlang->getDefault(), TRUE );
+		$jlang->load( 'com_virtuemart', JPATH_SITE, NULL, TRUE );
 
 		if(!empty($view->orderDetails['details']['BT']->order_language)) {
-			//$jlang->load( 'com_virtuemart', JPATH_SITE, $view->orderDetails['details']['BT']->order_language, true );
-			//$jlang->load( 'com_virtuemart_shoppers', JPATH_SITE, $view->orderDetails['details']['BT']->order_language, true );
-			//$jlang->load( 'com_virtuemart_orders', JPATH_SITE, $view->orderDetails['details']['BT']->order_language, true );
-			VmConfig::loadJLang('com_virtuemart',true,$view->orderDetails['details']['BT']->order_language);
-			VmConfig::loadJLang('com_virtuemart_shoppers',TRUE,$view->orderDetails['details']['BT']->order_language);
-			VmConfig::loadJLang('com_virtuemart_orders',TRUE,$view->orderDetails['details']['BT']->order_language);
+			$jlang->load( 'com_virtuemart', JPATH_SITE, $view->orderDetails['details']['BT']->order_language, true );
+			$jlang->load( 'com_virtuemart_shoppers', JPATH_SITE, $view->orderDetails['details']['BT']->order_language, true );
+			$jlang->load( 'com_virtuemart_orders', JPATH_SITE, $view->orderDetails['details']['BT']->order_language, true );
 		} else {
 			VmConfig::loadJLang('com_virtuemart_shoppers',TRUE);
 			VmConfig::loadJLang('com_virtuemart_orders',TRUE);
 		}
 
 		ob_start();
+
 		$view->renderMailLayout( $noVendorMail, $recipient );
 		$body = ob_get_contents();
 		ob_end_clean();
@@ -346,13 +348,9 @@ class shopFunctionsF {
 		$mailer->setBody( $body );
 
 		if(!$noVendorMail) {
-			$replyTo[0] = $view->vendorEmail;
-			$replyTo[1] = $view->vendor->vendor_name;
-			$mailer->addReplyTo( $replyTo );
-		} else {
-			$replyTo[0] = $view->orderDetails['details']['BT']->email;
-			$replyTo[1] = $view->orderDetails['details']['BT']->first_name.' '.$view->orderDetails['details']['BT']->last_name;
-			$mailer->addReplyTo( $replyTo );
+			$replyto[0] = $view->vendorEmail;
+			$replyto[1] = $view->vendor->vendor_name;
+			$mailer->addReplyTo( $replyto );
 		}
 		/*	if (isset($view->replyTo)) {
 				 $mailer->addReplyTo($view->replyTo);

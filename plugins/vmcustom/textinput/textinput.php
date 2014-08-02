@@ -1,12 +1,9 @@
 <?php
 defined('_JEXEC') or 	die( 'Direct Access to ' . basename( __FILE__ ) . ' is not allowed.' ) ;
 /**
- * @version $Id: standard.php,v 1.4 2005/05/27 19:33:57 ei
- *
- * a special type of 'cash on delivey':
- * its fee depend on total sum
+
  * @author Max Milbers
- * @version $Id: standard.php 3681 2011-07-08 12:27:36Z alatak $
+ * @version $Id:$
  * @package VirtueMart
  * @subpackage payment
  * @copyright Copyright (C) 2004-2008 soeren - All rights reserved.
@@ -24,12 +21,8 @@ if (!class_exists('vmCustomPlugin')) require(JPATH_VM_PLUGINS . DS . 'vmcustompl
 
 class plgVmCustomTextinput extends vmCustomPlugin {
 
-
-	// instance of class
-// 	public static $_this = false;
-
 	function __construct(& $subject, $config) {
-// 		if(self::$_this) return self::$_this;
+
 		parent::__construct($subject, $config);
 
 		$varsToPush = array(	'custom_size'=>array(0.0,'int'),
@@ -38,20 +31,10 @@ class plgVmCustomTextinput extends vmCustomPlugin {
 
 		$this->setConfigParameterable('custom_params',$varsToPush);
 
-// 		self::$_this = $this;
 	}
 
-	// function plgVmOnOrder($product) {
-
-		// $dbValues['virtuemart_product_id'] = $product->virtuemart_product_id;
-		// $dbValues['textinput'] = $this->_virtuemart_paymentmethod_id;
-		// $this->writeCustomData($dbValues, '#__virtuemart_product_custom_' . $this->_name);
-	// }
-
-
-
 	// get product param for this plugin on edit
-	function plgVmOnProductEdit($field, $product, &$row,&$retValue) {
+	function plgVmOnProductEdit($field, $product_id, &$row,&$retValue) {
 		if ($field->custom_element != $this->_name) return '';
 		// $html .='<input type="text" value="'.$field->custom_size.'" size="10" name="custom_param['.$row.'][custom_size]">';
 		$this->parseCustomParams($field);
@@ -60,7 +43,15 @@ class plgVmCustomTextinput extends vmCustomPlugin {
 			<fieldset>
 				<legend>'. JText::_('VMCUSTOM_TEXTINPUT') .'</legend>
 				<table class="admintable">
-					'.VmHTML::row('input','VMCUSTOM_TEXTINPUT_SIZE','custom_param['.$row.'][custom_size]',$field->custom_size).'
+					'.VmHTML::row('input','VMCUSTOM_TEXTINPUT_SIZE','custom_param['.$row.'][custom_size]',$field->custom_size).
+					'<tr>
+			<td class="key">'.
+				JText::_('VMCUSTOM_TEXTINPUT_PRICE_BY_LETTER_OR_INPUT').
+			'</td>
+			<td>';
+			$html .= ($field->custom_price_by_letter==1)?JText::_('VMCUSTOM_TEXTINPUT_PRICE_BY_LETTER'):JText::_('VMCUSTOM_TEXTINPUT_PRICE_BY_INPUT');
+			$html .='</td>
+		</tr>
 				</table>
 			</fieldset>';
 		$retValue .= $html;
@@ -76,44 +67,21 @@ class plgVmCustomTextinput extends vmCustomPlugin {
 	 */
 	function plgVmOnDisplayProductVariantFE($field,&$idx,&$group) {
 		// default return if it's not this plugin
-		if ($field->custom_value != $this->_name) return '';
-		$this->parseCustomParams($field);
-		$class='';
-		if ($field->custom_price_by_letter) $class='vmcustom-textinput';
-		$html=': <input class="'.$class.'" type="text" value="" size="'.$field->custom_size.'" name="customPlugin['.$field->virtuemart_custom_id.']['.$this->_name.'][comment]"><br />';
-		static $textinputjs;
-		$group->display .= $html;
-		// preventing 2 x load javascript
-		if ($textinputjs) return true;
-		$textinputjs = true ;
-		//javascript to update price
-		$document = JFactory::getDocument();
-		$document->addScriptDeclaration('
-	jQuery( function($) {
-		jQuery(".vmcustom-textinput").keyup(function() {
-				formProduct = $(".productdetails-view").find(".product");
-				virtuemart_product_id = formProduct.find(\'input[name="virtuemart_product_id[]"]\').val();
-			$.setproducttype(formProduct,virtuemart_product_id);
-			});
-	});
-		');
+		 if ($field->custom_element != $this->_name) return '';
+		$this->getCustomParams($field);
+		$group->display .= $this->renderByLayout('default',array($field,&$idx,&$group ) );
 
 		return true;
 //         return $html;
     }
-	function plgVmOnDisplayProductFE( $product, &$idx,&$group){}
+	//function plgVmOnDisplayProductFE( $product, &$idx,&$group){}
 	/**
 	 * @see components/com_virtuemart/helpers/vmCustomPlugin::plgVmOnViewCartModule()
 	 * @author Patrick Kohl
 	 */
 	function plgVmOnViewCartModule( $product,$row,&$html) {
-		if (!$plgParam = $this->GetPluginInCart($product)) return false ;
-		foreach($plgParam as $k => $item){
-			if(!empty($item['comment']) ){
-				$html .='<span>'.$item['comment'].'</span>';
-			}
-		 }
-		return true;
+
+		return $this->plgVmOnViewCart($product,$row,$html);
     }
 
 	/**
@@ -121,15 +89,17 @@ class plgVmCustomTextinput extends vmCustomPlugin {
 	 * @author Patrick Kohl
 	 */
 	function plgVmOnViewCart($product,$row,&$html) {
+		if (empty($product->productCustom->custom_element) or $product->productCustom->custom_element != $this->_name) return '';
 		if (!$plgParam = $this->GetPluginInCart($product)) return '' ;
 
-		$html  .= '<div>';
 		foreach($plgParam as $k => $item){
+
 			if(!empty($item['comment']) ){
-				$html .='<span>'.$item['comment'].'</span>';
+				if($product->productCustom->virtuemart_customfield_id==$k){
+					$html .='<span>'.JText::_($product->productCustom->custom_title).' '.$item['comment'].'</span>';
+				}
 			}
 		 }
-		$html .='</div>';
 
 		return true;
     }
@@ -140,6 +110,10 @@ class plgVmCustomTextinput extends vmCustomPlugin {
 	 * vendor order display BE
 	 */
 	function plgVmDisplayInOrderBE($item, $row, &$html) {
+		if(!empty($productCustom)){
+			$item->productCustom = $productCustom;
+		}
+		if (empty($item->productCustom->custom_element) or $item->productCustom->custom_element != $this->_name) return '';
 		$this->plgVmOnViewCart($item,$row,$html); //same render as cart
     }
 
@@ -148,6 +122,8 @@ class plgVmCustomTextinput extends vmCustomPlugin {
 	 * shopper order display FE
 	 */
 	function plgVmDisplayInOrderFE($item, $row, &$html) {
+
+		if (empty($item->productCustom->custom_element) or $item->productCustom->custom_element != $this->_name) return '';
 		$this->plgVmOnViewCart($item,$row,$html); //same render as cart
     }
 
@@ -163,7 +139,7 @@ class plgVmCustomTextinput extends vmCustomPlugin {
 
 
 	function plgVmDeclarePluginParamsCustom($psType,$name,$id, &$data){
-		return $this->declarePluginParams($psType, $name, $id, $data);
+		return $this->declarePluginParams('custom', $name, $id, $data);
 	}
 
 	function plgVmSetOnTablePluginParamsCustom($name, $id, &$table){
@@ -177,19 +153,26 @@ class plgVmCustomTextinput extends vmCustomPlugin {
 		return $this->onDisplayEditBECustom($virtuemart_custom_id,$customPlugin);
 	}
 
-	public function plgVmCalculateCustomVariant($product, &$productCustomsPrice,$selected,$row){
-		$customVariant = $this->getCustomVariant($product, $productCustomsPrice,$selected,$row);
+	public function plgVmCalculateCustomVariant($product, &$productCustomsPrice,$selected){
+		if ($productCustomsPrice->custom_element !==$this->_name) return ;
+		$customVariant = $this->getCustomVariant($product, $productCustomsPrice,$selected);
 		if (!empty($productCustomsPrice->custom_price)) {
 			//TODO adding % and more We should use here $this->interpreteMathOp
 			// eg. to calculate the price * comment text length
-			if ($productCustomsPrice->custom_price_by_letter ==1) {
-				if ($textinput = $customVariant['comment']) {
 
-					$productCustomsPrice->custom_price = strlen ($textinput) *  $productCustomsPrice->custom_price ;
+			if (!empty($customVariant['comment'])) {
+				if ($productCustomsPrice->custom_price_by_letter ==1) {
+					$charcount = strlen ($customVariant['comment']);
+				} else {
+					$charcount = 1.0;
 				}
+				$productCustomsPrice->custom_price = $charcount * $productCustomsPrice->custom_price ;
+			} else {
+				$productCustomsPrice->custom_price = 0.0;
 			}
-// 			return $field->custom_price;
+
 		}
+		return true;
 	}
 
 	public function plgVmDisplayInOrderCustom(&$html,$item, $param,$productCustom, $row ,$view='FE'){
@@ -197,8 +180,12 @@ class plgVmCustomTextinput extends vmCustomPlugin {
 	}
 
 	public function plgVmCreateOrderLinesCustom(&$html,$item,$productCustom, $row ){
-		$this->createOrderLinesCustom($html,$item,$productCustom, $row );
+// 		$this->createOrderLinesCustom($html,$item,$productCustom, $row );
 	}
+	function plgVmOnSelfCallFE($type,$name,&$render) {
+		$render->html = '';
+	}
+
 }
 
 // No closing tag

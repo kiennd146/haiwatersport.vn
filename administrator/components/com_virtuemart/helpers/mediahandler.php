@@ -38,11 +38,8 @@ class vmFile {
 		$str = preg_replace('/\xE3\x80\x80/', ' ', $str);
 		$str = str_replace(' ', '-', $str);
 
-		$unicodeslugs = VmConfig::get('transliterateSlugs',false);
-		if($unicodeslugs){
-			$lang = JFactory::getLanguage();
-			$str = $lang->transliterate($str);
-		}
+		$lang = JFactory::getLanguage();
+		$str = $lang->transliterate($str);
 
 		if(function_exists('mb_ereg_replace')){
 			$regex = array('#(\.){2,}#', '#[^\w\.\- ]#', '#^\.#');
@@ -341,15 +338,23 @@ class VmMediaHandler {
 	 */
 	static private function isImage($file_extension=0){
 
-		if($file_extension == 'jpg' || $file_extension == 'jpeg' || $file_extension == 'png' || $file_extension == 'gif'){
-			$isImage = TRUE;
+		//		if(!empty($file_mimetype)){
+		//			if(strpos($file_mimetype,'image')===FALSE){
+		//				$isImage = FALSE;
+		//			}else{
+		//				$isImage = TRUE;
+			//			}
+			//		} else {
+			if($file_extension == 'jpg' || $file_extension == 'jpeg' || $file_extension == 'png' || $file_extension == 'gif'){
+				$isImage = TRUE;
 
-		} else {
-			$isImage = FALSE;
+			} else {
+				$isImage = FALSE;
+			}
+			//		}
+
+			return $isImage;
 		}
-
-		return $isImage;
-	}
 
 		private $_foldersToTest = array();
 

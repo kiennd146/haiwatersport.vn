@@ -162,8 +162,7 @@ class VirtueMartViewCart extends VmView {
 			$this->assignRef('select_payment_text', $paymentText);
 
 			if (!VmConfig::get('use_as_catalog')) {
-				//$checkout_link_html = '<a name="'.$checkout_task.'"  class="vm-button-correct" href="javascript:document.checkoutForm.submit();" ><span>' . $text . '</span></a>';
-				$checkout_link_html = '<button name="'.$checkout_task.'" id="checkoutFormSubmit" class="vm-button-correct"  ><span>' . $text . '</span></button>';
+				$checkout_link_html = '<a name="'.$checkout_task.'" class="vm-button-correct" href="javascript:document.checkoutForm.submit();" ><span>' . $text . '</span></a>';
 			} else {
 				$checkout_link_html = '';
 			}
@@ -347,7 +346,7 @@ class VirtueMartViewCart extends VmView {
 	private function lOrderDone() {
 		$display_title = vRequest::getBool('display_title',true);
 		$this->assignRef('display_title', $display_title);
-		// Do not change this. It contains the payment form
+
 		$this->html = vRequest::get('html', JText::_('COM_VIRTUEMART_ORDER_PROCESSED') );
 		//Show Thank you page or error due payment plugins like paypal express
 	}

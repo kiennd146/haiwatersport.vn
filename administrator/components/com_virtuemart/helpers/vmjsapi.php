@@ -134,6 +134,7 @@ class vmJsApi{
 	 */
 	static function jQuery($isSite=-1) {
 
+
 		if(JVM_VERSION>2){
 			JHtml::_('jquery.framework');
 			return true;
@@ -168,12 +169,11 @@ class vmJsApi{
 		}
 		if (!$isSite) {
 			vmJsApi::js ('jquery.ui.autocomplete.html');
-		}
-		if(JVM_VERSION<3){
-			//Very important convention with other 3rd pary developers, must be kept DOES NOT WORK IN J3
-			JFactory::getApplication()->set('jquery',TRUE);
+
 		}
 		vmJsApi::js( 'jquery.noconflict');
+		//Very important convention with other 3rd pary developers, must be kept DOES NOT WORK IN J3
+		//JFactory::getApplication()->set('jquery',TRUE);
 		return TRUE;
 	}
 	// Virtuemart product and price script
@@ -190,7 +190,8 @@ class vmJsApi{
 		}
 		vmJsApi::jQuery();
 
-		VmConfig::loadJLang('com_virtuemart',true);
+		$lang = JFactory::getLanguage();
+		$lang->load('com_virtuemart');
 		vmJsApi::jSite();
 
 		$closeimage = JURI::root(TRUE) .'/components/com_virtuemart/assets/images/fancybox/fancy_close.png';
@@ -206,7 +207,7 @@ class vmJsApi{
 
 		if(VmConfig::get('addtocart_popup',1)){
 			$jsVars .= "Virtuemart.addtocart_popup = '".VmConfig::get('addtocart_popup',1)."' ; \n";
-			if(VmConfig::get('usefancy',1)){
+			if(VmConfig::get('usefancy',0)){
 				$jsVars .= "usefancy = true;";
 				vmJsApi::js( 'fancybox/jquery.fancybox-1.3.4.pack');
 				vmJsApi::css('jquery.fancybox-1.3.4');
@@ -337,7 +338,7 @@ class vmJsApi{
 		if ($jCreditCard) {
 			return;
 		}
-		VmConfig::loadJLang('com_virtuemart',true);
+		JFactory::getLanguage()->load('com_virtuemart');
 
 
 		$js = "

@@ -2,12 +2,12 @@
 <!DOCTYPE install SYSTEM "http://dev.joomla.org/xml/dtd/1.5/module-install.dtd">
 <install type="module" version="1.5.0">
     <name>mod_virtuemart_manufacturer</name>
-    <creationDate>February 2011</creationDate>
+    <creationDate>April 07 2014</creationDate>
     <author>The VirtueMart Development Team</author>
     <authorUrl>http://www.virtuemart.net</authorUrl>
-    <copyright>Copyright (C) 2004-2011 Virtuemart Team. All rights reserved.</copyright>
-    <license>http://www.gnu.org/licenses/gpl-3.0.html GNU/GPL</license>
-    <version>2.0.0RC3</version>
+    <copyright>${PHING.VM.COPYRIGH}</copyright>
+    <license>http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL</license>
+    <version>2.6.0</version>
     <description>MOD_VIRTUEMART_MANUFACTURER_DESC</description>
     <files>
         <filename module="mod_virtuemart_manufacturer">mod_virtuemart_manufacturer.php</filename>
@@ -15,6 +15,7 @@
         <filename>helper.php</filename>
         <filename>tmpl/default.php</filename>
         <filename>tmpl/index.html</filename>
+        <folder>language</folder>
     </files>
     <params>
         <param name="show" type="list" default="all"
@@ -83,12 +84,13 @@
 			label="MOD_VIRTUEMART_MANUFACTURER_FOOTER_TEXT"
 			description="MOD_VIRTUEMART_MANUFACTURER_FOOTER_TEXT_DESC" />
             </fieldset>
-            <fieldset group="advanced">
-                <field name="cache" type="radio" default="0"
-			label="Enable Cache"
-			description="Select whether to cache the content of this module">
-                    <option value="0">JNO</option>
-                    <option value="1">JYES</option>
+            <fieldset name="advanced">
+               <field name="cache" type="list"
+					default="1"
+					label="COM_MODULES_FIELD_CACHING_LABEL"
+					description="COM_MODULES_FIELD_CACHING_DESC">
+                   <option value="0">No</option>
+                   <option value="1">Yes</option>
                 </field>
                 <field name="moduleclass_sfx" type="text" default=""
 			label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL"

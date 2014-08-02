@@ -94,7 +94,9 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 	 */
 	function installSampleData(){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
 // 		$this->checkPermissionForTools();
 
 		$model = $this->getModel('updatesMigration');
@@ -112,7 +114,9 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 	 */
 	function setStoreOwner(){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
 		$this->checkPermissionForTools();
 
 		$model = $this->getModel('updatesMigration');
@@ -131,7 +135,9 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 	 */
 	function restoreSystemDefaults(){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
 		$this->checkPermissionForTools();
 
 		if(VmConfig::get('dangeroustools', false)){
@@ -157,7 +163,9 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 	 */
 	function deleteVmTables(){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
 		$this->checkPermissionForTools();
 
 		$msg = JText::_('COM_VIRTUEMART_SYSTEM_VMTABLES_DELETED');
@@ -182,7 +190,9 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 	 */
 	function deleteVmData(){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
 		$this->checkPermissionForTools();
 
 		$msg = JText::_('COM_VIRTUEMART_SYSTEM_VMDATA_DELETED');
@@ -202,7 +212,9 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 
 	function deleteAll(){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
 		$this->checkPermissionForTools();
 
 		$msg = JText::_('COM_VIRTUEMART_SYSTEM_ALLVMDATA_DELETED');
@@ -220,7 +232,9 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 
 	function deleteRestorable(){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
 		$this->checkPermissionForTools();
 
 		$msg = JText::_('COM_VIRTUEMART_SYSTEM_RESTVMDATA_DELETED');
@@ -243,7 +257,9 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 
 	function refreshCompleteInstall($sample=false){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
 		$this->checkPermissionForTools();
 
 		if(VmConfig::get('dangeroustools', true)){
@@ -281,7 +297,9 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 
 	function installComplete($sample=false){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
 		$this->checkPermissionForTools();
 
 		if(VmConfig::get('dangeroustools', true)){
@@ -352,7 +370,10 @@ class VirtuemartControllerUpdatesMigration extends VmController{
 	 */
 	function updateDatabase(){
 
-		vRequest::vmCheckToken();
+		$data = JRequest::get('get');
+		JRequest::setVar($data['token'], '1', 'post');
+		JRequest::checkToken() or jexit('Invalid Token, in ' . JRequest::getWord('task'));
+// 		$this->checkPermissionForTools();
 
 		if(!class_exists('com_virtuemartInstallerScript')) require(JPATH_VM_ADMINISTRATOR . DS . 'install' . DS . 'script.virtuemart.php');
 		$updater = new com_virtuemartInstallerScript();

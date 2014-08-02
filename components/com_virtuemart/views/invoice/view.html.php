@@ -42,7 +42,6 @@ class VirtuemartViewInvoice extends VmView {
 
 		$document = JFactory::getDocument();
 		VmConfig::loadJLang('com_virtuemart_shoppers', true);
-		VmConfig::loadJLang('com_virtuemart', true);
 		//We never want that the cart is indexed
 		$document->setMetaData('robots','NOINDEX, NOFOLLOW, NOARCHIVE, NOSNIPPET');
 
@@ -109,11 +108,11 @@ class VirtuemartViewInvoice extends VmView {
 			echo JText::_('COM_VIRTUEMART_ORDER_NOTFOUND');
 			return 0;
 		}
-
 		if(!empty($orderDetails['details']['BT']->order_language)) {
-			VmConfig::loadJLang('com_virtuemart',true, $orderDetails['details']['BT']->order_language);
-			VmConfig::loadJLang('com_virtuemart_shoppers',true, $orderDetails['details']['BT']->order_language);
-			VmConfig::loadJLang('com_virtuemart_orders',true, $orderDetails['details']['BT']->order_language);
+			$jlang = JFactory::getLanguage();
+			$jlang->load( 'com_virtuemart', JPATH_SITE, $orderDetails['details']['BT']->order_language, true );
+			$jlang->load( 'com_virtuemart_shoppers', JPATH_SITE, $orderDetails['details']['BT']->order_language, true );
+			$jlang->load( 'com_virtuemart_orders', JPATH_SITE, $orderDetails['details']['BT']->order_language, true );
 		}
 
 		$this->assignRef('orderDetails', $orderDetails);

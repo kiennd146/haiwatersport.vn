@@ -353,7 +353,7 @@ abstract class vmPSPlugin extends vmPlugin {
 			return NULL;
 		}
 
-		VmConfig::loadJLang('com_virtuemart');
+		JFactory::getLanguage ()->load ('com_virtuemart');
 		$html = '<table class="admintable">' . "\n"
 			. '	<thead>' . "\n"
 			. '		<tr>' . "\n"
@@ -981,7 +981,7 @@ abstract class vmPSPlugin extends vmPlugin {
 	 * @param $tax_id :  tax id
 	 */
 
-	function setCartPrices (VirtueMartCart $cart, &$cart_prices, $method, $progressive = true) {
+	function setCartPrices (VirtueMartCart $cart, &$cart_prices, $method) {
 
 
 		if (!class_exists ('calculationHelper')) {
@@ -994,17 +994,7 @@ abstract class vmPSPlugin extends vmPlugin {
 
 		if($this->_psType=='payment'){
 			$cartTotalAmountOrig=$this->getCartAmount($cart_prices);
-			if(!$progressive){
-				//Simple
-				$cartTotalAmount=($cartTotalAmountOrig + $method->cost_per_transaction) * (1 +($method->cost_percent_total * 0.01));
-				vmdebug('Simple $cartTotalAmount = ('.$cartTotalAmountOrig.' + '.$method->cost_per_transaction.') * (1 + ('.$method->cost_percent_total.' * 0.01)) = '.$cartTotalAmount );
-				vmdebug('Simple $cartTotalAmount = '.($cartTotalAmountOrig + $method->cost_per_transaction).' * '. (1 + $method->cost_percent_total * 0.01) .' = '.$cartTotalAmount );
-			} else {
-				//progressive
-				$cartTotalAmount = ($cartTotalAmountOrig + $method->cost_per_transaction) / (1 -($method->cost_percent_total * 0.01));
-				vmdebug('Progressive $cartTotalAmount = ('.$cartTotalAmountOrig.' + '.$method->cost_per_transaction.') / (1 - ('.$method->cost_percent_total.' * 0.01)) = '.$cartTotalAmount );
-				vmdebug('Progressive $cartTotalAmount = '.($cartTotalAmountOrig + $method->cost_per_transaction) .' / '. (1 - $method->cost_percent_total * 0.01) .' = '.$cartTotalAmount );
-			}
+			$cartTotalAmount=($cartTotalAmountOrig + $method->cost_per_transaction) / (1 -($method->cost_percent_total * 0.01));
 			$cart_prices[$this->_psType . 'Value'] = $cartTotalAmount - $cartTotalAmountOrig;
 		}
 

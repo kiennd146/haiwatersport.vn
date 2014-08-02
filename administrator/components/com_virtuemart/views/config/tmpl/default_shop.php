@@ -13,7 +13,7 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: default_shop.php 7982 2014-05-21 11:14:52Z Milbo $
+ * @version $Id: default_shop.php 7717 2014-03-07 16:52:31Z kkmediaproduction $
  */
 
 // Check to ensure this file is included in Joomla!
@@ -108,7 +108,7 @@ defined('_JEXEC') or die('Restricted access');?>
 			</td>
 		</tr>
 		<?php
-			echo VmHTML::row('checkbox','COM_VIRTUEMART_ADMIN_CFG_MAIL_USEVENDOR','useVendorEmail',VmConfig::get('useVendorEmail',0));
+			echo VmHTML::row('checkbox','COM_VIRTUEMART_ADMIN_CFG_MAIL_USEVENDOR','useVendorEmail',VmConfig::get('useVendorEmail',1));
 		?>
 
 		<?php /*?>		<!-- NOT YET -->

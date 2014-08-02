@@ -240,7 +240,6 @@ $q = 'SELECT virtuemart_order_item_id, product_quantity, order_item_name,
 		$_filter[] = ('u.virtuemart_user_id = ' . (int)$uid);
 		}*/
 
-		$where = array();
 		if(!class_exists('Permissions')) require(JPATH_VM_ADMINISTRATOR.DS.'helpers'.DS.'permissions.php');
 		if(!Permissions::getInstance()->check('storeadmin')){
 			$myuser		=JFactory::getUser();
@@ -332,11 +331,11 @@ $q = 'SELECT virtuemart_order_item_id, product_quantity, order_item_name,
 
 // 		$table->order_status = $orderdata->orderstatus;
 
-
-  		JPluginHelper::importPlugin('vmcustom');
- 		$_dispatcher = JDispatcher::getInstance();
-  		$_returnValues = $_dispatcher->trigger('plgVmOnUpdateSingleItem',array($table,&$orderdata));
-
+/*
+// 		JPluginHelper::importPlugin('vmcustom');
+// 		$_dispatcher = JDispatcher::getInstance();
+// 		$_returnValues = $_dispatcher->trigger('plgVmOnUpdateSingleItem',array($table,&$orderdata));
+*/
 		$dataT = get_object_vars($table);
 
 //		$doUpdate = JRequest::getString('update_values');
@@ -1745,7 +1744,7 @@ $q = 'SELECT virtuemart_order_item_id, product_quantity, order_item_name,
 
 		foreach ($_userFieldsBT as $_fld) {
 			$_name = $_fld->name;
-			if(isset( $_orderData["BT_{$_name}"])){
+			if(!empty( $_orderData["BT_{$_name}"])){
 
 				$_userInfoData[$_name] = $_orderData["BT_{$_name}"];
 			}
@@ -1770,7 +1769,7 @@ $q = 'SELECT virtuemart_order_item_id, product_quantity, order_item_name,
 		$_userInfoData = array();
 		foreach ($_userFieldsST as $_fld) {
 			$_name = $_fld->name;
-			if(isset( $_orderData["ST_{$_name}"])){
+			if(!empty( $_orderData["ST_{$_name}"])){
 
 				$_userInfoData[$_name] = $_orderData["ST_{$_name}"];
 			}

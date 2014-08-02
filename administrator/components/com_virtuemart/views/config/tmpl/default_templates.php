@@ -13,7 +13,7 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: default_templates.php 7929 2014-05-15 12:28:48Z Milbo $
+ * @version $Id: default_templates.php 7786 2014-03-25 16:38:48Z Milbo $
  */
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access'); ?>
@@ -657,7 +657,7 @@ defined('_JEXEC') or die('Restricted access'); ?>
 				</span>
 			</td>
 			<td>
-				<?php echo VmHTML::checkbox('usefancy', VmConfig::get('usefancy', 1)); ?>
+				<?php echo VmHTML::checkbox('usefancy', VmConfig::get('usefancy', 0)); ?>
 			</td>
 		</tr>
 		<tr>

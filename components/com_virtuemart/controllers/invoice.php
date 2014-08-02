@@ -229,7 +229,10 @@ class VirtueMartControllerInvoice extends JController
 		}
 
 		//We come from the be, so we need to load the FE langauge
-		VmConfig::loadJLang('com_virtuemart',true);
+		$jlang =JFactory::getLanguage();
+		$jlang->load('com_virtuemart', JPATH_SITE, 'en-GB', true);
+		$jlang->load('com_virtuemart', JPATH_SITE, $jlang->getDefault(), true);
+		$jlang->load('com_virtuemart', JPATH_SITE, null, true);
 
 		$this->addViewPath( JPATH_VM_SITE.DS.'views' );
 		$view = $this->getView($viewName, $format);

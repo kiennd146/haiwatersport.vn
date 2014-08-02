@@ -486,7 +486,7 @@ class VirtueMartModelUser extends VmModel {
 		$newId = 0;
 
 		if($checkToken){
-			vRequest::vmCheckToken() or jexit( 'Invalid Token, while trying to save user' );
+			JRequest::checkToken() or jexit( 'Invalid Token, while trying to save user' );
 			$mainframe = JFactory::getApplication() ;
 		}
 
@@ -1542,7 +1542,7 @@ function removeAddress($virtuemart_userinfo_id){
 	function getSuperAdminCount()
 	{
 		$this->_db->setQuery('SELECT COUNT(id) FROM #__users'
-		. ' WHERE usertype = ' . __SUPER_ADMIN_GID . ' AND block = 0');
+		. ' WHERE gid = ' . __SUPER_ADMIN_GID . ' AND block = 0');
 		return ($this->_db->loadResult());
 	}
 

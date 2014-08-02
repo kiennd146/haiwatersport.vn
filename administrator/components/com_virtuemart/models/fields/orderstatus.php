@@ -14,8 +14,6 @@ defined ('_JEXEC') or die();
  * other free or open source software licenses.
  * @version $Id:$
  */
-if (!class_exists('VmConfig'))
-	require(JPATH_ROOT . DS . 'administrator' . DS . 'components' . DS . 'com_virtuemart' . DS . 'helpers' . DS . 'config.php');
 
 class JFormFieldOrderstatus extends JFormField {
 	var $type = 'orderstatus';
@@ -28,7 +26,12 @@ class JFormFieldOrderstatus extends JFormField {
 			require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'vmmodel.php');
 		}
 		VmConfig::loadConfig ();
-		VmConfig::loadJLang('com_virtuemart');
+		if (VmConfig::get ('enableEnglish', 1)) {
+			$jlang = JFactory::getLanguage ();
+			$jlang->load ('com_virtuemart', JPATH_ADMINISTRATOR, 'en-GB', TRUE);
+			$jlang->load ('com_virtuemart', JPATH_ADMINISTRATOR, $jlang->getDefault (), TRUE);
+			$jlang->load ('com_virtuemart', JPATH_ADMINISTRATOR, NULL, TRUE);
+		}
 		$key = ($this->element['key_field'] ? $this->element['key_field'] : 'value');
 		$val = ($this->element['value_field'] ? $this->element['value_field'] : $this->name);
 		$model = VmModel::getModel ('Orderstatus');

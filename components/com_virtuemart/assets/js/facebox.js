@@ -85,10 +85,10 @@
 
   $.extend($.facebox, {
     settings: {
-      opacity      : 0.6,
+      opacity      : 0.2,
       overlay      : true,
-      loadingImage : '/components/com_virtuemart/assets/images/facebox/loading.gif',
-      closeImage   : '/components/com_virtuemart/assets/images/facebox/closelabel.png',
+      loadingImage : 'components/com_virtuemart/assets/images/facebox/loading.gif',
+      closeImage   : 'components/com_virtuemart/assets/images/facebox/closelabel.png',
       imageTypes   : [ 'png', 'jpg', 'jpeg', 'gif' ],
       faceboxHtml  : '\
     <div id="facebox" style="display:none;"> \
@@ -97,7 +97,6 @@
         </div> \
         <a href="#" class="close"></a> \
       </div> \
-	  <span></span>\
     </div>'
     },
 
